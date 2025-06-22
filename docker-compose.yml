@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  flask:
+    build: .
+    container_name: flask_app
+    volumes:
+      - .:/app
+      - ./user_data:/app/user_data
+    expose:
+      - "5000"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./static:/app/static
+    depends_on:
+      - flask
