@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Flask Kanban Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='home.css') }}" rel="stylesheet"> <!-- Можно вынести отдельно -->
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <span class="material-icons">grid_view</span>
+            <b>Flask Kanban Board</b>
+        </div>
+        <div class="topbar-right">
+            <button class="theme-toggle-btn" id="theme-toggle-btn" type="button">
+                <span class="material-icons" id="theme-icon">dark_mode</span>
+            </button>
+        </div>
+    </div>
+    <main>
+        <div class="kanban-home">
+    <div class="kanban-home-header">
+        <span class="material-icons">person</span>
+        <span>Добро пожаловать!</span>
+    </div>
+    <form class="kanban-home-form" id="user-form" autocomplete="off">
+        <input type="text" name="username" placeholder="Имя пользователя" required pattern="[a-zA-Z0-9_-]{2,32}" maxlength="32" autocomplete="off">
+        <button type="submit"><span class="material-icons">login</span>Открыть доску</button>
+    </form>
+    <div class="kanban-home-subtitle">
+        <b>Каждый пользователь — своя уникальная канбан-доска.</b><br>
+        Всё хранится отдельно и защищено паролем.
+    </div>
+</div>
+    </main>
+    <footer>
+        © 2025 — Flask Kanban.
+    </footer>
+    <!-- Модалка авторизации/регистрации -->
+    <div class="modal-backdrop" id="login-modal" style="display:none;">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-title" id="modal-title"></div>
+            <form id="modal-form" class="modal-form">
+                <input type="password" name="password" id="modal-password" placeholder="Пароль" required>
+                <input type="password" name="password2" id="modal-password2" placeholder="Повторите пароль" style="display:none;">
+                <button type="submit" class="plus-btn">
+                    <span class="material-icons">login</span>
+                    <span id="modal-btn"></span>
+                </button>
+            </form>
+            <div id="modal-error"></div>
+        </div>
+    </div>
+<script>
+    // ======= Переключатель темы =======
+    function setTheme(dark) {
+        if(dark) {
+            document.body.classList.add('dark');
+            localStorage.setItem('kanban-theme', 'dark');
+            document.getElementById('theme-icon').innerText = 'light_mode';
+        } else {
+            document.body.classList.remove('dark');
+            localStorage.setItem('kanban-theme', 'light');
+            document.getElementById('theme-icon').innerText = 'dark_mode';
+        }
+    }
+    document.getElementById('theme-toggle-btn').onclick = function() {
+        setTheme(!document.body.classList.contains('dark'));
+    };
+    (function(){
+        const theme = localStorage.getItem('kanban-theme');
+        setTheme(theme === 'dark');
+    })();
+
+    // ======= Модалка логина/регистрации =======
+    function openModal(isRegister, username){
+        document.getElementById('login-modal').style.display = 'flex';
+        document.getElementById('modal-title').innerText = isRegister ? `Создать доску для "${username}"` : `Вход в доску "${username}"`;
+        document.getElementById('modal-btn').innerText = isRegister ? "Создать" : "Войти";
+        document.getElementById('modal-password2').style.display = isRegister ? "" : "none";
+        showModalError(""); // очищаем ошибку с анимацией
+        document.getElementById('modal-password').value = "";
+        document.getElementById('modal-password2').value = "";
+        setTimeout(()=>{ document.getElementById('modal-password').focus(); }, 180);
+    }
+    function closeModal(){
+        document.getElementById('login-modal').style.display = 'none';
+    }
+    // Красивая анимация ошибки
+    function showModalError(msg) {
+        let error = document.getElementById('modal-error');
+        error.innerText = msg;
+        error.classList.remove('animated');
+        // Для повторной анимации сбрасываем класс
+        void error.offsetWidth;
+        if(msg) error.classList.add('animated');
+    }
+
+    document.getElementById('user-form').onsubmit = async function(e){
+        e.preventDefault();
+        let username = this.username.value.trim();
+        if (!username.match(/^[a-zA-Z0-9_-]{2,32}$/)) return;
+        let r = await fetch(`/api/check_user/${username}`);
+        let {exists} = await r.json();
+        openModal(!exists, username);
+        window.currentUser = username;
+    }
+
+    document.getElementById('modal-form').onsubmit = async function(e){
+        e.preventDefault();
+        let isReg = document.getElementById('modal-password2').style.display !== "none";
+        let username = window.currentUser;
+        let pass = document.getElementById('modal-password').value;
+        let pass2 = document.getElementById('modal-password2').value;
+        let btn = document.getElementById('modal-btn');
+        btn.disabled = true;
+        btn.innerText = "Загрузка...";
+        let url = isReg ? '/api/register' : '/api/login';
+        let body = {username, password: pass};
+        if(isReg && pass !== pass2){ 
+            showModalError("Пароли не совпадают!"); 
+            btn.disabled = false; btn.innerText = "Создать"; 
+            return;
+        }
+        let resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+        if(resp.ok){
+            window.location.href = `/${username}/kanban`;
+        } else {
+            let data = await resp.json();
+            showModalError(isReg ? "Ошибка регистрации!" : "Неверный пароль!");
+            btn.disabled = false;
+            btn.innerText = isReg ? "Создать" : "Войти";
+        }
+    };
+    document.getElementById('login-modal').onclick = function(e){ if (e.target === this) closeModal(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,757 @@
+:root {
+  --main-bg: #f5f7fb;
+  --panel-bg: #fff;
+  --primary: #5271ff;
+  --primary-dark: #3952d2;
+  --accent: #ff9800;
+  --danger: #d11a2a;
+  --border: #e3e7fd;
+  --shadow: 0 6px 26px #5271ff13, 0 2px 8px #0001;
+  --input-bg: #f7f8fc;
+  --input-focus: #f0f6ff;
+  --column-radius: 16px;
+  --task-radius: 11px;
+  --card-shadow: 0 2px 8px #5271ff10;
+  --text-main: #23294b;
+  --text-soft: #7d809f;
+  --topbar-bg: #f5f7fb;
+  --footer-bg: #e7e9fc;
+  --scroll-thumb: #c4d3ff;
+  --scroll-track: #ecf1fa;
+  --modal-bg: #fff;
+  --modal-title: #23253e;
+  --modal-shadow: 0 8px 38px #4f5eff13, 0 1px 6px #0002;
+  --modal-blur: blur(8px);
+}
+
+body.dark {
+  --main-bg: #181c26;
+  --panel-bg: #23253e;
+  --primary: #5271ff;
+  --primary-dark: #7895fa;
+  --accent: #ffc053;
+  --danger: #ff5470;
+  --border: #313554;
+  --shadow: 0 8px 28px #1b23363c, 0 2px 8px #0b1127;
+  --input-bg: #202442;
+  --input-focus: #232859;
+  --card-shadow: 0 2px 8px #23285340;
+  --text-main: #f5f7fb;
+  --text-soft: #8a94c7;
+  --topbar-bg: #23253e;
+  --footer-bg: #22263a;
+  --scroll-thumb: #415ebf;
+  --scroll-track: #191e2b;
+  --modal-bg: #23253e;
+  --modal-title: #dbe5ff;
+}
+
+body {
+  background: var(--main-bg);
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  min-height: 100vh;
+  color: var(--text-main);
+  transition: background 0.22s, color 0.19s;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 10px; background: var(--scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 8px; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 900px;
+  margin: 36px auto 36px auto;
+  padding: 0 22px;
+  background: var(--topbar-bg);
+  border-radius: 20px;
+  box-shadow: 0 4px 22px #5271ff10, 0 1px 6px #a6aefd0a;
+  border: 1.1px solid var(--border);
+  min-height: 56px;
+  font-size: 1em;
+  gap: 18px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 100%;
+}
+.topbar-left .material-icons {
+  font-size: 1.7em;
+  color: var(--primary);
+}
+.topbar-left b {
+  color: var(--primary);
+  font-size: 1.31em;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+.theme-toggle-btn {
+  background: #fff;
+  color: var(--primary);
+  border: 1.4px solid var(--border);
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 6px #5271ff06;
+  font-size: 1.19em;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+}
+
+.theme-toggle-btn .material-icons {
+  font-size: 1.3em;
+  transition: color 0.13s;
+}
+
+.theme-toggle-btn:hover {
+  background: #e6edff; /* Чуть светлее, но не ярко-синяя */
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+body.dark .theme-toggle-btn {
+  background: var(--panel-bg);
+  color: var(--primary);
+  border: 1.4px solid var(--border);
+}
+body.dark .theme-toggle-btn .material-icons {
+  color: var(--primary); /* всегда синяя */
+}
+body.dark .theme-toggle-btn:hover {
+  background: #293a6b;   /* светло-синий или panel-bg + 20% */
+  color: var(--primary);
+  border-color: var(--primary);
+}
+body.dark .theme-toggle-btn:hover .material-icons {
+  color: #fff; /* Только при ховере делаем белой, если фон не сливается */
+  filter: drop-shadow(0 0 4px #5271ff80); /* Легкая голубая тень */
+}
+
+.topbar-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.4px solid var(--border);
+  background: #fff;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.08em;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 1px 6px #5271ff06;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+}
+
+.topbar-link .material-icons {
+  font-size: 1.24em;
+  transition: color 0.13s, filter 0.13s;
+}
+
+.topbar-link:hover,
+.topbar-link:focus {
+  background: #e6edff;
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  text-decoration: none;
+}
+.topbar-link:hover .material-icons,
+.topbar-link:focus .material-icons {
+  color: var(--primary-dark);
+  filter: drop-shadow(0 0 4px #5271ff50);
+}
+
+/* Тёмная тема */
+body.dark .topbar-link {
+  background: var(--panel-bg);
+  color: var(--primary);
+  border: 1.4px solid var(--border);
+}
+body.dark .topbar-link .material-icons {
+  color: var(--primary);
+}
+body.dark .topbar-link:hover,
+body.dark .topbar-link:focus {
+  background: #293a6b;
+  color: #fff;
+  border-color: var(--primary);
+}
+body.dark .topbar-link:hover .material-icons,
+body.dark .topbar-link:focus .material-icons {
+  color: #fff;
+  filter: drop-shadow(0 0 4px #5271ff90);
+}
+
+.kanban-board {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 auto 32px auto;
+  max-width: 1400px;
+}
+
+.kanban-column {
+  flex: 1 1 265px;
+  max-width: 320px;
+  min-width: 240px;
+  background: var(--panel-bg);
+  border-radius: var(--column-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1.5px solid var(--border);
+  position: relative;
+  transition: box-shadow 0.16s, border 0.13s;
+}
+
+.kanban-col-title {
+  padding: 14px 17px 8px 19px;
+  font-size: 1.16em;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid var(--border);
+  gap: 4px;
+}
+
+.delete-status-btn {
+  border: none; background: none; padding: 0 2px; cursor: pointer;
+  display: flex; align-items: center;
+}
+.delete-status-btn .material-icons { color: #b9b9b9; font-size:1.22em;}
+.delete-status-btn:hover .material-icons { color: var(--danger); }
+
+.kanban-tasks {
+  min-height: 46px;
+  flex: 1;
+  padding: 6px 11px 4px 11px;
+  overflow-y: auto;
+}
+
+.kanban-task {
+  background: linear-gradient(120deg, #f8fdff 85%, #e3f1ff 100%);
+  margin: 9px 0;
+  padding: 12px 11px 10px 11px;
+  border-radius: var(--task-radius);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1.2px solid #d5e4ff;
+  position: relative;
+  font-size: 1.04em;
+  word-break: break-word;
+  overflow: hidden;
+  transition: background 0.17s, border 0.17s;
+}
+body.dark .kanban-task {
+  background: linear-gradient(120deg, #242c47 83%, #273355 100%);
+  border: 1.2px solid #2a3454;
+}
+
+.kanban-task .task-main {
+  font-size: 1.07em;
+  color: var(--text-main);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kanban-task .task-desc {
+  font-size: 0.96em;
+  color: var(--text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kanban-task-empty {
+  color: #b9bccc;
+  font-size: 1em;
+  margin: 12px 0 6px 0;
+  text-align: center;
+  user-select: none;
+}
+
+/* Общие стили */
+.task-actions {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.icon-btn {
+  border: none;
+  outline: none;
+  background: transparent;
+  border-radius: 50%;
+  padding: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.21em;
+  transition:
+    background 0.18s cubic-bezier(.4,0,.2,1),
+    box-shadow 0.19s cubic-bezier(.4,0,.2,1),
+    transform 0.14s cubic-bezier(.4,0,.2,1);
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn .material-icons {
+  transition: color 0.15s, text-shadow 0.14s;
+  font-size: 1.1em;
+}
+
+/* Редактировать (edit) */
+.icon-btn.edit-btn .material-icons {
+  color: var(--accent);
+}
+.icon-btn.edit-btn:hover,
+.icon-btn.edit-btn:focus {
+  background: rgba(255, 196, 0, 0.12);
+  transform: scale(1.13) rotate(-7deg);
+}
+.icon-btn.edit-btn:hover .material-icons,
+.icon-btn.edit-btn:focus .material-icons {
+  color: #fff;
+  text-shadow: 0 0 5px var(--accent), 0 2px 8px #fff3;
+}
+/* Темная тема — glow + тень */
+body.dark .icon-btn.edit-btn:hover,
+body.dark .icon-btn.edit-btn:focus {
+  background: rgba(255, 196, 0, 0.19);
+  box-shadow: 0 2px 10px 0 rgba(255, 196, 0, 0.17);
+}
+
+/* Удалить (delete) */
+.icon-btn.delete-btn .material-icons {
+  color: var(--danger);
+}
+.icon-btn.delete-btn:hover,
+.icon-btn.delete-btn:focus {
+  background: rgba(255, 84, 112, 0.13);
+  transform: scale(1.16) rotate(7deg);
+}
+.icon-btn.delete-btn:hover .material-icons,
+.icon-btn.delete-btn:focus .material-icons {
+  color: #fff;
+  text-shadow: 0 0 6px var(--danger), 0 2px 10px #fff3;
+}
+/* Темная тема — glow + тень */
+body.dark .icon-btn.delete-btn:hover,
+body.dark .icon-btn.delete-btn:focus {
+  background: rgba(255, 84, 112, 0.22);
+  box-shadow: 0 2px 11px 0 rgba(255, 84, 112, 0.18);
+}
+
+.kanban-add-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px 8px 13px;
+  background: none;
+  margin-top: 3px;
+  border-radius: 0 0 12px 12px;
+}
+.kanban-add-form input[type="text"] {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: 1.2px solid #b5b5bb;
+  font-size: 1em;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--text-main);
+  box-shadow: 0 1px 4px #5271ff09;
+  transition: border 0.13s, background 0.10s;
+}
+.kanban-add-form input[type="text"]:focus {
+  border-color: var(--primary);
+  background: var(--input-focus);
+}
+
+.plus-btn {
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 18px;
+  min-width: unset;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 1px 7px #5271ff14;
+  transition: background 0.12s, box-shadow 0.11s, color 0.12s;
+}
+.plus-btn .material-icons { font-size: 1.18em; }
+.plus-btn:hover {
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+.kanban-add-btn {
+  margin: 0;
+  width: 100%;
+  border-radius: 0 0 12px 12px;
+  padding: 13px 0;
+  font-size: 1.13em;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  transition: background 0.13s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.kanban-add-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* Новый статус — отдельная карточка */
+.status-add-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 30px 32px;
+  margin: 20px auto 0 auto;
+  max-width: 320px;
+}
+.status-add-block .plus-btn {
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.18em;
+  font-weight: 700;
+  border-radius: 11px;
+  padding: 18px 30px 12px 30px;
+  margin-bottom: 10px;
+  min-width: unset;
+  gap: 8px;
+}
+.status-add-block .plus-btn .material-icons {
+  font-size: 1.55em;
+}
+.status-add-block .status-add-label {
+  font-size: 1.09em;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+footer {
+  margin-top: auto;
+  padding: 14px 0 11px 0;
+  background: var(--footer-bg);
+  color: #7c85af;
+  text-align: center;
+  font-size: 1em;
+  border-top: 1.2px solid #5271ff11;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  user-select: none;
+  box-shadow: 0 -2px 20px #22295522;
+}
+
+body.dark footer {
+  background: var(--topbar-bg);
+  color: #7c85af;
+  box-shadow: 0 -2px 20px #22295528;
+}
+
+/* --- Modal --- */
+.modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(30, 40, 80, 0.26);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.17s;
+  backdrop-filter: var(--modal-blur);
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--modal-bg);
+  border-radius: 20px;
+  box-shadow: var(--modal-shadow);
+  padding: 32px 24px 24px 24px;
+  min-width: 340px;
+  max-width: 98vw;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.modal-title {
+  font-size: 1.37em;
+  font-weight: 900;
+  color: var(--modal-title);
+  margin-bottom: 17px;
+  text-align: left;
+  line-height: 1.18;
+}
+.modal-close {
+  position: absolute; top: 13px; right: 17px;
+  background: none; border: none;
+  font-size: 2em; color: #7a7c8c; cursor: pointer;
+  transition: color .15s;
+  z-index: 1;
+}
+.modal-close:hover { color: #d11a2a; }
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 0;
+}
+.modal-form input[type="text"], .modal-form textarea, .modal-form select {
+  font-size: 1.05em;
+  padding: 13px 11px;
+  border-radius: 9px;
+  border: 1.5px solid #b5b5bb;
+  background: #f5fafd;
+  color: var(--text-main);
+  outline: none;
+  resize: none;
+  transition: border 0.14s, background 0.12s;
+}
+.modal-form input[type="text"]:focus, .modal-form textarea:focus, .modal-form select:focus {
+  border-color: #5271ff;
+  background: #f0f6ff;
+}
+body.dark .modal-form input[type="text"], body.dark .modal-form textarea, body.dark .modal-form select {
+  background: #272b47;
+  color: #e3e8f9;
+  border-color: #323557;
+}
+body.dark .modal-form input[type="text"]:focus, 
+body.dark .modal-form textarea:focus, 
+body.dark .modal-form select:focus {
+  background: #242a3a;
+  border-color: #5271ff;
+}
+.modal-form .plus-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 9px #5271ff16;
+  font-size: 1.13em;
+  padding: 13px 32px;
+  min-width: 140px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.13s, box-shadow 0.12s, color 0.13s;
+  margin-left: 0;
+  outline: none;
+}
+.modal-form .plus-btn:hover, .modal-form .plus-btn:focus {
+  background: var(--primary-dark);
+  color: #fff;
+  box-shadow: 0 3px 10px #5271ff22;
+}
+#modal-error {
+  color: #d11a2a;
+  margin-top: 12px;
+  font-size: 1.02em;
+  text-align: center;
+}
+
+/* === Кастомный SELECT для modal-form === */
+.modal-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(120deg, #d7e4ff11, #fff0),
+    url("data:image/svg+xml;utf8,<svg fill='gray' height='14' viewBox='0 0 20 20' width='14' xmlns='http://www.w3.org/2000/svg'><path d='M7 8l3 3 3-3'/></svg>");
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 14px center, right 14px center;
+  background-size: auto, 16px;
+  cursor: pointer;
+}
+
+body.dark .modal-form select {
+  background: #282b3e;
+  color: #e3e8f9;
+  border-color: #323557;
+  background-image:
+    linear-gradient(120deg, #233 10%, #23253e00),
+    url("data:image/svg+xml;utf8,<svg fill='white' height='14' viewBox='0 0 20 20' width='14' xmlns='http://www.w3.org/2000/svg'><path d='M7 8l3 3 3-3'/></svg>");
+}
+body.dark .modal-form select:focus {
+  background: #242a3a;
+  border-color: #5271ff;
+}
+
+/* Адаптивность */
+@media (max-width: 1100px) {
+  .kanban-board { gap: 14px;}
+  .kanban-column { min-width: 140px; max-width: 99vw;}
+  .topbar { max-width: 99vw; padding: 0 3vw;}
+}
+@media (max-width: 750px) {
+  .kanban-board { flex-direction:column; gap:10px;}
+  .kanban-column { min-width: 0; max-width: 100vw;}
+  .topbar { flex-direction:column; align-items:flex-start; gap:7px; min-height: 52px; height: auto;}
+  .kanban-home { margin-top: 16px; padding: 9vw 5vw;}
+  .modal { min-width: 98vw; padding: 10vw 3vw 7vw 3vw;}
+  .modal-title { font-size: 1em; }
+  .modal-form .plus-btn { width: 100%; margin-left: 0;}
+  .status-add-block { padding: 12vw 5vw; }
+}
+.kanban-add-status-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 24px auto 0 auto;
+  padding: 9px 18px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px #5271ff16;
+  font-size: 1.01em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.14s, box-shadow 0.13s;
+  min-width: 0;
+  max-width: 99vw;
+  line-height: 1.1;
+}
+.kanban-add-status-btn .material-icons {
+  font-size: 1.32em;
+  margin: 0;
+}
+.kanban-add-status-btn span:last-child {
+  margin-top: 0;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.kanban-add-status-btn:hover,
+.kanban-add-status-btn:focus {
+  background: var(--primary-dark);
+  box-shadow: 0 5px 18px #5271ff23;
+}
+
+.add-status-column {
+  min-width: 210px;
+  max-width: 290px;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.kanban-add-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 0 0 14px 14px;
+  font-weight: 800;
+  font-size: 1.14em;
+  width: 100%;
+  padding: 13px 0 11px 0;
+  margin-top: 12px;
+  box-shadow: 0 2px 18px #5271ff28, 0 4px 16px #5271ff12;
+  min-height: 44px;
+  transition: background 0.13s;
+  border-bottom: 1px solid #e3e7fd;
+}
+
+body.dark .kanban-add-task-btn {
+  border-bottom: 1px solid #313554;
+}
+
+.kanban-add-task-btn .material-icons {
+  font-size: 1.32em;
+  margin-right: 7px;
+}
+
+.kanban-add-task-btn:hover,
+.kanban-add-task-btn:focus {
+  background: var(--primary-dark);
+}
+
+/* Сброс стандартных иконок автозаполнения браузера для паролей */
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #f5fafd inset !important;
+    box-shadow: 0 0 0 1000px #f5fafd inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    caret-color: var(--text-main) !important;
+    border-radius: 9px !important;
+    border: 1.5px solid #b5b5bb !important;
+    transition: background-color 0s;
+}
+
+/* Для темной темы */
+body.dark input:-webkit-autofill,
+body.dark input:-webkit-autofill:focus,
+body.dark input:-webkit-autofill:hover,
+body.dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #272b47 inset !important;
+    box-shadow: 0 0 0 1000px #272b47 inset !important;
+    -webkit-text-fill-color: #e3e8f9 !important;
+    caret-color: #e3e8f9 !important;
+    border-radius: 9px !important;
+    border: 1.5px solid #323557 !important;
+}
+
+/* Скрыть браузерную иконку в поле пароля (Webkit only) */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-autofill-strong-password,
+input[type="password"]::-webkit-autofill-password {
+    display: none !important;
+    visibility: hidden !important;
+}
