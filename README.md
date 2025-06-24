@@ -1,199 +1,179 @@
 
-# 🗂️ Flask Kanban Board
+# 🗂️ Flask Kanban & ToDo Board
 
-**Flask Kanban Board** — это простой и современный веб-сервис для личной канбан-доски на Python + Flask.  
-Каждый пользователь получает свою уникальную доску — все данные защищены паролем и хранятся на сервере PostgresDB.
+**Flask Kanban & ToDo Board** — современный сервис для личной канбан-доски и ToDo‑листа на Python + Flask + PostgreSQL.  
+Каждый пользователь получает собственную доску, ToDo‑лист, может менять тему, редактировать профиль и пароль.
 
 ---
 
-## 🇷🇺 Быстрый старт (Russian)
+## 🇷🇺 Быстрый старт
 
-### 1. Клонируйте репозиторий
+### Установка (Docker Compose)
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable --now docker
+git clone https://github.com/yafoxins/kanban-flask.git
+cd kanban-flask
+sudo docker-compose up --build -d
+```
+
+Откройте: [http://localhost/](http://localhost/)  
+База и таблицы создаются автоматически.
+
+---
+
+### Ручная установка (без Docker)
 
 ```bash
 git clone https://github.com/yafoxins/kanban-flask.git
 cd kanban-flask
-```
-
-### 2. Установите Python
-
-Проверьте, что у вас установлен Python 3.8 или выше:
-
-```bash
-python3 --version
-```
-Если Python не установлен, [скачайте его с официального сайта](https://www.python.org/downloads/).
-
----
-
-### 3. (Рекомендуется) создайте виртуальное окружение
-
-```bash
 python3 -m venv venv
-source venv/bin/activate      # Linux/Mac
-venv\Scripts\activate        # Windows
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
----
-
-### 4. Установите зависимости
-
-```bash
-pip install flask werkzeug psycopg2-binary
+Создать базу Postgres:
+```sql
+CREATE DATABASE kanban_db;
+CREATE USER kanban_user WITH PASSWORD 'kanban_pass';
+GRANT ALL PRIVILEGES ON DATABASE kanban_db TO kanban_user;
 ```
-
----
-
-### 5. Запустите приложение
 
 ```bash
 python app.py
 ```
 
-Откройте в браузере [http://127.0.0.1:5000](http://127.0.0.1:5000)
-
 ---
 
 ## 🌟 Возможности
 
-- Уникальная канбан-доска для каждого пользователя
-- Безопасная аутентификация, пароли хранятся в виде хэшей
-- Светлая и тёмная тема, современный дизайн
-- Drag & Drop задач и статусов, всё работает динамически (SPA)
+- Kanban + ToDo‑лист (SPA)
+- Drag & Drop задач и статусов
+- Профиль пользователя + смена пароля
+- Темная/светлая тема
+- Безопасная авторизация
+- Современный адаптивный дизайн
 
 ---
 
-## 📦 Структура проекта
+## 👤 Профиль
+
+- Редактирование e‑mail, страны, имени
+- Смена пароля через модалку
+- Быстрый выход
+
+---
+
+## 🗂️ Структура
 
 ```
 kanban-flask/
-│
-├── app.py              # Основное приложение Flask
-├── user_data/          # Здесь хранятся все данные пользователей
-├── templates/
-│   ├── home.html       # Главная страница
-│   └── kanban.html     # Канбан-доска
+├── app.py
+├── docker-compose.yml
+├── Dockerfile
+├── nginx.conf
+├── requirements.txt
 ├── static/
-│   ├── style.css       # Общие стили
-│   └── home.css        # Стили главной страницы
+│   ├── style.css
+│   └── home.css
+├── templates/
+│   ├── home.html
+│   ├── kanban.html
+│   ├── todo.html
 └── README.md
-```
-
----
-
-## 🛠️ Зависимости
-
-```python
-import os
-import json
-import time
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
-from werkzeug.security import generate_password_hash, check_password_hash
 ```
 
 ---
 
 ## 📝 Лицензия
 
-GPL-3.0 license
+GPL‑3.0  
+Автор: Yafoxin ([@yafoxins](https://t.me/yafoxins))
 
-Автор: [Yafoxin](https://t.me/yafoxin)
 
 ---
 
-# 🇬🇧 Quick Start (English)
+# 🇬🇧 Quick Start
 
-### 1. Clone the repository
+### Install (Docker Compose)
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable --now docker
+git clone https://github.com/yafoxins/kanban-flask.git
+cd kanban-flask
+sudo docker-compose up --build -d
+```
+
+App: [http://localhost/](http://localhost/)
+
+---
+
+### Manual install (no Docker)
 
 ```bash
 git clone https://github.com/yafoxins/kanban-flask.git
 cd kanban-flask
-```
-
-### 2. Install Python
-
-Make sure you have Python 3.8+:
-
-```bash
-python3 --version
-```
-If not, [download Python here](https://www.python.org/downloads/).
-
----
-
-### 3. (Recommended) Create a virtual environment
-
-```bash
 python3 -m venv venv
-source venv/bin/activate      # Linux/Mac
-venv\Scripts\activate        # Windows
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
----
-
-### 4. Install dependencies
-
-```bash
-pip install flask werkzeug psycopg2-binary
+Create Postgres DB:
+```sql
+CREATE DATABASE kanban_db;
+CREATE USER kanban_user WITH PASSWORD 'kanban_pass';
+GRANT ALL PRIVILEGES ON DATABASE kanban_db TO kanban_user;
 ```
-
----
-
-### 5. Run the application
 
 ```bash
 python app.py
 ```
 
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
-
 ---
 
 ## 🌟 Features
 
-- Unique Kanban board per user
-- Secure authentication (passwords hashed)
-- Light/Dark mode and modern UI
-- Drag & Drop for tasks and statuses (fully dynamic, SPA)
+- Kanban + ToDo‑list (SPA)
+- Drag & Drop tasks and statuses
+- User profile + password change
+- Light/Dark theme
+- Secure authentication
+- Modern, adaptive UI
 
 ---
 
-## 📦 Project Structure
+## 👤 User profile
+
+- Edit e-mail, country, name
+- Change password via modal
+- Quick logout
+
+---
+
+## 🗂️ Structure
 
 ```
 kanban-flask/
-│
-├── app.py              # Main Flask app
-├── user_data/          # User data storage
-├── templates/
-│   ├── home.html       # Home page
-│   └── kanban.html     # Kanban board
+├── app.py
+├── docker-compose.yml
+├── Dockerfile
+├── nginx.conf
+├── requirements.txt
 ├── static/
-│   ├── style.css       # Main styles
-│   └── home.css        # Home page styles
+│   ├── style.css
+│   └── home.css
+├── templates/
+│   ├── home.html
+│   ├── kanban.html
+│   ├── todo.html
 └── README.md
-```
-
----
-
-## 🛠️ Dependencies
-
-```python
-import os
-import json
-import time
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
-from werkzeug.security import generate_password_hash, check_password_hash
 ```
 
 ---
 
 ## 📝 License
 
-GPL-3.0 license
-
-Author: [Yafoxin](https://t.me/yafoxin)
-
----
-
-> Have questions or suggestions? Create an [issue](https://github.com/yafoxins/kanban-flask/issues) or contact the author!
+GPL‑3.0  
+Author: Yafoxin ([@yafoxins](https://t.me/yafoxins))
