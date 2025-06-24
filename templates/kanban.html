@@ -20,35 +20,147 @@
   </head>
   <body>
     <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <span
-          class="material-icons"
-          style="font-size: 2em; color: var(--primary)"
-          >dashboard</span
-        >
-        <b style="font-size: 1.2em"
-          ><span style="color: var(--primary)">{{ username }}</span></b
-        >
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-nav">
+          <button
+            class="nav-btn{% if active_page == 'kanban' %} active{% endif %}"
+            id="kanban-btn"
+            type="button"
+          >
+            <span class="material-icons">dashboard</span>
+            <span>Kanban</span>
+          </button>
+          <button
+            class="nav-btn{% if active_page == 'todo' %} active{% endif %}"
+            id="todo-btn"
+            type="button"
+          >
+            <span class="material-icons">check_circle</span>
+            <span>ToDo‑лист</span>
+          </button>
+        </div>
+        <div class="topbar-right">
+          <button
+            id="theme-toggle-btn"
+            class="theme-toggle-btn"
+            title="Переключить тему"
+          >
+            <span class="material-icons" id="theme-icon">dark_mode</span>
+          </button>
+          <div class="user-menu-wrap">
+            <button id="user-menu-btn" class="user-menu-btn" type="button">
+              <span class="material-icons">account_circle</span>
+              <span class="user-menu-name">{{ username }}</span>
+              <span class="material-icons">expand_more</span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown">
+              <button class="dropdown-item" id="profile-btn" type="button">
+                <span class="material-icons">person</span>Профиль
+              </button>
+              <button
+                class="dropdown-item"
+                id="change-password-btn"
+                type="button"
+              >
+                <span class="material-icons">lock</span>Сменить пароль
+              </button>
+              <button class="dropdown-item" id="logout-btn" type="button">
+                <span class="material-icons">logout</span>Выйти
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="topbar-right">
-        <button
-          id="theme-toggle-btn"
-          class="theme-toggle-btn"
-          title="Переключить тему"
-        >
-          <span class="material-icons" id="theme-icon">dark_mode</span>
-        </button>
-        <a class="topbar-link" href="{{ url_for('logout', username=username) }}"
-          ><span class="material-icons">logout</span></a
-        >
-      </div>
-    </div>
-    <!-- Динамическая доска -->
-    <div class="kanban-board"></div>
-
+    </header>
+    <!-- Kanban board -->
+    <main>
+      <div class="kanban-board"></div>
+    </main>
     <footer>© 2025 — Flask Kanban.</footer>
 
+    <!-- Модалка: профиль пользователя -->
+    <div class="modal-backdrop" id="profile-modal" style="display: none">
+      <div class="modal modal-profile">
+        <button class="modal-close profile-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <span class="material-icons">account_circle</span>
+          </div>
+          <div class="profile-username" id="profile-username"></div>
+          <div class="profile-fields">
+            <div class="profile-field">
+              <span class="profile-label">E-mail:</span>
+              <span class="profile-value" id="profile-email"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Страна:</span>
+              <span class="profile-value" id="profile-country"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Имя:</span>
+              <span class="profile-value" id="profile-fullname"></span>
+            </div>
+          </div>
+          <button class="plus-btn profile-close" type="button">Закрыть</button>
+        </div>
+      </div>
+    </div>
+    <!-- Модалка: смена пароля -->
+    <div
+      class="modal-backdrop"
+      id="change-password-modal"
+      style="display: none"
+    >
+      <div class="modal modal-password">
+        <button
+          class="modal-close"
+          onclick="closeChangePasswordModal()"
+          type="button"
+          aria-label="Закрыть"
+        >
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-password-content">
+          <div class="modal-password-icon">
+            <span class="material-icons">lock_reset</span>
+          </div>
+          <div class="modal-title modal-password-title">Смена пароля</div>
+          <form class="modal-form" id="change-password-form" autocomplete="off">
+            <input
+              type="password"
+              name="old_password"
+              id="old_password"
+              placeholder="Старый пароль"
+              required
+            />
+            <input
+              type="password"
+              name="new_password"
+              id="new_password"
+              placeholder="Новый пароль"
+              required
+              minlength="3"
+            />
+            <input
+              type="password"
+              name="new_password2"
+              id="new_password2"
+              placeholder="Повторите новый пароль"
+              required
+              minlength="3"
+            />
+            <button type="submit" class="plus-btn">
+              <span class="material-icons">sync_lock</span>
+              Сменить
+            </button>
+            <div id="change-password-error" class="modal-error"></div>
+          </form>
+        </div>
+      </div>
+    </div>
     <!-- Модалка: задача -->
     <div class="modal-backdrop" id="task-modal" style="display: none">
       <div class="modal">
@@ -87,7 +199,6 @@
         ></div>
       </div>
     </div>
-
     <!-- Модалка: новый статус -->
     <div class="modal-backdrop" id="status-modal" style="display: none">
       <div class="modal">
@@ -119,7 +230,6 @@
         ></div>
       </div>
     </div>
-
     <script>
       // ===================== Theme =====================
       function setTheme(dark) {
@@ -141,6 +251,89 @@
         setTheme(theme === "dark");
       })();
 
+      // ========== User Dropdown ==========
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userDropdown = document.getElementById("user-dropdown");
+      userMenuBtn.onclick = function (e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle("show");
+      };
+      document.body.addEventListener("click", function () {
+        userDropdown.classList.remove("show");
+      });
+      userDropdown.onclick = function (e) {
+        e.stopPropagation();
+      };
+
+      // Открытие профиля
+      document.getElementById("profile-btn").onclick = async function () {
+        userDropdown.classList.remove("show");
+        let r = await fetch(`/api/profile/{{ username }}`);
+        let data = await r.json();
+        document.getElementById(
+          "profile-username"
+        ).innerHTML = `<span>${data.username}</span>`;
+        document.getElementById("profile-email").textContent =
+          data.email || "-";
+        document.getElementById("profile-country").textContent =
+          data.country || "-";
+        document.getElementById("profile-fullname").textContent =
+          data.fullname || "-";
+        document.getElementById("profile-modal").style.display = "flex";
+      };
+      function closeProfileModal() {
+        document.getElementById("profile-modal").style.display = "none";
+      }
+      document.querySelectorAll(".profile-close").forEach((btn) => {
+        btn.onclick = closeProfileModal;
+      });
+      document.getElementById("profile-modal").onclick = function (e) {
+        if (e.target === this) closeProfileModal();
+      };
+
+      // ========== Смена пароля ==========
+      document.getElementById("change-password-btn").onclick = function () {
+        userDropdown.classList.remove("show");
+        document.getElementById("change-password-form").reset();
+        document.getElementById("change-password-error").innerText = "";
+        document.getElementById("change-password-modal").style.display = "flex";
+      };
+      function closeChangePasswordModal() {
+        document.getElementById("change-password-modal").style.display = "none";
+      }
+      document.getElementById("change-password-modal").onclick = function (e) {
+        if (e.target === this) closeChangePasswordModal();
+      };
+      document.getElementById("change-password-form").onsubmit =
+        async function (e) {
+          e.preventDefault();
+          let oldPass = document.getElementById("old_password").value;
+          let newPass = document.getElementById("new_password").value;
+          let newPass2 = document.getElementById("new_password2").value;
+          let err = document.getElementById("change-password-error");
+          if (newPass !== newPass2) {
+            err.innerText = "Пароли не совпадают!";
+            return;
+          }
+          let resp = await fetch(`/{{ username }}/api/change_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              old_password: oldPass,
+              new_password: newPass,
+            }),
+          });
+          if (resp.ok) {
+            err.style.color = "#32c964";
+            err.innerText = "Пароль изменён!";
+            setTimeout(closeChangePasswordModal, 900);
+          } else {
+            err.style.color = "#d11a2a";
+            let data = await resp.json();
+            err.innerText = data.error || "Ошибка смены пароля!";
+          }
+        };
+
       // ===================== State =====================
       let STATUSES = [];
       let TASKS = [];
@@ -152,7 +345,6 @@
           fetch(`/${USERNAME}/api/statuses`).then((r) => r.json()),
           fetch(`/${USERNAME}/api/tasks`).then((r) => r.json()),
         ]);
-        // Сервер отдаёт tasks в {"tasks": [...]}, если поменяешь — поправь тут!
         if (Array.isArray(tasks)) TASKS = tasks;
         else TASKS = tasks.tasks;
         STATUSES = statuses;
@@ -163,26 +355,24 @@
       function renderBoard() {
         const board = document.querySelector(".kanban-board");
         board.innerHTML = "";
-        // Колонки
         STATUSES.forEach((status) => {
           const col = document.createElement("div");
           col.className = "kanban-column";
           col.dataset.status = status.code;
           col.innerHTML = `
-            <div class="kanban-col-title">
-                <span class="status-title" title="${status.title}">${status.title}</span>
-                <button class="icon-btn delete-status-btn" data-status-code="${status.code}" title="Удалить статус">
-                    <span class="material-icons">close</span>
-                </button>
-            </div>
-            <div class="kanban-tasks" id="tasks-${status.code}"></div>
-            <button class="plus-btn kanban-add-task-btn" data-status-code="${status.code}">
-                <span class="material-icons">add</span>
-                <span>Добавить задачу</span>
+          <div class="kanban-col-title">
+            <span class="status-title" title="${status.title}">${status.title}</span>
+            <button class="icon-btn delete-status-btn" data-status-code="${status.code}" title="Удалить статус">
+              <span class="material-icons">close</span>
             </button>
+          </div>
+          <div class="kanban-tasks" id="tasks-${status.code}"></div>
+          <button class="plus-btn kanban-add-task-btn" data-status-code="${status.code}">
+            <span class="material-icons">add</span>
+            <span>Добавить задачу</span>
+          </button>
         `;
           board.appendChild(col);
-          // Задачи
           const tasksBlock = col.querySelector(".kanban-tasks");
           const tasks = TASKS.filter((t) => t.status === status.code);
           if (tasks.length === 0) {
@@ -198,17 +388,16 @@
         addStatusCol.className = "kanban-column add-status-column";
         addStatusCol.innerHTML = `
         <button id="open-status-modal" class="kanban-add-status-btn">
-            <span class="material-icons">add_box</span>
-            <span>Новый статус</span>
+          <span class="material-icons">add_box</span>
+          <span>Новый статус</span>
         </button>
-    `;
+      `;
         board.appendChild(addStatusCol);
 
         bindAllHandlers();
         updateDnD();
       }
 
-      // Создание карточки задачи
       function createTaskCard(task) {
         const div = document.createElement("div");
         div.className = "kanban-task";
@@ -225,21 +414,20 @@
             : ""
         }
         <div class="task-actions">
-            <button class="icon-btn edit-btn" title="Редактировать" data-task-id="${
-              task.id
-            }">
-                <span class="material-icons">edit</span>
-            </button>
-            <button class="icon-btn delete-btn" title="Удалить" data-task-id="${
-              task.id
-            }">
-                <span class="material-icons">delete</span>
-            </button>
+          <button class="icon-btn edit-btn" title="Редактировать" data-task-id="${
+            task.id
+          }">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="icon-btn delete-btn" title="Удалить" data-task-id="${
+            task.id
+          }">
+            <span class="material-icons">delete</span>
+          </button>
         </div>
-    `;
+      `;
         return div;
       }
-
       function escapeHTML(str) {
         return String(str).replace(
           /[&<>"']/g,
@@ -285,7 +473,9 @@
           });
         });
       }
-
+      document.getElementById("logout-btn").onclick = function () {
+        window.location.href = "{{ url_for('logout', username=username) }}";
+      };
       // ===================== Modal: Task =====================
       function openTaskModal({
         edit = false,
@@ -300,7 +490,6 @@
         document.getElementById("edit_task_id").value = id || "";
         document.getElementById("task_text").value = text || "";
         document.getElementById("task_description").value = description || "";
-        // Рендерим опции статусов каждый раз, чтобы не устарели
         let statusSel = document.getElementById("task_status");
         statusSel.innerHTML = STATUSES.map(
           (s) =>
@@ -380,13 +569,11 @@
 
       // ===================== Handlers =====================
       function bindAllHandlers() {
-        // Кнопка "добавить задачу"
         document.querySelectorAll(".kanban-add-task-btn").forEach((btn) => {
           btn.onclick = function () {
             openTaskModal({ status: btn.dataset.statusCode });
           };
         });
-        // Кнопка "редактировать"
         document.querySelectorAll(".edit-btn").forEach((btn) => {
           btn.onclick = function () {
             let taskId = btn.dataset.taskId;
@@ -402,7 +589,6 @@
             }
           };
         });
-        // Кнопка "удалить"
         document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.onclick = async function () {
             if (!confirm("Удалить задачу?")) return;
@@ -414,12 +600,10 @@
             else alert("Ошибка удаления!");
           };
         });
-        // Кнопка "добавить статус"
         let addStatusBtn = document.getElementById("open-status-modal");
         if (addStatusBtn) {
           addStatusBtn.onclick = openStatusModal;
         }
-        // Кнопка "удалить статус"
         document.querySelectorAll(".delete-status-btn").forEach((btn) => {
           btn.onclick = async function () {
             if (!confirm("Удалить статус?")) return;
@@ -433,6 +617,20 @@
         });
       }
       fetchBoard();
+
+      // Topbar навигация
+      document.getElementById("kanban-btn").onclick = () => {
+        location.href = `/${USERNAME}/kanban`;
+      };
+      document.getElementById("todo-btn").onclick = () => {
+        location.href = `/${USERNAME}/todo`;
+      };
+      // выделение активного:
+      if (window.location.pathname.includes("/kanban")) {
+        document.getElementById("kanban-btn").classList.add("active");
+      } else {
+        document.getElementById("todo-btn").classList.add("active");
+      }
     </script>
   </body>
 </html>

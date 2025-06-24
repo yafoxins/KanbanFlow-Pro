@@ -1,8 +1,9 @@
 import os
 import time
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, g
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 
 app = Flask(__name__)
 app.secret_key = 'super-strong-secret-key'
@@ -23,8 +24,18 @@ def init_db():
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        email TEXT NOT NULL,
+        country TEXT NOT NULL,
+        fullname TEXT
     );
+    CREATE TABLE IF NOT EXISTS todos (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    date DATE,
+    done BOOLEAN DEFAULT FALSE
+   );
     CREATE TABLE IF NOT EXISTS statuses (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -76,13 +87,21 @@ def api_register():
     data = request.get_json()
     username = data.get('username', '').strip()
     password = data.get('password', '').strip()
-    if len(username) < 2 or len(password) < 3:
+    email = data.get('email', '').strip()
+    country = data.get('country', '').strip()
+    fullname = data.get('fullname', '').strip()
+
+    # Валидация
+    if (len(username) < 2 or len(password) < 3 or
+        not email or '@' not in email or
+            not country):
         return jsonify({'error': 'bad'}), 400
+
     conn = get_db()
     cur = conn.cursor()
     try:
-        cur.execute('INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id',
-                    (username, generate_password_hash(password)))
+        cur.execute('INSERT INTO users (username, password, email, country, fullname) VALUES (%s, %s, %s, %s, %s) RETURNING id',
+                    (username, generate_password_hash(password), email, country, fullname))
         user_id = cur.fetchone()[0]
         statuses = [("todo", "Запланировано"),
                     ("progress", "В работе"),
@@ -132,7 +151,7 @@ def logout(username):
 def kanban(username):
     if not is_authenticated(username):
         return redirect(url_for('home'))
-    return render_template('kanban.html', username=username)
+    return render_template('kanban.html', username=username, active_page="kanban")
 
 
 @app.route('/<username>/api/statuses', methods=['GET'])
@@ -257,6 +276,111 @@ def api_delete_status(username, code):
     cur.close()
     conn.close()
     return jsonify({'success': True})
+
+
+@app.route('/api/profile/<username>')
+def api_profile(username):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'SELECT username, email, country, fullname FROM users WHERE username=%s', (username,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not row:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({
+        'username': row[0],
+        'email': row[1],
+        'country': row[2],
+        'fullname': row[3]
+    })
+
+
+@app.route('/<username>/api/change_password', methods=['POST'])
+def api_change_password(username):
+    if not is_authenticated(username):
+        return jsonify({'error': 'auth'}), 401
+    data = request.get_json()
+    old_password = data.get('old_password', '').strip()
+    new_password = data.get('new_password', '').strip()
+    if len(new_password) < 3:
+        return jsonify({'error': 'Пароль слишком короткий'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT password FROM users WHERE username=%s', (username,))
+    user = cur.fetchone()
+    if not user or not check_password_hash(user[0], old_password):
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Старый пароль неверен!'}), 400
+    cur.execute('UPDATE users SET password=%s WHERE username=%s',
+                (generate_password_hash(new_password), username))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/<username>/todo')
+def todo(username):
+    if not is_authenticated(username):
+        return redirect(url_for('home'))
+    return render_template('todo.html', username=username, active_page="todo")
+
+
+@app.route('/<username>/api/todos', methods=['GET', 'POST'])
+def api_todos(username):
+    if not is_authenticated(username):
+        return jsonify({'error': 'auth'}), 401
+    conn = get_db()
+    cur = conn.cursor()
+    if request.method == 'GET':
+        cur.execute(
+            'SELECT id, text, date, done FROM todos WHERE user_id=(SELECT id FROM users WHERE username=%s) ORDER BY (NOT done), date NULLS LAST, id DESC', (username,))
+        todos = [
+            {'id': row[0], 'text': row[1], 'date': row[2].isoformat(
+            ) if row[2] else None, 'done': row[3]}
+            for row in cur.fetchall()
+        ]
+        cur.close()
+        conn.close()
+        return jsonify(todos)
+    else:
+        data = request.get_json()
+        text = data.get('text', '').strip()
+        date_val = data.get('date', None)
+        cur.execute('INSERT INTO todos (user_id, text, date) VALUES ((SELECT id FROM users WHERE username=%s), %s, %s) RETURNING id, date',
+                    (username, text, date_val))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'id': row[0], 'text': text, 'date': row[1].isoformat() if row[1] else None, 'done': False})
+
+
+@app.route('/<username>/api/todos/<int:todo_id>', methods=['PATCH', 'DELETE'])
+def api_todo_modify(username, todo_id):
+    if not is_authenticated(username):
+        return jsonify({'error': 'auth'}), 401
+    conn = get_db()
+    cur = conn.cursor()
+    if request.method == 'DELETE':
+        cur.execute(
+            'DELETE FROM todos WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (todo_id, username))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
+    else:
+        data = request.get_json()
+        done = data.get('done')
+        cur.execute('UPDATE todos SET done=%s WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)',
+                    (done, todo_id, username))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
 
 
 if __name__ == '__main__':

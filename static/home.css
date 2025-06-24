@@ -8,6 +8,8 @@
   --shadow: 0 8px 36px #5271ff17, 0 1.5px 10px #a6aefd11;
   --input-bg: #f7f8fc;
   --input-focus: #e9f0ff;
+  --footer-bg: #e7e9fc;
+  --border: #e3e7fd;
 }
 
 body.dark {
@@ -20,53 +22,309 @@ body.dark {
   --shadow: 0 8px 36px #1b23361d, 0 1.5px 10px #27346818;
   --input-bg: #22294b;
   --input-focus: #28325a;
+  --footer-bg: #23253e;
+  --border: #313554;
 }
 
+/* Базовые сбросы */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  height: 100%; min-height: 100vh; width: 100%;
+  margin: 0; padding: 0; font-family: 'Roboto', Arial, sans-serif;
+  background: var(--main-bg); color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* Флекс-структура */
 body {
-  min-height: 100vh;
-  background: var(--main-bg);
-  font-family: 'Roboto', Arial, sans-serif;
-  color: var(--text-main);
-  margin: 0;
-  padding: 0;
+  display: flex; flex-direction: column; min-height: 100vh;
 }
 
+/* ---------- TOPBAR ---------- */
+.topbar {
+  width: 100vw;
+  background: var(--panel-bg);
+  border-bottom: 1.1px solid var(--border);
+  box-shadow: 0 4px 22px #5271ff10, 0 1px 6px #a6aefd0a;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 60px; position: sticky; top: 0; left: 0; z-index: 100;
+  border-radius: 0 0 18px 18px; box-sizing: border-box;
+}
+
+.topbar-inner {
+  width: 100%; max-width: 950px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px;
+}
+.topbar-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.topbar-left .material-icons { font-size: 1.5em; color: var(--primary); }
+.topbar-left b { color: var(--primary); font-size: 1.18em; font-weight: 900; white-space: nowrap; user-select: none; }
+.topbar-right { display: flex; align-items: center; }
+.theme-toggle-btn {
+  background: #fff;
+  color: var(--primary);
+  border: 1.4px solid var(--border);
+  border-radius: 10px;
+  width: 38px; height: 38px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 6px #5271ff06;
+  font-size: 1.1em;
+  transition: background 0.17s, color 0.17s, border 0.15s, box-shadow 0.14s;
+}
+.theme-toggle-btn .material-icons { font-size: 1.27em; }
+
+/* --- Dark mode --- */
+body.dark .theme-toggle-btn {
+  background: var(--panel-bg); /* тёмная, но не полностью сливается с фоном */
+  color: var(--primary);
+  border: 1.4px solid var(--border);
+  box-shadow: 0 1px 8px #10152e54;
+}
+body.dark .theme-toggle-btn .material-icons {
+  color: var(--primary); /* иконка синяя */
+  filter: drop-shadow(0 0 3px #5271ff44);
+}
+body.dark .theme-toggle-btn:hover,
+body.dark .theme-toggle-btn:focus {
+  background: #202642;
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 10px #415ebf3b;
+}
+body.dark .theme-toggle-btn:hover .material-icons {
+  color: #fff;
+  filter: drop-shadow(0 0 5px #415ebf77);
+}
+
+/* Для светлой темы hover */
+.theme-toggle-btn:hover,
+.theme-toggle-btn:focus {
+  background: #e6edff;
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+
+/* ---------- MAIN ---------- */
+main {
+  flex: 1 1 auto; width: 100vw; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
 
 .kanban-home {
-  background: var(--panel-bg);
-  box-shadow: var(--shadow);
-  border-radius: 20px;
-  padding: 36px 38px 24px 38px;
-  max-width: 380px;
-  margin: 70px auto 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: var(--panel-bg); box-shadow: var(--shadow);
+  border-radius: 18px;
+  padding: 36px 38px 28px 38px; max-width: 390px; width: 98vw;
+  margin: 50px 0 0 0;
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 0; box-sizing: border-box; transition: all 0.22s;
 }
 
 .kanban-home-header {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  font-size: 1.2em;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 11px;
+  font-size: 1.15em; font-weight: 700; color: var(--primary); margin-bottom: 20px;
 }
-
-.kanban-home-header .material-icons {
-  font-size: 1.62em;
-}
+.kanban-home-header .material-icons { font-size: 1.62em; }
 
 .kanban-home-form {
+  width: 100%; display: flex; flex-direction: column; gap: 13px; margin-bottom: 14px;
+}
+.kanban-home-form input[type="text"] {
+  padding: 15px 15px; border-radius: 11px; border: 1.5px solid #d7dfff;
+  background: var(--input-bg); font-size: 1.1em; color: var(--text-main);
+  outline: none; transition: border 0.13s, background 0.11s; box-sizing: border-box;
+}
+.kanban-home-form input[type="text"]:focus {
+  border-color: var(--primary); background: var(--input-focus);
+}
+.kanban-home-form button {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--primary); color: #fff; border: none; border-radius: 13px;
+  font-size: 1.15em; font-weight: 700;
+  box-shadow: 0 2px 12px #5271ff22; padding: 15px 0 14px 0; margin-top: 6px;
+  cursor: pointer; transition: background 0.14s, box-shadow 0.12s;
+}
+.kanban-home-form button:hover { background: var(--primary-dark); }
+.kanban-home-form .material-icons { font-size: 1.16em; }
+
+.kanban-home-subtitle {
+  margin-top: 8px; color: var(--primary); text-align: center;
+  font-size: 1em; line-height: 1.6; font-weight: 600;
+}
+.kanban-home-subtitle b { color: var(--primary); font-weight: 800; }
+.kanban-home-subtitle, .kanban-home-subtitle br + span {
+  color: var(--text-soft); font-weight: 400; font-size: 1em;
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+  width: 100vw; background: var(--footer-bg); color: #7c85af;
+  text-align: center; font-size: 1em; border-top: 1.2px solid #5271ff11;
+  letter-spacing: 0.01em; line-height: 1.5; user-select: none;
+  box-shadow: 0 -2px 20px #22295522; padding: 14px 0 8px 0; margin: 0; box-sizing: border-box;
+}
+footer a {
+  color: #5271ff; font-weight: 800; margin-left: 7px; text-decoration: underline;
+  transition: color 0.16s, text-decoration 0.16s;
+}
+footer a:hover, footer a:focus {
+  color: #3952d2; text-decoration: underline wavy; text-underline-offset: 2px;
+}
+
+/* ---------- MODAL ---------- */
+.modal-backdrop {
+  position: fixed; z-index: 1000; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(80, 90, 120, 0.19); display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.19s; backdrop-filter: blur(8px);
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--panel-bg, #fff);
+  border-radius: 23px;
+  box-shadow: 0 10px 42px #3141b124, 0 2px 13px #0c16501e;
+  padding: 36px 32px 28px 32px;
   width: 100%;
+  max-width: 430px;
+  min-width: 0;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: max-width 0.22s cubic-bezier(.4,1.3,.5,1), padding 0.22s, border-radius 0.22s;
+}
+
+/* Брейкпоинты: */
+@media (max-width: 620px) {
+  .modal {
+    max-width: 95vw;
+    padding: 26px 4vw 22px 4vw;
+    border-radius: 16px;
+  }
+}
+@media (max-width: 420px) {
+  .modal {
+    max-width: 99vw;
+    padding: 16px 2vw 13px 2vw;
+    border-radius: 10px;
+  }
+}
+.modal-title {
+  font-size: 1.28em; font-weight: 900; color: var(--text-main);
+  margin-bottom: 22px; text-align: left; line-height: 1.18;
+}
+.modal-close {
+  position: absolute; top: 23px; right: 27px;
+  background: none; border: none; font-size: 2.2em; color: #7a7c8c; cursor: pointer;
+  transition: color .15s; z-index: 1;
+}
+.modal-close:hover { color: #d11a2a; }
+.modal-form {
+  display: flex; flex-direction: column; gap: 15px; align-items: stretch; margin-bottom: 0;
+}
+.modal-form input[type="password"], .modal-form input[type="text"], .modal-form input[type="email"], .modal-form select {
+  font-size: 1.13em; padding: 15px 13px; border-radius: 11px; border: 1.5px solid #d7dfff;
+  background: var(--input-bg); color: var(--text-main); outline: none;
+  transition: border 0.13s, background 0.11s;
+}
+.modal-form input[type="password"]:focus, .modal-form input[type="text"]:focus, .modal-form input[type="email"]:focus, .modal-form select:focus {
+  border-color: var(--primary); background: var(--input-focus); box-shadow: 0 0 0 3px #5271ff28;
+}
+body.dark .modal-form input,
+body.dark .kanban-home-form input { background: #202845; color: #dbe1f9; border-color: #33406c; }
+body.dark .modal-form input:focus,
+body.dark .kanban-home-form input:focus { background: #222a49; border-color: #729aff; }
+.modal-form .plus-btn {
+  background: var(--primary); color: #fff; border: none; border-radius: 13px;
+  box-shadow: 0 2px 12px #5271ff22; font-size: 1.17em; font-weight: 700;
+  padding: 15px 0 14px 0; min-width: 140px;
+  display: flex; align-items: center; gap: 13px; justify-content: center;
+  cursor: pointer; transition: background 0.13s, box-shadow 0.12s, color 0.13s; margin-left: 0; outline: none;
+}
+.modal-form .plus-btn:hover, .modal-form .plus-btn:focus {
+  background: var(--primary-dark); color: #fff; box-shadow: 0 4px 14px #5271ff31;
+}
+#modal-error {
+  color: #d11a2a; margin-top: 7px; font-size: 1.09em; text-align: center; min-height: 21px;
+}
+
+/* MODAL ADAPT */
+@media (max-width: 600px) {
+  .modal { min-width: 92vw; padding: 7vw 2vw; }
+  .modal-title { font-size: 1.13em; }
+}
+@media (max-width: 400px) {
+  .modal { padding: 4vw 1vw 2vw 1vw; }
+}
+
+/* ---------- MEDIA QUERIES ---------- */
+@media (max-width: 900px) {
+  .topbar-inner { max-width: 99vw; }
+  .kanban-home { max-width: 98vw; }
+}
+@media (max-width: 600px) {
+  .topbar { min-height: 48px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 14px #5271ff12; }
+  .topbar-inner { padding: 0 8px; }
+  .topbar-left .material-icons { font-size: 1.3em; }
+  .topbar-left b { font-size: 1em; }
+  .theme-toggle-btn { width: 32px; height: 32px; border-radius: 7px; font-size: 1em; }
+  .kanban-home { margin-top: 13vw; padding: 7vw 2vw 5vw 2vw; max-width: 99vw; border-radius: 7px; min-width: 0; }
+  .kanban-home-header { font-size: 0.95em; }
+  .kanban-home-form input[type="text"] { font-size: 0.98em; padding: 11px 7px; }
+  .kanban-home-form button { font-size: 0.97em; padding: 11px 0 11px 0; }
+  .kanban-home-subtitle { font-size: 0.92em; }
+  footer { font-size: 0.92em; padding: 10px 0 7px 0; }
+}
+@media (max-width: 400px) {
+  .kanban-home { padding: 4vw 1vw 3vw 1vw; }
+  .topbar-inner { padding: 0 3px; }
+}
+/* -------- MODAL DESKTOP: шире и красивее -------- */
+@media (min-width: 700px) {
+  .modal {
+    min-width: 420px;
+    max-width: 96vw;
+    padding: 38px 38px 30px 38px;
+    border-radius: 30px;
+    /* Можно увеличить тень для "воздуха" */
+    box-shadow: 0 18px 56px #5271ff23, 0 3px 14px #a6aefd22;
+  }
+  .modal-title {
+    font-size: 1.39em;
+    margin-bottom: 26px;
+  }
+  .modal-form input,
+  .modal-form select {
+    font-size: 1.16em;
+    padding: 17px 15px;
+  }
+  .modal-form .plus-btn {
+    font-size: 1.21em;
+    padding: 16px 0 15px 0;
+    min-width: 160px;
+  }
+  .modal-close {
+    top: 27px;
+    right: 31px;
+    font-size: 2.38em;
+  }
+}
+.kanban-login-area {
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 11px;
+  animation: fadeIn 0.22s;
+}
+.kanban-login-area.visible {
+  display: flex;
+}
+.kanban-login-form {
   display: flex;
   flex-direction: column;
   gap: 13px;
-  margin-bottom: 14px;
 }
-
-.kanban-home-form input[type="text"] {
+.kanban-login-form input[type="password"] {
   padding: 15px 15px;
   border-radius: 11px;
   border: 1.5px solid #d7dfff;
@@ -76,13 +334,11 @@ body {
   outline: none;
   transition: border 0.13s, background 0.11s;
 }
-
-.kanban-home-form input[type="text"]:focus {
+.kanban-login-form input[type="password"]:focus {
   border-color: var(--primary);
   background: var(--input-focus);
 }
-
-.kanban-home-form button {
+.kanban-login-form button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +347,7 @@ body {
   color: #fff;
   border: none;
   border-radius: 13px;
-  font-size: 1.17em;
+  font-size: 1.15em;
   font-weight: 700;
   box-shadow: 0 2px 12px #5271ff22;
   padding: 15px 0 14px 0;
@@ -99,83 +355,21 @@ body {
   cursor: pointer;
   transition: background 0.14s, box-shadow 0.12s;
 }
-.kanban-home-form button:hover {
+.kanban-login-form button:hover {
   background: var(--primary-dark);
 }
-
-.kanban-home-form .material-icons {
-  font-size: 1.16em;
-}
-
-.kanban-home-subtitle {
-  margin-top: 8px;
-  color: var(--primary);
-  text-align: center;
-  font-size: 1em;
-  line-height: 1.6;
+#login-error {
+  color: #d11a2a;
+  min-height: 20px;
   font-weight: 600;
+  margin-top: 3px;
+  text-align: center;
 }
-.kanban-home-subtitle b {
-  color: var(--primary);
-  font-weight: 800;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px);}
+  to   { opacity: 1; transform: none;}
 }
-.kanban-home-subtitle,
-.kanban-home-subtitle br + span {
-  color: var(--text-soft);
-  font-weight: 400;
-  font-size: 1em;
-}
-
-/* ==== Модалка логина ==== */
-.modal-backdrop {
-  position: fixed;
-  z-index: 1000;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(80, 90, 120, 0.19);
-  display: flex; align-items: center; justify-content: center;
-  animation: fadeIn 0.19s;
-  backdrop-filter: blur(8px);
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.modal {
-  background: var(--panel-bg);
-  border-radius: 23px;
-  box-shadow: 0 10px 42px #3141b124, 0 2px 13px #0c16501e;
-  padding: 32px 30px 28px 30px;
-  min-width: 390px;
-  max-width: 96vw;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.modal-title {
-  font-size: 1.68em;
-  font-weight: 900;
-  color: var(--text-main);
-  margin-bottom: 24px;
-  text-align: left;
-  line-height: 1.18;
-}
-.modal-close {
-  position: absolute; top: 23px; right: 27px;
-  background: none; border: none;
-  font-size: 2.2em; color: #7a7c8c; cursor: pointer;
-  transition: color .15s;
-  z-index: 1;
-}
-.modal-close:hover { color: #d11a2a; }
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: stretch;
-  margin-bottom: 0;
-}
-
-.modal-form input[type="password"] {
+.modal-form select {
   font-size: 1.13em;
   padding: 15px 13px;
   border-radius: 11px;
@@ -184,137 +378,17 @@ body {
   color: var(--text-main);
   outline: none;
   transition: border 0.13s, background 0.11s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 18px;
+  padding-right: 35px;
 }
-.modal-form input[type="password"]:focus {
+.modal-form select:focus {
   border-color: var(--primary);
   background: var(--input-focus);
-}
-
-body.dark .modal-form input[type="password"],
-body.dark .kanban-home-form input[type="text"] {
-  background: #202845;
-  color: #dbe1f9;
-  border-color: #33406c;
-}
-body.dark .modal-form input[type="password"]:focus,
-body.dark .kanban-home-form input[type="text"]:focus {
-  background: #222a49;
-  border-color: #729aff;
-}
-
-.modal-form .plus-btn {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 13px;
-  box-shadow: 0 2px 12px #5271ff22;
-  font-size: 1.17em;
-  font-weight: 700;
-  padding: 15px 0 14px 0;
-  min-width: 140px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.13s, box-shadow 0.12s, color 0.13s;
-  margin-left: 0;
-  outline: none;
-}
-.modal-form .plus-btn:hover, .modal-form .plus-btn:focus {
-  background: var(--primary-dark);
-  color: #fff;
-  box-shadow: 0 4px 14px #5271ff31;
-}
-#modal-error {
-  color: #d11a2a;
-  margin-top: 7px;
-  font-size: 1.09em;
-  text-align: center;
-  min-height: 21px;
-}
-footer {
-  margin-top: auto;
-  padding: 15px 0 12px 0;
-  background: #e7e9fc;
-  color: #7c85af;
-  text-align: center;
-  font-size: 1em;
-  border-top: 1.2px solid #5271ff11;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
-  user-select: none;
-  box-shadow: 0 -2px 20px #22295522;
-}
-body.dark footer {
-  background: var(--panel-bg);
-  color: #7c85af;
-  box-shadow: 0 -2px 20px #22295528;
-}
-@media (max-width: 650px) {
-  .kanban-home { padding: 11vw 3vw; min-width: 0; max-width: 99vw;}
-  .modal { min-width: 92vw; padding: 7vw 2vw;}
-  .modal-title { font-size: 1.3em; }
-}
-
-/* === Анимация появления модалки === */
-@keyframes modalPop {
-  0%   { opacity: 0; transform: scale(0.91) translateY(38px);}
-  70%  { opacity: 1; transform: scale(1.04) translateY(-9px);}
-  100% { opacity: 1; transform: scale(1.0) translateY(0);}
-}
-.modal {
-  animation: modalPop 0.38s cubic-bezier(.26,1.34,.46,.89);
-  will-change: transform, opacity;
-}
-
-/* === Анимация появления формы .kanban-home === */
-@keyframes homeFadeIn {
-  from { opacity: 0; transform: translateY(40px) scale(.97);}
-  to   { opacity: 1; transform: none;}
-}
-.kanban-home {
-  animation: homeFadeIn 0.55s cubic-bezier(.26,1.34,.46,.89);
-}
-
-/* === Glow-анимация для кнопки === */
-.kanban-home-form button, .modal-form .plus-btn {
-  box-shadow: 0 3px 12px #5271ff18, 0 0px 0 #5271ff99;
-  transition: background 0.13s, box-shadow 0.22s cubic-bezier(.23,1.24,.54,.94), transform 0.12s;
-}
-.kanban-home-form button:hover, .modal-form .plus-btn:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 5px 18px 0 #4a72ff33, 0 0px 0 #5271ff;
-  transform: scale(1.04);
-}
-
-/* === Input highlight (shine) при фокусе === */
-.kanban-home-form input[type="text"]:focus, .modal-form input[type="password"]:focus {
   box-shadow: 0 0 0 3px #5271ff28;
-}
-.modal-form input[type="password"]:focus {
-  box-shadow: 0 0 0 3px #729aff28;
-}
-
-/* === Анимация ошибки в модалке === */
-@keyframes shake {
-  0%, 100% { transform: translateX(0);}
-  16% { transform: translateX(-8px);}
-  32% { transform: translateX(8px);}
-  48% { transform: translateX(-6px);}
-  64% { transform: translateX(6px);}
-  80% { transform: translateX(-3px);}
-}
-#modal-error.animated {
-  animation: shake 0.35s;
-  color: #d11a2a;
-}
-
-/* === Мелкие доработки для красоты */
-.kanban-home-form input[type="text"], .modal-form input[type="password"] {
-  transition: border 0.15s, background 0.13s, box-shadow 0.22s cubic-bezier(.23,1.24,.54,.94);
-}
-.kanban-home-form button:active, .modal-form .plus-btn:active {
-  transform: scale(0.97);
-  box-shadow: 0 2px 6px #5271ff11;
 }

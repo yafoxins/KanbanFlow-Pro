@@ -1,143 +1,344 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Flask Kanban Board</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='home.css') }}" rel="stylesheet"> 
-</head>
-<body>
-    <div class="topbar">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='home.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
         <div class="topbar-left">
-            <span class="material-icons">grid_view</span>
-            <b>Flask Kanban Board</b>
+          <span class="material-icons">grid_view</span>
+          <b>Flask Kanban Board</b>
         </div>
         <div class="topbar-right">
-            <button class="theme-toggle-btn" id="theme-toggle-btn" type="button">
-                <span class="material-icons" id="theme-icon">dark_mode</span>
-            </button>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" type="button">
+            <span class="material-icons" id="theme-icon">dark_mode</span>
+          </button>
         </div>
-    </div>
+      </div>
+    </header>
     <main>
-        <div class="kanban-home">
-    <div class="kanban-home-header">
-        <span class="material-icons">person</span>
-        <span>Добро пожаловать!</span>
-    </div>
-    <form class="kanban-home-form" id="user-form" autocomplete="off">
-        <input type="text" name="username" placeholder="Имя пользователя" required pattern="[a-zA-Z0-9_-]{2,32}" maxlength="32" autocomplete="off">
-        <button type="submit"><span class="material-icons">login</span>Открыть доску</button>
-    </form>
-    <div class="kanban-home-subtitle">
-        <b>Каждый пользователь — своя уникальная канбан-доска.</b><br>
-        Всё хранится отдельно и защищено паролем.
-    </div>
-</div>
+      <div class="kanban-home">
+        <div class="kanban-home-header">
+          <span class="material-icons">person</span>
+          <span>Добро пожаловать!</span>
+        </div>
+        <!-- Форма только для username -->
+        <form
+          class="kanban-home-form"
+          id="user-form"
+          autocomplete="off"
+          style="width: 100%"
+        >
+          <input
+            type="text"
+            name="username"
+            id="username-input"
+            placeholder="Имя пользователя"
+            required
+            pattern="[a-zA-Z0-9_-]{2,32}"
+            maxlength="32"
+            autocomplete="off"
+          />
+          <button id="username-next-btn" type="submit">
+            <span class="material-icons">arrow_forward</span>Открыть доску
+          </button>
+        </form>
+
+        <!-- Блок логина — ВНЕ формы! -->
+        <div id="login-area" class="kanban-login-area">
+          <form class="kanban-login-form" onsubmit="return false;">
+            <input
+              type="password"
+              name="password"
+              id="login-password"
+              placeholder="Пароль"
+              required
+              autocomplete="current-password"
+            />
+            <button id="login-btn" type="button">
+              <span class="material-icons">login</span>Войти в доску
+            </button>
+          </form>
+          <div id="login-error"></div>
+        </div>
+
+        <div class="kanban-home-subtitle">
+          <b>Каждый пользователь — своя уникальная канбан-доска.</b><br />
+          Всё хранится отдельно и защищено паролем.
+        </div>
+      </div>
     </main>
     <footer>
-        © 2025 — Flask Kanban.
+      © 2025 — Flask Kanban. | <a href="https://github.com/yafoxins">GitHub</a>
     </footer>
-    <!-- Модалка авторизации/регистрации -->
-    <div class="modal-backdrop" id="login-modal" style="display:none;">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-            <div class="modal-title" id="modal-title"></div>
-            <form id="modal-form" class="modal-form">
-                <input type="password" name="password" id="modal-password" placeholder="Пароль" required>
-                <input type="password" name="password2" id="modal-password2" placeholder="Повторите пароль" style="display:none;">
-                <button type="submit" class="plus-btn">
-                    <span class="material-icons">login</span>
-                    <span id="modal-btn"></span>
-                </button>
-            </form>
-            <div id="modal-error"></div>
-        </div>
+    <!-- Модалка только для регистрации -->
+    <div class="modal-backdrop" id="register-modal" style="display: none">
+      <div class="modal">
+        <button class="modal-close" onclick="closeRegisterModal()">
+          &times;
+        </button>
+        <div class="modal-title" id="register-title"></div>
+        <form id="register-form" class="modal-form" autocomplete="off">
+          <input
+            type="text"
+            name="fullname"
+            placeholder="Имя (необязательно)"
+          />
+          <input type="email" name="email" placeholder="E-mail" required />
+          <!-- Исправленный селект -->
+          <select name="country" required></select>
+          <input
+            type="password"
+            name="password"
+            placeholder="Пароль"
+            required
+            minlength="3"
+          />
+          <input
+            type="password"
+            name="password2"
+            placeholder="Повторите пароль"
+            required
+            minlength="3"
+          />
+          <button type="submit" class="plus-btn">
+            <span class="material-icons">how_to_reg</span>
+            <span id="register-btn-text">Создать</span>
+          </button>
+          <div id="register-error"></div>
+        </form>
+      </div>
     </div>
-<script>
-    // ======= Переключатель темы =======
-    function setTheme(dark) {
-        if(dark) {
-            document.body.classList.add('dark');
-            localStorage.setItem('kanban-theme', 'dark');
-            document.getElementById('theme-icon').innerText = 'light_mode';
+    <script>
+      // ===== Список стран =====
+      const COUNTRIES = [
+        "Россия",
+        "Украина",
+        "Беларусь",
+        "Казахстан",
+        "США",
+        "Германия",
+        "Франция",
+        "Италия",
+        "Испания",
+        "Великобритания",
+        "Китай",
+        "Япония",
+        "Южная Корея",
+        "Канада",
+        "Польша",
+        "Латвия",
+        "Литва",
+        "Эстония",
+        "Армения",
+        "Грузия",
+        "Израиль",
+        "Турция",
+        "Бразилия",
+        "Аргентина",
+        "Индия",
+        "Австралия",
+        "Швеция",
+        "Норвегия",
+        "Дания",
+        "Финляндия",
+        "Швейцария",
+        "Австрия",
+        "Бельгия",
+        "Чехия",
+        "Словакия",
+        "Венгрия",
+        "Румыния",
+        "Болгария",
+        "Хорватия",
+        "Сербия",
+        "Словения",
+        "Черногория",
+        "Кипр",
+        "Греция",
+        "Португалия",
+        "Нидерланды",
+        "Ирландия",
+        "Мексика",
+        "ЮАР",
+      ];
+
+      // -- Селект стран: правильный placeholder --
+      function fillCountryOptions(sel) {
+        sel.innerHTML =
+          '<option value="" disabled selected hidden>Страна...</option>' +
+          COUNTRIES.map((c) => `<option>${c}</option>`).join("");
+      }
+      fillCountryOptions(document.querySelector("#register-form select"));
+
+      // ======= Переключатель темы =======
+      function setTheme(dark) {
+        if (dark) {
+          document.body.classList.add("dark");
+          localStorage.setItem("kanban-theme", "dark");
+          document.getElementById("theme-icon").innerText = "light_mode";
         } else {
-            document.body.classList.remove('dark');
-            localStorage.setItem('kanban-theme', 'light');
-            document.getElementById('theme-icon').innerText = 'dark_mode';
+          document.body.classList.remove("dark");
+          localStorage.setItem("kanban-theme", "light");
+          document.getElementById("theme-icon").innerText = "dark_mode";
         }
-    }
-    document.getElementById('theme-toggle-btn').onclick = function() {
-        setTheme(!document.body.classList.contains('dark'));
-    };
-    (function(){
-        const theme = localStorage.getItem('kanban-theme');
-        setTheme(theme === 'dark');
-    })();
+      }
+      document.getElementById("theme-toggle-btn").onclick = function () {
+        setTheme(!document.body.classList.contains("dark"));
+      };
+      (function () {
+        const theme = localStorage.getItem("kanban-theme");
+        setTheme(theme === "dark");
+      })();
 
-    // ======= Модалка логина/регистрации =======
-    function openModal(isRegister, username){
-        document.getElementById('login-modal').style.display = 'flex';
-        document.getElementById('modal-title').innerText = isRegister ? `Создать доску для "${username}"` : `Вход в доску "${username}"`;
-        document.getElementById('modal-btn').innerText = isRegister ? "Создать" : "Войти";
-        document.getElementById('modal-password2').style.display = isRegister ? "" : "none";
-        showModalError(""); // очищаем ошибку с анимацией
-        document.getElementById('modal-password').value = "";
-        document.getElementById('modal-password2').value = "";
-        setTimeout(()=>{ document.getElementById('modal-password').focus(); }, 180);
-    }
-    function closeModal(){
-        document.getElementById('login-modal').style.display = 'none';
-    }
-    // Красивая анимация ошибки
-    function showModalError(msg) {
-        let error = document.getElementById('modal-error');
-        error.innerText = msg;
-        error.classList.remove('animated');
-        // Для повторной анимации сбрасываем класс
-        void error.offsetWidth;
-        if(msg) error.classList.add('animated');
-    }
+      // ======= UX-логика: Username check, Login, Register =======
+      const userForm = document.getElementById("user-form");
+      const usernameInput = document.getElementById("username-input");
+      const loginArea = document.getElementById("login-area");
+      const loginPassword = document.getElementById("login-password");
+      const usernameNextBtn = document.getElementById("username-next-btn");
+      const loginBtn = document.getElementById("login-btn");
+      const loginError = document.getElementById("login-error");
+      let currentUser = null;
 
-    document.getElementById('user-form').onsubmit = async function(e){
+      // После проверки username — показываем логин или регистрацию
+      userForm.onsubmit = async function (e) {
         e.preventDefault();
-        let username = this.username.value.trim();
+        if (loginArea.classList.contains("visible")) {
+          // Если уже видна форма входа — ничего не делаем, т.к. кнопка логина отдельная
+          return;
+        }
+        const username = usernameInput.value.trim();
         if (!username.match(/^[a-zA-Z0-9_-]{2,32}$/)) return;
         let r = await fetch(`/api/check_user/${username}`);
-        let {exists} = await r.json();
-        openModal(!exists, username);
-        window.currentUser = username;
-    }
-
-    document.getElementById('modal-form').onsubmit = async function(e){
-        e.preventDefault();
-        let isReg = document.getElementById('modal-password2').style.display !== "none";
-        let username = window.currentUser;
-        let pass = document.getElementById('modal-password').value;
-        let pass2 = document.getElementById('modal-password2').value;
-        let btn = document.getElementById('modal-btn');
-        btn.disabled = true;
-        btn.innerText = "Загрузка...";
-        let url = isReg ? '/api/register' : '/api/login';
-        let body = {username, password: pass};
-        if(isReg && pass !== pass2){ 
-            showModalError("Пароли не совпадают!"); 
-            btn.disabled = false; btn.innerText = "Создать"; 
-            return;
-        }
-        let resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-        if(resp.ok){
-            window.location.href = `/${username}/kanban`;
+        let { exists } = await r.json();
+        if (exists) {
+          // Показываем форму входа
+          loginArea.classList.add("visible");
+          usernameNextBtn.style.display = "none";
+          loginPassword.value = "";
+          loginError.innerText = "";
+          setTimeout(() => loginPassword.focus(), 50);
+          currentUser = username;
         } else {
-            let data = await resp.json();
-            showModalError(isReg ? "Ошибка регистрации!" : "Неверный пароль!");
-            btn.disabled = false;
-            btn.innerText = isReg ? "Создать" : "Войти";
+          // Открываем модалку регистрации
+          openRegisterModal(username);
         }
-    };
-    document.getElementById('login-modal').onclick = function(e){ if (e.target === this) closeModal(); }
-</script>
-</body>
+      };
+
+      // Кнопка "Войти" в div#login-area (НЕ вложенный form!)
+      loginBtn.onclick = async function (e) {
+        e.preventDefault();
+        loginBtn.disabled = true;
+        loginBtn.innerHTML =
+          '<span class="material-icons">hourglass_top</span>Вход...';
+        loginError.innerText = "";
+        const password = loginPassword.value;
+        let resp = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: currentUser, password }),
+        });
+        loginBtn.disabled = false;
+        loginBtn.innerHTML =
+          '<span class="material-icons">login</span>Войти в доску';
+        if (resp.ok) {
+          window.location.href = `/${currentUser}/kanban`;
+        } else {
+          loginError.innerText = "Неверный пароль!";
+          loginPassword.value = "";
+          loginPassword.focus();
+        }
+      };
+
+      loginPassword.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          loginBtn.click();
+        }
+      });
+
+      function openRegisterModal(username) {
+        document.getElementById("register-modal").style.display = "flex";
+        document.getElementById(
+          "register-title"
+        ).innerText = `Создать доску для "${username}"`;
+        document.getElementById("register-form").reset();
+        document.getElementById("register-error").innerText = "";
+        // Перезаполняем селект, сбрасывая его в placeholder
+        fillCountryOptions(document.querySelector("#register-form select"));
+        document.querySelector("#register-form [name=fullname]").value =
+          username;
+      }
+      function closeRegisterModal() {
+        document.getElementById("register-modal").style.display = "none";
+        usernameNextBtn.style.display = "";
+        loginArea.classList.remove("visible");
+        loginPassword.value = "";
+        loginError.innerText = "";
+      }
+
+      // --- Регистрация ---
+      document.getElementById("register-form").onsubmit = async function (e) {
+        e.preventDefault();
+        let f = this;
+        let password = f.password.value;
+        let password2 = f.password2.value;
+        if (password !== password2) {
+          document.getElementById("register-error").innerText =
+            "Пароли не совпадают!";
+          return;
+        }
+        let btn = document.getElementById("register-btn-text");
+        btn.innerText = "Создание...";
+        let body = {
+          username: document
+            .querySelector("#register-title")
+            .innerText.match(/"(.+)"/)[1],
+          password,
+          email: f.email.value,
+          country: f.country.value,
+          fullname: f.fullname.value,
+        };
+        let resp = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        btn.innerText = "Создать";
+        if (resp.ok) {
+          window.location.href = `/${body.username}/kanban`;
+        } else {
+          document.getElementById("register-error").innerText =
+            "Ошибка регистрации!";
+        }
+      };
+
+      document.getElementById("register-modal").onclick = function (e) {
+        if (e.target === this) closeRegisterModal();
+      };
+
+      // Если изменить username — прячем форму входа, показываем "Открыть доску"
+      usernameInput.oninput = function () {
+        usernameNextBtn.style.display = "";
+        loginArea.classList.remove("visible");
+        loginPassword.value = "";
+        loginError.innerText = "";
+      };
+    </script>
+  </body>
 </html>
