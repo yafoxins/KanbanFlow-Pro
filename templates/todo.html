@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ToDo-лист — {{ username }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='style.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-nav">
+          <button
+            class="nav-btn{% if active_page == 'kanban' %} active{% endif %}"
+            id="kanban-btn"
+            type="button"
+          >
+            <span class="material-icons">dashboard</span>
+            <span>Kanban</span>
+          </button>
+          <button
+            class="nav-btn{% if active_page == 'todo' %} active{% endif %}"
+            id="todo-btn"
+            type="button"
+          >
+            <span class="material-icons">check_circle</span>
+            <span>ToDo‑лист</span>
+          </button>
+        </div>
+        <div class="topbar-right">
+          <button
+            id="theme-toggle-btn"
+            class="theme-toggle-btn"
+            title="Переключить тему"
+          >
+            <span class="material-icons" id="theme-icon">dark_mode</span>
+          </button>
+          <div class="user-menu-wrap">
+            <button id="user-menu-btn" class="user-menu-btn" type="button">
+              <span class="material-icons">account_circle</span>
+              <span class="user-menu-name">{{ username }}</span>
+              <span class="material-icons">expand_more</span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown">
+              <button class="dropdown-item" id="profile-btn" type="button">
+                <span class="material-icons">person</span>Профиль
+              </button>
+              <button
+                class="dropdown-item"
+                id="change-password-btn"
+                type="button"
+              >
+                <span class="material-icons">lock</span>Сменить пароль
+              </button>
+              <button class="dropdown-item" id="logout-btn" type="button">
+                <span class="material-icons">logout</span>Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div class="todo-widget">
+        <h2 class="todo-title">
+          <span style="font-size: 1.5em">📝</span> Мои задачи
+        </h2>
+        <form id="todo-add-form">
+          <input
+            type="text"
+            id="todo-input"
+            placeholder="Новая задача..."
+            required
+          />
+          <input type="date" id="todo-date" required />
+          <button type="submit" id="todo-add-btn">
+            <span class="material-icons">add</span>
+          </button>
+        </form>
+        <ul id="todo-list"></ul>
+        <div style="display: flex; justify-content: center; margin-top: 30px">
+          <button id="toggle-completed-btn" class="todo-toggle-btn big">
+            <span
+              class="material-icons"
+              style="font-size: 1.22em; vertical-align: -2px; margin-right: 7px"
+              >checklist</span
+            >
+            Показать/скрыть завершённые
+          </button>
+        </div>
+      </div>
+    </main>
+    <footer>© 2025 — Flask Kanban.</footer>
+
+    <!-- Модалка: профиль пользователя -->
+    <div class="modal-backdrop" id="profile-modal" style="display: none">
+      <div class="modal modal-profile">
+        <button class="modal-close profile-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <span class="material-icons">account_circle</span>
+          </div>
+          <div class="profile-username" id="profile-username"></div>
+          <div class="profile-fields">
+            <div class="profile-field">
+              <span class="profile-label">E-mail:</span>
+              <span class="profile-value" id="profile-email"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Страна:</span>
+              <span class="profile-value" id="profile-country"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Имя:</span>
+              <span class="profile-value" id="profile-fullname"></span>
+            </div>
+          </div>
+          <button class="plus-btn profile-close" type="button">Закрыть</button>
+        </div>
+      </div>
+    </div>
+    <!-- Модалка: смена пароля -->
+    <div
+      class="modal-backdrop"
+      id="change-password-modal"
+      style="display: none"
+    >
+      <div class="modal modal-password">
+        <button
+          class="modal-close"
+          onclick="closeChangePasswordModal()"
+          type="button"
+          aria-label="Закрыть"
+        >
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-password-content">
+          <div class="modal-password-icon">
+            <span class="material-icons">lock_reset</span>
+          </div>
+          <div class="modal-title modal-password-title">Смена пароля</div>
+          <form class="modal-form" id="change-password-form" autocomplete="off">
+            <input
+              type="password"
+              name="old_password"
+              id="old_password"
+              placeholder="Старый пароль"
+              required
+            />
+            <input
+              type="password"
+              name="new_password"
+              id="new_password"
+              placeholder="Новый пароль"
+              required
+              minlength="3"
+            />
+            <input
+              type="password"
+              name="new_password2"
+              id="new_password2"
+              placeholder="Повторите новый пароль"
+              required
+              minlength="3"
+            />
+            <button type="submit" class="plus-btn">
+              <span class="material-icons">sync_lock</span>
+              Сменить
+            </button>
+            <div id="change-password-error" class="modal-error"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+      // ========== Theme ==========
+      function setTheme(dark) {
+        if (dark) {
+          document.body.classList.add("dark");
+          localStorage.setItem("kanban-theme", "dark");
+          document.getElementById("theme-icon").innerText = "light_mode";
+        } else {
+          document.body.classList.remove("dark");
+          localStorage.setItem("kanban-theme", "light");
+          document.getElementById("theme-icon").innerText = "dark_mode";
+        }
+      }
+      document.getElementById("theme-toggle-btn").onclick = function () {
+        setTheme(!document.body.classList.contains("dark"));
+      };
+      (function () {
+        const theme = localStorage.getItem("kanban-theme");
+        setTheme(theme === "dark");
+      })();
+
+      // ========== User Dropdown ==========
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userDropdown = document.getElementById("user-dropdown");
+      userMenuBtn.onclick = function (e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle("show");
+      };
+      document.body.addEventListener("click", function () {
+        userDropdown.classList.remove("show");
+      });
+      userDropdown.onclick = function (e) {
+        e.stopPropagation();
+      };
+
+      // Открытие профиля
+      document.getElementById("profile-btn").onclick = async function () {
+        userDropdown.classList.remove("show");
+        let r = await fetch(`/api/profile/{{ username }}`);
+        let data = await r.json();
+        document.getElementById(
+          "profile-username"
+        ).innerHTML = `<span>${data.username}</span>`;
+        document.getElementById("profile-email").textContent =
+          data.email || "-";
+        document.getElementById("profile-country").textContent =
+          data.country || "-";
+        document.getElementById("profile-fullname").textContent =
+          data.fullname || "-";
+        document.getElementById("profile-modal").style.display = "flex";
+      };
+      function closeProfileModal() {
+        document.getElementById("profile-modal").style.display = "none";
+      }
+      document.querySelectorAll(".profile-close").forEach((btn) => {
+        btn.onclick = closeProfileModal;
+      });
+      document.getElementById("profile-modal").onclick = function (e) {
+        if (e.target === this) closeProfileModal();
+      };
+
+      // ========== Смена пароля ==========
+      document.getElementById("change-password-btn").onclick = function () {
+        userDropdown.classList.remove("show");
+        document.getElementById("change-password-form").reset();
+        document.getElementById("change-password-error").innerText = "";
+        document.getElementById("change-password-modal").style.display = "flex";
+      };
+      function closeChangePasswordModal() {
+        document.getElementById("change-password-modal").style.display = "none";
+      }
+      document.getElementById("change-password-modal").onclick = function (e) {
+        if (e.target === this) closeChangePasswordModal();
+      };
+      document.getElementById("change-password-form").onsubmit =
+        async function (e) {
+          e.preventDefault();
+          let oldPass = document.getElementById("old_password").value;
+          let newPass = document.getElementById("new_password").value;
+          let newPass2 = document.getElementById("new_password2").value;
+          let err = document.getElementById("change-password-error");
+          if (newPass !== newPass2) {
+            err.innerText = "Пароли не совпадают!";
+            return;
+          }
+          let resp = await fetch(`/{{ username }}/api/change_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              old_password: oldPass,
+              new_password: newPass,
+            }),
+          });
+          if (resp.ok) {
+            err.style.color = "#32c964";
+            err.innerText = "Пароль изменён!";
+            setTimeout(closeChangePasswordModal, 900);
+          } else {
+            err.style.color = "#d11a2a";
+            let data = await resp.json();
+            err.innerText = data.error || "Ошибка смены пароля!";
+          }
+        };
+
+      // Topbar навигация
+      let USERNAME = "{{ username }}";
+      document.getElementById("kanban-btn").onclick = () =>
+        (location.href = `/${USERNAME}/kanban`);
+      document.getElementById("todo-btn").onclick = () =>
+        (location.href = `/${USERNAME}/todo`);
+      if (window.location.pathname.includes("/kanban")) {
+        document.getElementById("kanban-btn").classList.add("active");
+      } else {
+        document.getElementById("todo-btn").classList.add("active");
+      }
+
+      // ===== ToDo List =====
+      const todoList = document.getElementById("todo-list");
+      const todoForm = document.getElementById("todo-add-form");
+      const todoInput = document.getElementById("todo-input");
+      const todoDate = document.getElementById("todo-date");
+      const toggleCompletedBtn = document.getElementById(
+        "toggle-completed-btn"
+      );
+      let todos = [];
+      let showCompleted = true;
+
+      function renderTodos() {
+        todoList.innerHTML = "";
+        todos.forEach((t, i) => {
+          if (!showCompleted && t.done) return;
+          let li = document.createElement("li");
+          li.className = "todo-item" + (t.done ? " completed" : "");
+          li.innerHTML = `
+          <label>
+            <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
+            <span>${escapeHTML(t.text)}</span>
+          </label>
+          <span class="date">${t.date ? formatDate(t.date) : ""}</span>
+          <button class="remove-btn" data-i="${i}" title="Удалить">&times;</button>
+        `;
+          todoList.appendChild(li);
+        });
+      }
+      todoList.onclick = async function (e) {
+        // Проверка для чекбокса (без изменений)
+        if (e.target.type === "checkbox") {
+          let i = e.target.getAttribute("data-i");
+          let todo = todos[i];
+          await fetch(`/${USERNAME}/api/todos/${todo.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ done: !todo.done }),
+          });
+          todos[i].done = !todos[i].done;
+          renderTodos();
+        }
+        // Универсально ищем .remove-btn (по кнопке или вложенной иконке)
+        let btn = e.target.closest(".remove-btn");
+        if (btn) {
+          let i = btn.getAttribute("data-i");
+          let todo = todos[i];
+          await fetch(`/${USERNAME}/api/todos/${todo.id}`, {
+            method: "DELETE",
+          });
+          todos.splice(i, 1);
+          renderTodos();
+        }
+      };
+      todoForm.onsubmit = async function (e) {
+        e.preventDefault();
+        let text = todoInput.value;
+        let dateVal = todoDate.value || null;
+        let resp = await fetch(`/${USERNAME}/api/todos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, date: dateVal }),
+        });
+        let data = await resp.json();
+        todos.unshift(data);
+        todoInput.value = "";
+        todoDate.value = "";
+        renderTodos();
+      };
+      toggleCompletedBtn.onclick = function () {
+        showCompleted = !showCompleted;
+        renderTodos();
+      };
+
+      function formatDate(dateStr) {
+        let d = new Date(dateStr);
+        return d.toLocaleDateString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        });
+      }
+      function escapeHTML(str) {
+        return String(str).replace(
+          /[&<>"']/g,
+          (s) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[s])
+        );
+      }
+
+      // init
+      fetch(`/${USERNAME}/api/todos`)
+        .then((r) => r.json())
+        .then((data) => {
+          todos = data;
+          renderTodos();
+        });
+
+      // Выход
+      document.getElementById("logout-btn").onclick = function () {
+        window.location.href = "{{ url_for('logout', username=username) }}";
+      };
+
+      //Render initial todos
+      function renderTodos() {
+        todoList.innerHTML = "";
+        todos.forEach((t, i) => {
+          if (!showCompleted && t.done) return;
+          let li = document.createElement("li");
+          li.className = "todo-item" + (t.done ? " completed" : "");
+          li.innerHTML = `
+      <label class="todo-checkbox">
+        <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
+        <span></span>
+      </label>
+      <div class="todo-content">
+        <span class="todo-text" title="${escapeHTML(
+          t.text
+        )}" data-i="${i}">${escapeHTML(t.text)}</span>
+        <span class="date">${t.date ? formatDate(t.date) : ""}</span>
+      </div>
+      <button class="remove-btn" data-i="${i}" title="Удалить">
+        <span class="material-icons">close</span>
+      </button>
+    `;
+          todoList.appendChild(li);
+        });
+
+        // Логика разворачивания по клику только если текст реально обрезан (скрыт)
+        document.querySelectorAll(".todo-text").forEach((el) => {
+          el.addEventListener("click", function () {
+            // Если задача завершена, не раскрываем
+            if (el.closest(".todo-item").classList.contains("completed"))
+              return;
+            // Проверим: текст реально обрезается (scrollWidth > clientWidth)
+            if (
+              el.scrollWidth > el.clientWidth ||
+              el.classList.contains("expanded")
+            ) {
+              el.classList.toggle("expanded");
+            }
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

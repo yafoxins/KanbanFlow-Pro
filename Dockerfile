@@ -7,7 +7,9 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-COPY . .
+COPY app.py .
+COPY static ./static
+COPY templates ./templates
 
 EXPOSE 5000
 
