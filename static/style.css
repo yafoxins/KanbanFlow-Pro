@@ -630,7 +630,7 @@ body.dark .task-title {
 .task-date-badge {
   background: #e7e9fc;
   color: #5271ff;
-  font-size: 0.92em;
+  font-size: 0.98em;
   font-weight: 700;
   border-radius: 8px;
   padding: 2px 10px;
@@ -638,6 +638,7 @@ body.dark .task-title {
   box-shadow: 0 1px 4px #5271ff13;
   letter-spacing: 0.01em;
   user-select: none;
+  display: inline-block;
 }
 body.dark .task-date-badge {
   background: #23253e;
@@ -2970,4 +2971,93 @@ body.dark .kanban-scroll .simplebar-track.simplebar-horizontal .simplebar-scroll
 body.dark .kanban-scroll .simplebar-track.simplebar-horizontal .simplebar-scrollbar:hover {
   background: linear-gradient(90deg, #3a8dde 0%, #00fff0 100%) !important;
   opacity: 0.7 !important;
+}
+
+/* Теги задач */
+.task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.task-tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 8px;
+  font-size: 0.98em;
+  font-weight: 700;
+  color: #fff;
+  background: #b9bccc;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 4px #5271ff13;
+  user-select: none;
+  transition: background 0.18s, color 0.18s;
+}
+.task-tag.tag-срочно { background: #ff5470; }
+.task-tag.tag-баг { background: #ff9800; }
+.task-tag.tag-улучшение { background: #5271ff; }
+.task-tag.tag-обсудить { background: #a259ff; }
+.task-tag.tag-документы { background: #00b894; }
+.task-tag.tag-default { background: #b9bccc; color: #fff; }
+
+/* Дата задачи */
+.task-date-badge {
+  background: #e7e9fc;
+  color: #5271ff;
+  font-size: 0.98em;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 2px 10px;
+  margin-left: 2px;
+  box-shadow: 0 1px 4px #5271ff13;
+  letter-spacing: 0.01em;
+  user-select: none;
+  display: inline-block;
+}
+body.dark .task-date-badge {
+  background: #23253e;
+  color: #aac6ff;
+}
+
+/* Модалка просмотра задачи */
+.view-task-modal {
+  min-width: 540px;
+  max-width: 96vw;
+  padding: 38px 38px 28px 38px;
+  border-radius: 28px;
+  box-shadow: 0 8px 38px #5271ff13, 0 1px 6px #0002;
+  background: var(--modal-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (max-width: 700px) {
+  .view-task-modal { min-width: 98vw; padding: 16px 4vw 12px 4vw; border-radius: 16px; }
+}
+.view-task-modal .task-tags {
+  margin-bottom: 10px;
+  gap: 10px;
+}
+.view-task-modal .task-tag {
+  font-size: 1.08em;
+  padding: 5px 16px;
+  border-radius: 10px;
+}
+.view-task-modal .task-date-badge {
+  font-size: 1.08em;
+  padding: 4px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.view-task-modal .task-meta {
+  font-size: 1.04em;
+  color: #5271ff;
+  margin-bottom: 8px;
+}
+.view-task-modal .task-updated-by {
+  color: #7d809f;
+  font-size: 0.98em;
+  margin-bottom: 8px;
 }

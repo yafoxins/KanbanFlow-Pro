@@ -97,7 +97,7 @@
           </div>
         </div>
       </div>
-      <div class="kanban-add-status-wrap">
+      <div class="kanban-add-status-wrap" style="margin-bottom: 38px">
         <button
           class="kanban-add-status-btn"
           id="open-status-modal"
@@ -374,6 +374,43 @@
             rows="2"
           ></textarea>
           <select name="task_status" id="task_status" required></select>
+          <div
+            class="modal-row"
+            style="
+              margin: 10px 0 0 0;
+              gap: 10px;
+              flex-wrap: wrap;
+              flex-direction: column;
+              align-items: stretch;
+            "
+          >
+            <div class="task-tags-select" style="margin-bottom: 14px">
+              <span class="tag-badge tag-sos" data-tag="Срочно">Срочно</span>
+              <span class="tag-badge tag-bug" data-tag="Баг">Баг</span>
+              <span class="tag-badge tag-feature" data-tag="Улучшение"
+                >Улучшение</span
+              >
+              <span class="tag-badge tag-discuss" data-tag="Обсудить"
+                >Обсудить</span
+              >
+              <span class="tag-badge tag-docs" data-tag="Документы"
+                >Документы</span
+              >
+            </div>
+            <div class="date-input-wrapper" style="margin-top: 2px">
+              <label class="date-label">
+                <span class="material-icons">event</span>
+                Срок выполнения
+              </label>
+              <input
+                type="date"
+                id="task_due_date"
+                name="task_due_date"
+                class="date-input"
+                placeholder="Выберите дату"
+              />
+            </div>
+          </div>
           <div class="modal-row">
             <input
               type="text"
@@ -432,6 +469,35 @@
             font-size: 1.08em;
           "
         ></div>
+      </div>
+    </div>
+    <!-- Модалка просмотра задачи -->
+    <div class="modal-backdrop" id="view-task-modal" style="display: none">
+      <div
+        class="modal view-task-modal"
+        style="min-width: 540px; max-width: 96vw"
+      >
+        <button class="modal-close" onclick="closeViewTaskModal()">
+          &times;
+        </button>
+        <div class="modal-title" id="view-task-title">Задача</div>
+        <div id="view-task-status" class="task-status-pill"></div>
+        <div id="view-task-assignee" class="task-assignee-row"></div>
+        <div id="view-task-tags" class="task-tags"></div>
+        <div id="view-task-date" class="task-date-badge"></div>
+        <div id="view-task-desc" class="task-desc-card"></div>
+        <div
+          id="view-task-updated"
+          class="task-updated-by"
+          style="font-size: 0.98em; color: #7d809f"
+        ></div>
+        <button
+          class="plus-btn"
+          id="view-task-edit-btn"
+          style="margin-top: 18px"
+        >
+          Редактировать
+        </button>
       </div>
     </div>
 
@@ -835,7 +901,9 @@
           text = "",
           description = "",
           status = "",
-          assignee_id = "",
+          assignee_id = null,
+          tags = [],
+          due_date = null,
         } = {}) {
           const modal = document.getElementById("task-modal");
           if (!modal) return;
@@ -849,21 +917,28 @@
           statusSel.innerHTML = STATUSES.map(
             (s) =>
               `<option value="${s.code}"${
-                s.code === status ? " selected" : ""
+                (status || STATUSES[0].code) === s.code ? " selected" : ""
               }>${escapeHTML(s.title)}</option>`
           ).join("");
-          // --- assignee input ---
+          // --- новые поля ---
+          let tagSet = new Set(tags || []);
+          document.querySelectorAll(".tag-badge[data-tag]").forEach((badge) => {
+            if (tagSet.has(badge.dataset.tag)) {
+              badge.classList.add("selected");
+            } else {
+              badge.classList.remove("selected");
+            }
+          });
+          document.getElementById("task_due_date").value = due_date
+            ? due_date.slice(0, 10)
+            : "";
+          // Исполнитель
           let assigneeInput = document.getElementById("task_assignee_input");
           let assigneeHidden = document.getElementById("task_assignee");
-          if (assignee_id) {
+          if (assignee_id && Array.isArray(MEMBERS)) {
             let member = MEMBERS.find((m) => m.id == assignee_id);
-            if (member) {
-              assigneeInput.value = member.username;
-              assigneeHidden.value = member.id;
-            } else {
-              assigneeInput.value = "";
-              assigneeHidden.value = "";
-            }
+            assigneeInput.value = member ? member.username : "";
+            assigneeHidden.value = assignee_id;
           } else {
             assigneeInput.value = "";
             assigneeHidden.value = "";
@@ -902,62 +977,25 @@
           };
           document.getElementById("task-modal-error").innerText = "";
           modal.style.display = "flex";
+          bindTagBadges();
           setTimeout(() => {
             document.getElementById("task_text").focus();
           }, 120);
         }
-        function closeTaskModal() {
-          const modal = document.getElementById("task-modal");
-          if (modal) modal.style.display = "none";
-          const form = document.getElementById("task-modal-form");
-          if (form) form.reset();
+        // Обработчики для тегов-бейджей (без чекбоксов)
+        function bindTagBadges() {
+          const badges = document.querySelectorAll(".tag-badge[data-tag]");
+          badges.forEach((badge) => {
+            badge.onclick = function () {
+              badge.classList.toggle("selected");
+            };
+          });
         }
-        if (document.getElementById("task-modal-form")) {
-          document.getElementById("task-modal-form").onsubmit = async function (
-            e
-          ) {
-            e.preventDefault();
-            let text = document.getElementById("task_text").value.trim();
-            let description = document
-              .getElementById("task_description")
-              .value.trim();
-            let status = document.getElementById("task_status").value;
-            let assignee_id =
-              document.getElementById("task_assignee").value || null;
-            if (assignee_id && assignee_id !== "") {
-              assignee_id = parseInt(assignee_id);
-            } else {
-              assignee_id = null;
-            }
-            let id = document.getElementById("edit_task_id").value;
-            let method = id ? "PATCH" : "POST";
-            let url =
-              `/{{ username }}/api/teams/${TEAM_ID}/tasks` +
-              (id ? `/${id}` : "");
-            let resp = await fetch(url, {
-              method,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text, description, status, assignee_id }),
-            });
-            if (resp.ok) {
-              fetchTeamBoard();
-              closeTaskModal();
-            } else {
-              let errorText = "Ошибка сохранения задачи!";
-              try {
-                let errorData = await resp.json();
-                errorText = errorData.error || errorText;
-              } catch (e) {
-                // Если не удалось распарсить JSON, используем стандартный текст
-              }
-              document.getElementById("task-modal-error").innerText = errorText;
-            }
-          };
-        }
-        if (document.getElementById("task-modal")) {
-          document.getElementById("task-modal").onclick = function (e) {
-            if (e.target === this) closeTaskModal();
-          };
+        // Получить выбранные теги
+        function getSelectedTags() {
+          return Array.from(
+            document.querySelectorAll(".tag-badge.selected[data-tag]")
+          ).map((b) => b.dataset.tag);
         }
 
         // ===================== Modal: Status =====================
@@ -1017,57 +1055,100 @@
 
         // ===================== SPA: Fetch Board (эталон kanban.html, но для команды)
         async function fetchTeamBoard() {
-          let [statuses, tasks, members] = await Promise.all([
-            fetch(`/{{ username }}/api/teams/${TEAM_ID}/statuses`).then((r) =>
-              r.json()
-            ),
-            fetch(`/{{ username }}/api/teams/${TEAM_ID}/tasks`).then((r) =>
-              r.json()
-            ),
-            fetch(`/{{ username }}/api/teams/${TEAM_ID}/members`).then((r) =>
-              r.json()
-            ),
-          ]);
-          STATUSES = Array.isArray(statuses)
-            ? statuses
-            : statuses.statuses || [];
-          TASKS = Array.isArray(tasks) ? tasks : tasks.tasks || [];
+          try {
+            let [statuses, tasks, members] = await Promise.all([
+              fetch(`/{{ username }}/api/teams/${TEAM_ID}/statuses`).then((r) =>
+                r.json()
+              ),
+              fetch(`/{{ username }}/api/teams/${TEAM_ID}/tasks`).then((r) =>
+                r.json()
+              ),
+              fetch(`/{{ username }}/api/teams/${TEAM_ID}/members`).then((r) =>
+                r.json()
+              ),
+            ]);
 
-          // Получаем участников с их ID
-          MEMBERS = [];
-          if (members.members && members.members.length > 0) {
-            // Получаем ID для каждого участника
-            for (let username of members.members) {
-              try {
-                let userResp = await fetch(`/api/check_user/${username}`);
-                let userData = await userResp.json();
-                MEMBERS.push({
-                  username: username,
-                  id: userData.exists ? userData.id : null,
-                });
-              } catch (e) {
-                console.error(`Ошибка получения ID для ${username}:`, e);
-                MEMBERS.push({
-                  username: username,
-                  id: null,
-                });
+            // Проверяем, что получили валидные данные
+            if (Array.isArray(statuses)) {
+              STATUSES = statuses;
+            } else if (statuses && statuses.error) {
+              console.error("Error fetching team statuses:", statuses.error);
+              STATUSES = [];
+            } else {
+              console.error("Unexpected team statuses format:", statuses);
+              STATUSES = [];
+            }
+
+            if (Array.isArray(tasks)) {
+              TASKS = tasks;
+            } else if (tasks && tasks.tasks && Array.isArray(tasks.tasks)) {
+              TASKS = tasks.tasks;
+            } else if (tasks && tasks.error) {
+              console.error("Error fetching team tasks:", tasks.error);
+              TASKS = [];
+            } else {
+              console.error("Unexpected team tasks format:", tasks);
+              TASKS = [];
+            }
+
+            // Получаем участников с их ID
+            MEMBERS = [];
+            if (members && members.members && members.members.length > 0) {
+              // Получаем ID для каждого участника
+              for (let username of members.members) {
+                try {
+                  let userResp = await fetch(`/api/check_user/${username}`);
+                  let userData = await userResp.json();
+                  MEMBERS.push({
+                    username: username,
+                    id: userData.exists ? userData.id : null,
+                  });
+                } catch (e) {
+                  console.error(`Ошибка получения ID для ${username}:`, e);
+                  MEMBERS.push({
+                    username: username,
+                    id: null,
+                  });
+                }
               }
             }
-          }
 
-          // Удалить старую строку "Новый статус" если есть
-          const oldAddStatusRow = document.getElementById("add-status-row");
-          if (oldAddStatusRow && oldAddStatusRow.parentNode) {
-            oldAddStatusRow.parentNode.removeChild(oldAddStatusRow);
+            // Удалить старую строку "Новый статус" если есть
+            const oldAddStatusRow = document.getElementById("add-status-row");
+            if (oldAddStatusRow && oldAddStatusRow.parentNode) {
+              oldAddStatusRow.parentNode.removeChild(oldAddStatusRow);
+            }
+            renderBoard();
+            bindAddStatusBtn();
+          } catch (error) {
+            console.error("Error in fetchTeamBoard:", error);
+            STATUSES = [];
+            TASKS = [];
+            MEMBERS = [];
+            renderBoard();
+            bindAddStatusBtn();
           }
-          renderBoard();
-          bindAddStatusBtn();
         }
 
         // ===================== Render (эталон kanban.html, но для команды)
         function renderBoard() {
           const row = document.getElementById("kanban-row");
           row.innerHTML = "";
+
+          // Проверяем, что STATUSES и TASKS определены
+          if (!STATUSES || !Array.isArray(STATUSES)) {
+            console.error("STATUSES is not valid:", STATUSES);
+            STATUSES = [];
+          }
+          if (!TASKS || !Array.isArray(TASKS)) {
+            console.error("TASKS is not valid:", TASKS);
+            TASKS = [];
+          }
+          if (!MEMBERS || !Array.isArray(MEMBERS)) {
+            console.error("MEMBERS is not valid:", MEMBERS);
+            MEMBERS = [];
+          }
+
           STATUSES.forEach((status) => {
             const col = document.createElement("div");
             col.className = "kanban-column";
@@ -1102,6 +1183,7 @@
           bindAllHandlers();
           updateDnD();
           bindAddStatusBtn();
+          bindTaskViewHandlers();
         }
 
         function getAvatarColor(id) {
@@ -1126,16 +1208,24 @@
           const div = document.createElement("div");
           div.className = "kanban-task";
           div.dataset.taskId = task.id;
-          // Дата (пример: task.due_date)
+          let tagsHtml = "";
+          if (task.tags && task.tags.length) {
+            tagsHtml =
+              `<div class='task-tags'>` +
+              task.tags
+                .map(
+                  (tag) =>
+                    `<span class='task-tag tag-${tag.toLowerCase()}'>${tag}</span>`
+                )
+                .join("") +
+              `</div>`;
+          }
           let dateHtml = task.due_date
-            ? `<span class='task-date-badge'>${escapeHTML(
+            ? `<span class='task-date-badge'>${formatRuDate(
                 task.due_date
               )}</span>`
             : "";
-          // Бейдж (пример: срочно)
-          let badgeHtml = task.urgent
-            ? `<span class='task-badge urgent'>Срочно</span>`
-            : "";
+          let updatedByHtml = "";
           // Аватарка исполнителя
           let assignee = MEMBERS.find((m) => m.id == task.assignee_id);
           let avatarHtml = assignee
@@ -1153,12 +1243,13 @@
               <div class="task-title">${escapeHTML(
                 truncate(task.text, 80)
               )}</div>
-              <div class="task-badges">${badgeHtml}${dateHtml}</div>
+              <div class="task-badges">${dateHtml}</div>
             </div>
+            ${tagsHtml}
             ${
               task.description
                 ? `<div class="task-desc">${escapeHTML(
-                    truncate(task.description, 200)
+                    truncate(task.description, 120)
                   )}</div>`
                 : ""
             }
@@ -1179,6 +1270,11 @@
         }
         function truncate(str, len) {
           return str.length > len ? str.slice(0, len) + "…" : str;
+        }
+        function formatRuDate(dateStr) {
+          if (!dateStr) return "";
+          const d = new Date(dateStr);
+          return d.toLocaleDateString("ru-RU");
         }
         // ===================== Вспомогательные функции =====================
         function escapeHTML(str) {
@@ -1408,6 +1504,188 @@
           const btn = document.getElementById("open-status-modal");
           if (btn) btn.onclick = openStatusModal;
         }
+
+        async function openViewTaskModal(task) {
+          document.getElementById("view-task-title").textContent = task.text;
+          // Статус pill-style
+          let statusTitle =
+            (STATUSES.find((s) => s.code === task.status) || {}).title ||
+            task.status;
+          document.getElementById(
+            "view-task-status"
+          ).innerHTML = `<span class='task-status-pill-inner'>${escapeHTML(
+            statusTitle
+          )}</span>`;
+          // Исполнитель (только если есть assignee_id)
+          let assigneeHtml = "";
+          if (task.assignee_id) {
+            let member = MEMBERS.find((m) => m.id == task.assignee_id);
+            if (member) {
+              assigneeHtml = `<span style='color:#7d809f;font-weight:500;margin-right:8px;'>Исполнитель:</span><span class='task-avatar'>${getInitials(
+                member.username
+              )}</span><span class='assignee-name'>${escapeHTML(
+                member.username
+              )}</span>`;
+            } else {
+              assigneeHtml = `<span style='color:#7d809f;font-weight:500;margin-right:8px;'>Исполнитель:</span><span style='color:#b9bccc;'>Не назначено</span>`;
+            }
+          } else {
+            assigneeHtml = `<span style='color:#7d809f;font-weight:500;margin-right:8px;'>Исполнитель:</span><span style='color:#b9bccc;'>Не назначено</span>`;
+          }
+          document.getElementById("view-task-assignee").innerHTML =
+            assigneeHtml;
+          document.getElementById("view-task-tags").innerHTML = (
+            task.tags || []
+          )
+            .map(
+              (tag) =>
+                `<span class='task-tag tag-${tag.toLowerCase()}'>${tag}</span>`
+            )
+            .join(" ");
+          document.getElementById("view-task-date").textContent = task.due_date
+            ? formatRuDate(task.due_date)
+            : "";
+          // Описание — выделенный блок
+          document.getElementById("view-task-desc").innerHTML = task.description
+            ? `<div class='task-desc-card-inner'>${escapeHTML(
+                task.description
+              )}</div>`
+            : "<div class='task-desc-card-inner empty'>Нет описания</div>";
+          // Изменил: всегда ник и дата/время
+          let updName = task.updated_by_name || "-";
+          if (
+            (!updName || updName === "-") &&
+            task.updated_by &&
+            Array.isArray(MEMBERS)
+          ) {
+            let updUser = MEMBERS.find((m) => m.id == task.updated_by);
+            updName = updUser ? updUser.username : "-";
+          }
+          // Если не нашли в MEMBERS, делаем запрос к API
+          if ((!updName || updName === "-") && task.updated_by) {
+            updName = await getUserNameById(task.updated_by);
+          }
+          let dateStr = "";
+          if (task.updated_at) {
+            let d = new Date(task.updated_at);
+            dateStr = isNaN(d)
+              ? ""
+              : d.toLocaleString("ru-RU", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+          }
+
+          let upd = `<span style='color:#7d809f;font-size:0.93em;'>Изменил: ${escapeHTML(
+            updName
+          )}${dateStr ? " — " + dateStr : ""}</span>`;
+          document.getElementById("view-task-updated").innerHTML = upd;
+          document.getElementById("view-task-modal").style.display = "flex";
+          document.getElementById("view-task-edit-btn").onclick = function () {
+            openTaskModal({ edit: true, ...task });
+            closeViewTaskModal();
+          };
+        }
+        function closeViewTaskModal() {
+          document.getElementById("view-task-modal").style.display = "none";
+        }
+
+        async function getUserNameById(userId) {
+          if (!userId) return "-";
+          try {
+            let resp = await fetch(`/api/check_user_id/${userId}`);
+            if (resp.ok) {
+              let data = await resp.json();
+              if (data && data.username) return data.username;
+            }
+          } catch (e) {}
+          return "-";
+        }
+
+        // Открытие по клику на задачу
+        function bindTaskViewHandlers() {
+          document.querySelectorAll(".kanban-task").forEach((div) => {
+            div.onclick = function (e) {
+              if (e.target.closest(".edit-btn,.delete-btn")) return;
+              const id = div.dataset.taskId;
+              const task = TASKS.find((t) => t.id == id);
+              if (task) openViewTaskModal(task);
+            };
+          });
+        }
+
+        if (document.getElementById("task-modal-form")) {
+          document.getElementById("task-modal-form").onsubmit = async function (
+            e
+          ) {
+            e.preventDefault();
+            let text = document.getElementById("task_text").value.trim();
+            let description = document
+              .getElementById("task_description")
+              .value.trim();
+            let status = document.getElementById("task_status").value;
+            let assignee_id =
+              document.getElementById("task_assignee").value || null;
+            if (assignee_id && Array.isArray(MEMBERS)) {
+              let member = MEMBERS.find((m) => m.id == assignee_id);
+              assignee_id = member ? member.id : null;
+            } else {
+              assignee_id = null;
+            }
+            let id = document.getElementById("edit_task_id").value;
+            // --- новые поля ---
+            let tags = getSelectedTags();
+            let due_date = this.task_due_date.value || null;
+            let method = id ? "PATCH" : "POST";
+            let url =
+              `/{{ username }}/api/teams/${TEAM_ID}/tasks` +
+              (id ? `/${id}` : "");
+            let body = {
+              text,
+              description,
+              status,
+              assignee_id,
+              tags,
+              due_date,
+            };
+            console.log("DEBUG: отправка задачи:", body);
+            let resp = await fetch(url, {
+              method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (resp.ok) {
+              fetchTeamBoard();
+              closeTaskModal();
+            } else {
+              let errorText = "Ошибка сохранения задачи!";
+              try {
+                let errorData = await resp.json();
+                errorText = errorData.error || errorText;
+              } catch (e) {}
+              document.getElementById("task-modal-error").innerText = errorText;
+            }
+          };
+        }
+
+        function closeTaskModal() {
+          const modal = document.getElementById("task-modal");
+          if (modal) modal.style.display = "none";
+          const form = document.getElementById("task-modal-form");
+          if (form) form.reset();
+          // Снимаем выделение с тегов
+          document
+            .querySelectorAll(".tag-badge.selected")
+            .forEach((b) => b.classList.remove("selected"));
+        }
+        if (document.getElementById("task-modal")) {
+          document.getElementById("task-modal").onclick = function (e) {
+            if (e.target === this) closeTaskModal();
+          };
+        }
       });
     </script>
     <style>
@@ -1480,6 +1758,202 @@
       }
       body.dark .kanban-add-status-btn:hover {
         background: linear-gradient(90deg, #3a8dde 0%, #00fff0 100%);
+      }
+      .view-task-modal {
+        min-width: 540px;
+        max-width: 96vw;
+      }
+      @media (max-width: 700px) {
+        .view-task-modal {
+          min-width: 98vw;
+        }
+      }
+      .task-tags-select {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 8px;
+        padding: 3px 10px;
+        font-size: 1em;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s,
+          transform 0.18s;
+      }
+      .tag-badge:hover {
+        box-shadow: 0 2px 8px #5271ff22;
+        opacity: 1;
+      }
+      .tag-badge.tag-sos {
+        background: #ff3a3a22;
+        color: #d11a2a;
+        border: 1.5px solid #ff3a3a;
+      }
+      .tag-badge.tag-bug {
+        background: #ff980022;
+        color: #ff9800;
+        border: 1.5px solid #ff9800;
+      }
+      .tag-badge.tag-feature {
+        background: #3a8dde22;
+        color: #3a8dde;
+        border: 1.5px solid #3a8dde;
+      }
+      .tag-badge.tag-discuss {
+        background: #a259ff22;
+        color: #a259ff;
+        border: 1.5px solid #a259ff;
+      }
+      .tag-badge.tag-docs {
+        background: #00b89422;
+        color: #00b894;
+        border: 1.5px solid #00b894;
+      }
+      /* Выбранные теги - яркий фон, анимация */
+      .tag-badge.selected {
+        color: #fff !important;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+      .tag-badge.tag-sos.selected {
+        background: #ff3a3a !important;
+      }
+      .tag-badge.tag-bug.selected {
+        background: #ff9800 !important;
+      }
+      .tag-badge.tag-feature.selected {
+        background: #3a8dde !important;
+      }
+      .tag-badge.tag-discuss.selected {
+        background: #a259ff !important;
+      }
+      .tag-badge.tag-docs.selected {
+        background: #00b894 !important;
+      }
+      /* Стили для поля даты */
+      .date-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 180px;
+      }
+      .date-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: var(--text-soft);
+        margin-bottom: 2px;
+      }
+      .date-label .material-icons {
+        font-size: 1.1em;
+        color: var(--accent);
+      }
+      .date-input {
+        padding: 10px 12px;
+        border: 1.5px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1em;
+        background: #fff;
+        color: var(--text);
+        transition: border-color 0.18s, box-shadow 0.18s;
+        cursor: pointer;
+      }
+      .date-input:hover {
+        border-color: var(--accent);
+      }
+      .date-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
+      body.dark .date-input {
+        background: #2a2d3e;
+        border-color: #3a3f55;
+        color: #e1e5e9;
+      }
+      body.dark .date-input:hover {
+        border-color: var(--accent);
+      }
+      body.dark .date-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-dark);
+      }
+      .task-status-pill {
+        display: flex;
+        align-items: center;
+        margin: 10px 0 8px 0;
+        min-height: 32px;
+      }
+      .task-status-pill-inner {
+        display: inline-block;
+        background: linear-gradient(90deg, #4fd1ff 0%, #5271ff 100%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.08em;
+        border-radius: 16px;
+        padding: 4px 18px;
+        margin-right: 8px;
+        box-shadow: 0 2px 8px #5271ff22;
+        letter-spacing: 0.01em;
+        user-select: none;
+      }
+      .task-assignee-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        min-height: 28px;
+      }
+      .task-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #e7e9fc;
+        color: #5271ff;
+        font-weight: 700;
+        font-size: 1.08em;
+        margin-right: 4px;
+        box-shadow: 0 1px 4px #5271ff13;
+      }
+      .assignee-name {
+        font-weight: 600;
+        color: #5271ff;
+        font-size: 1.08em;
+      }
+      .task-desc-card {
+        background: #f7f8fd;
+        border-radius: 12px;
+        border: 1.5px solid #e1e5e9;
+        padding: 18px 18px 16px 18px;
+        margin: 18px 0 10px 0;
+        min-height: 44px;
+        box-shadow: 0 2px 8px #5271ff11;
+      }
+      body.dark .task-desc-card {
+        background: #23253e;
+        border-color: #3a3f55;
+      }
+      .task-desc-card-inner {
+        font-size: 1.15em;
+        color: var(--text-main);
+        font-weight: 500;
+      }
+      .task-desc-card-inner.empty {
+        color: #b9bccc;
+        font-size: 1.08em;
+        font-style: italic;
       }
     </style>
   </body>

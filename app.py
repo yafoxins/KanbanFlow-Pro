@@ -50,7 +50,11 @@ def init_db():
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         text TEXT NOT NULL,
         description TEXT,
-        status TEXT NOT NULL
+        status TEXT NOT NULL,
+        tags TEXT[],
+        due_date DATE,
+        updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        updated_at TIMESTAMP
     );
      CREATE TABLE IF NOT EXISTS teams (
         id SERIAL PRIMARY KEY,
@@ -74,7 +78,11 @@ def init_db():
         text TEXT NOT NULL,
         description TEXT,
         status VARCHAR(32) NOT NULL,
-        assignee_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+        assignee_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        tags TEXT[],
+        due_date DATE,
+        updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        updated_at TIMESTAMP
     );
     """)
     conn.commit()
@@ -188,33 +196,123 @@ def kanban(username):
     return render_template('kanban.html', username=username, active_page="kanban")
 
 
+def create_default_statuses(username):
+    """Создаёт статусы по умолчанию для пользователя, если их нет"""
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        # Проверяем, есть ли уже статусы у пользователя
+        cur.execute(
+            'SELECT COUNT(*) FROM statuses WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
+        count_row = cur.fetchone()
+        count = count_row[0] if count_row else 0
+
+        if count == 0:
+            # Получаем user_id
+            cur.execute('SELECT id FROM users WHERE username=%s', (username,))
+            user_row = cur.fetchone()
+            if user_row:
+                user_id = user_row[0]
+                # Создаём статусы по умолчанию
+                statuses = [("todo", "Запланировано"),
+                            ("progress", "В работе"), ("done", "Готово")]
+                for code, title in statuses:
+                    cur.execute(
+                        'INSERT INTO statuses (user_id, code, title) VALUES (%s, %s, %s)', (user_id, code, title))
+                conn.commit()
+    except Exception as e:
+        print(f"Error in create_default_statuses for {username}: {e}")
+        if conn:
+            conn.rollback()
+        # Не прерываем выполнение, просто логируем ошибку
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
 @app.route('/<username>/api/statuses', methods=['GET'])
 def api_get_statuses(username):
     if not is_authenticated(username):
         return jsonify({'error': 'auth'}), 401
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        'SELECT code, title FROM statuses WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
-    statuses = [{'code': row[0], 'title': row[1]} for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return jsonify(statuses)
+
+    # Создаём статусы по умолчанию, если их нет
+    create_default_statuses(username)
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'SELECT code, title FROM statuses WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
+        statuses = [{'code': row[0], 'title': row[1]}
+                    for row in cur.fetchall()]
+        return jsonify(statuses)
+    except Exception as e:
+        print(f"Error in api_get_statuses for {username}: {e}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def to_iso(val):
+    # Если это строка — возвращаем как есть, если datetime/date — isoformat, иначе None
+    if val is None:
+        return None
+    if hasattr(val, 'isoformat'):
+        return val.isoformat()
+    return str(val)
 
 
 @app.route('/<username>/api/tasks', methods=['GET'])
 def api_get_tasks(username):
     if not is_authenticated(username):
         return jsonify({'error': 'auth'}), 401
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        'SELECT id, text, description, status FROM tasks WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
-    tasks = [{'id': row[0], 'text': row[1], 'description': row[2],
-              'status': row[3]} for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return jsonify(tasks)
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'SELECT t.id, t.text, t.description, t.status, t.tags, t.due_date, t.updated_by, t.updated_at, u.username as updated_by_name '
+            'FROM tasks t LEFT JOIN users u ON t.updated_by = u.id '
+            'WHERE t.user_id=(SELECT id FROM users WHERE username=%s)', (username,))
+        tasks = []
+        for row in cur.fetchall():
+            tasks.append({
+                'id': row[0],
+                'text': row[1],
+                'description': row[2],
+                'status': row[3],
+                'tags': row[4] or [],
+                'due_date': to_iso(row[5]),
+                'updated_by': row[6],
+                'updated_by_name': row[8],
+                'updated_at': to_iso(row[7])
+            })
+        return jsonify(tasks)
+    except Exception as e:
+        import traceback
+        print(f"Error in api_get_tasks for {username}: {e}")
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error', 'details': str(e)}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 @app.route('/<username>/api/tasks', methods=['POST'])
@@ -226,8 +324,20 @@ def api_add_task(username):
         return jsonify({'error': 'no data'}), 400
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('INSERT INTO tasks (user_id, text, description, status) VALUES ((SELECT id FROM users WHERE username=%s), %s, %s, %s) RETURNING id',
-                (username, data['text'], data.get('description', ''), data['status']))
+    # Получаем user_id
+    cur.execute('SELECT id, username FROM users WHERE username=%s', (username,))
+    user_row = cur.fetchone()
+    if not user_row:
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'user not found'}), 400
+    user_id = user_row[0]
+    user_name = user_row[1]
+    tags = data.get('tags', [])
+    due_date = data.get('due_date')
+    updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+    cur.execute('INSERT INTO tasks (user_id, text, description, status, tags, due_date, updated_by, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+                (user_id, data['text'], data.get('description', ''), data['status'], tags, due_date, user_id, updated_at))
     row = cur.fetchone()
     if not row:
         cur.close()
@@ -237,7 +347,7 @@ def api_add_task(username):
     conn.commit()
     cur.close()
     conn.close()
-    return jsonify({'id': task_id, 'text': data['text'], 'description': data.get('description', ''), 'status': data['status']})
+    return jsonify({'success': True, 'id': task_id, 'updated_by': user_id, 'updated_by_name': user_name, 'updated_at': updated_at})
 
 
 @app.route('/<username>/api/tasks/<int:task_id>', methods=['PATCH', 'DELETE'])
@@ -249,16 +359,33 @@ def api_modify_task(username, task_id):
     if request.method == 'DELETE':
         cur.execute(
             'DELETE FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
     else:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'no data'}), 400
-        cur.execute('UPDATE tasks SET text=%s, description=%s, status=%s WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)',
-                    (data['text'], data.get('description', ''), data['status'], task_id, username))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({'success': True})
+        tags = data.get('tags', [])
+        due_date = data.get('due_date')
+        updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+        # Получаем user_id
+        cur.execute(
+            'SELECT id, username FROM users WHERE username=%s', (username,))
+        user_row = cur.fetchone()
+        if not user_row:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'user not found'}), 400
+        user_id = user_row[0]
+        user_name = user_row[1]
+        cur.execute('UPDATE tasks SET text=%s, description=%s, status=%s, tags=%s, due_date=%s, updated_by=%s, updated_at=%s WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)',
+                    (data['text'], data.get('description', ''), data['status'], tags, due_date, user_id, updated_at, task_id, username))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'success': True, 'id': task_id, 'updated_by': user_id, 'updated_by_name': user_name, 'updated_at': updated_at})
 
 
 @app.route('/<username>/api/tasks/order', methods=['POST'])
@@ -557,83 +684,139 @@ def add_team_member(username, team_id):
 def get_team_members(username, team_id):
     if not is_authenticated(username):
         return jsonify({'error': 'auth'}), 401
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute('''
-        SELECT u.username FROM team_members tm
-        JOIN users u ON tm.user_id = u.id
-        WHERE tm.team_id = %s
-    ''', (team_id,))
-    members = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return jsonify({'members': members})
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('''
+            SELECT u.username FROM team_members tm
+            JOIN users u ON tm.user_id = u.id
+            WHERE tm.team_id = %s
+        ''', (team_id,))
+        members = [row[0] for row in cur.fetchall()]
+        return jsonify({'members': members})
+    except Exception as e:
+        print(f"Error in get_team_members for {username}, team {team_id}: {e}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 @app.route('/<username>/api/teams/<int:team_id>/statuses', methods=['GET'])
 def get_team_statuses(username, team_id):
     if not is_authenticated(username):
         return jsonify({'error': 'auth'}), 401
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        'SELECT code, title FROM team_statuses WHERE team_id=%s', (team_id,))
-    statuses = [{'code': row[0], 'title': row[1]} for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return jsonify(statuses)
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'SELECT code, title FROM team_statuses WHERE team_id=%s', (team_id,))
+        statuses = [{'code': row[0], 'title': row[1]}
+                    for row in cur.fetchall()]
+        return jsonify(statuses)
+    except Exception as e:
+        print(
+            f"Error in get_team_statuses for {username}, team {team_id}: {e}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 @app.route('/<username>/api/teams/<int:team_id>/tasks', methods=['GET', 'POST'])
 def team_tasks(username, team_id):
     if not is_authenticated(username):
         return jsonify({'error': 'auth'}), 401
-    conn = get_db()
-    cur = conn.cursor()
-    if request.method == 'GET':
-        cur.execute(
-            'SELECT t.id, t.text, t.description, t.status, t.assignee_id, u.username as assignee_name '
-            'FROM team_tasks t LEFT JOIN users u ON t.assignee_id = u.id WHERE t.team_id=%s', (team_id,))
-        tasks = [{'id': row[0], 'text': row[1], 'description': row[2],
-                  'status': row[3], 'assignee_id': row[4], 'assignee_name': row[5]} for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        return jsonify(tasks)
-    else:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'no data'}), 400
-        assignee_id = data.get('assignee_id')
-
-        # Обработка assignee_id
-        if assignee_id is not None and assignee_id != "":
-            try:
-                assignee_id = int(assignee_id)
-            except (ValueError, TypeError):
-                assignee_id = None
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        if request.method == 'GET':
+            cur.execute(
+                'SELECT t.id, t.text, t.description, t.status, t.assignee_id, u.username as assignee_name, t.tags, t.due_date, t.updated_by, t.updated_at, u2.username as updated_by_name '
+                'FROM team_tasks t '
+                'LEFT JOIN users u ON t.assignee_id = u.id '
+                'LEFT JOIN users u2 ON t.updated_by = u2.id '
+                'WHERE t.team_id=%s', (team_id,))
+            tasks = []
+            for row in cur.fetchall():
+                tasks.append({
+                    'id': row[0],
+                    'text': row[1],
+                    'description': row[2],
+                    'status': row[3],
+                    'assignee_id': row[4],
+                    'assignee_name': row[5],
+                    'tags': row[6] or [],
+                    'due_date': to_iso(row[7]),
+                    'updated_by': row[8],
+                    'updated_at': to_iso(row[9]),
+                    'updated_by_name': row[10]
+                })
+            return jsonify(tasks)
         else:
-            assignee_id = None
-
-        cur.execute('INSERT INTO team_tasks (team_id, text, description, status, assignee_id) VALUES (%s, %s, %s, %s, %s) RETURNING id',
-                    (team_id, data['text'], data.get('description', ''), data['status'], assignee_id))
-        row = cur.fetchone()
-        if not row:
+            data = request.get_json()
+            if not data:
+                return jsonify({'error': 'no data'}), 400
+            assignee_id = data.get('assignee_id')
+            tags = data.get('tags', [])
+            due_date = data.get('due_date')
+            updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+            # Получаем user_id
+            cur.execute('SELECT id FROM users WHERE username=%s', (username,))
+            user_row = cur.fetchone()
+            if not user_row:
+                return jsonify({'error': 'user not found'}), 400
+            user_id = user_row[0]
+            cur.execute('INSERT INTO team_tasks (team_id, text, description, status, assignee_id, tags, due_date, updated_by, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+                        (team_id, data['text'], data.get('description', ''), data['status'], assignee_id, tags, due_date, user_id, updated_at))
+            row = cur.fetchone()
+            if not row:
+                return jsonify({'error': 'not found'}), 404
+            task_id = row[0]
+            conn.commit()
+            # Реалтайм: уведомить всех в комнате team_{team_id}
+            cur.execute('SELECT username FROM users WHERE id=%s', (user_id,))
+            row_name = cur.fetchone()
+            updated_by_name = row_name[0] if row_name else None
+            socketio.emit('team_task_added', {
+                'id': task_id,
+                'text': data['text'],
+                'description': data.get('description', ''),
+                'status': data['status'],
+                'assignee_id': assignee_id,
+                'tags': tags,
+                'due_date': due_date,
+                'updated_by': user_id,
+                'updated_by_name': updated_by_name,
+                'updated_at': updated_at
+            }, to=f'team_{team_id}')
+            return jsonify({'id': task_id, 'text': data['text'], 'description': data.get('description', ''), 'status': data['status'], 'assignee_id': assignee_id, 'tags': tags, 'due_date': due_date, 'updated_by': user_id, 'updated_by_name': updated_by_name, 'updated_at': updated_at})
+    except Exception as e:
+        import traceback
+        print(f"Error in team_tasks for {username}, team {team_id}: {e}")
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error', 'details': str(e)}), 500
+    finally:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
-            return jsonify({'error': 'not found'}), 404
-        task_id = row[0]
-        conn.commit()
-        cur.close()
-        conn.close()
-        # Реалтайм: уведомить всех в комнате team_{team_id}
-        socketio.emit('team_task_added', {
-            'id': task_id,
-            'text': data['text'],
-            'description': data.get('description', ''),
-            'status': data['status'],
-            'assignee_id': assignee_id
-        }, to=f'team_{team_id}')
-        return jsonify({'id': task_id, 'text': data['text'], 'description': data.get('description', ''), 'status': data['status'], 'assignee_id': assignee_id})
 
 
 @app.route('/<username>/api/teams/<int:team_id>/tasks/<int:task_id>', methods=['PATCH', 'DELETE'])
@@ -656,18 +839,21 @@ def team_task_modify(username, team_id, task_id):
         if not data:
             return jsonify({'error': 'no data'}), 400
         assignee_id = data.get('assignee_id')
-
-        # Обработка assignee_id
-        if assignee_id is not None and assignee_id != "":
-            try:
-                assignee_id = int(assignee_id)
-            except (ValueError, TypeError):
-                assignee_id = None
-        else:
-            assignee_id = None
-
-        cur.execute('UPDATE team_tasks SET text=%s, description=%s, status=%s, assignee_id=%s WHERE id=%s AND team_id=%s',
-                    (data['text'], data.get('description', ''), data['status'], assignee_id, task_id, team_id))
+        tags = data.get('tags', [])
+        due_date = data.get('due_date')
+        updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+        # Получаем user_id
+        cur.execute(
+            'SELECT id, username FROM users WHERE username=%s', (username,))
+        user_row = cur.fetchone()
+        if not user_row:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'user not found'}), 400
+        user_id = user_row[0]
+        user_name = user_row[1]
+        cur.execute('UPDATE team_tasks SET text=%s, description=%s, status=%s, assignee_id=%s, tags=%s, due_date=%s, updated_by=%s, updated_at=%s WHERE id=%s AND team_id=%s',
+                    (data['text'], data.get('description', ''), data['status'], assignee_id, tags, due_date, user_id, updated_at, task_id, team_id))
         conn.commit()
         cur.close()
         conn.close()
@@ -676,9 +862,14 @@ def team_task_modify(username, team_id, task_id):
             'text': data['text'],
             'description': data.get('description', ''),
             'status': data['status'],
-            'assignee_id': assignee_id
+            'assignee_id': assignee_id,
+            'tags': tags,
+            'due_date': due_date,
+            'updated_by': user_id,
+            'updated_by_name': user_name,
+            'updated_at': updated_at
         }, to=f'team_{team_id}')
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'updated_by': user_id, 'updated_by_name': user_name, 'updated_at': updated_at})
 
 
 @app.route('/<username>/api/teams/<int:team_id>/tasks/order', methods=['POST'])
@@ -950,6 +1141,19 @@ def delete_team_status(username, team_id, code):
     socketio.emit('team_status_deleted', {
                   'team_id': team_id, 'code': code}, to=f'team_{team_id}')
     return jsonify({'success': True, 'moved_to': new_code})
+
+
+@app.route('/api/check_user_id/<int:user_id>')
+def api_check_user_id(user_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT username FROM users WHERE id=%s', (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not row:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'username': row[0]})
 
 
 if __name__ == '__main__':

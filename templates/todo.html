@@ -356,8 +356,8 @@
           li.className = "todo-item" + (t.done ? " completed" : "");
           li.innerHTML = `
       <label class="todo-checkbox">
-        <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
-      </label>
+            <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
+          </label>
       <div class="todo-content">
         <span class="todo-text${
           t.done ? " completed" : ""
@@ -371,7 +371,7 @@
       <button class="remove-btn" data-i="${i}" title="Удалить">
         <span class="material-icons">close</span>
       </button>
-    `;
+        `;
           todoList.appendChild(li);
         });
 

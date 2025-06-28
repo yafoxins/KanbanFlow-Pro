@@ -93,7 +93,7 @@
           </div>
         </div>
       </div>
-      <div class="kanban-add-status-wrap">
+      <div class="kanban-add-status-wrap" style="margin-bottom: 38px">
         <button
           class="kanban-add-status-btn"
           id="open-status-modal"
@@ -218,6 +218,67 @@
             rows="2"
           ></textarea>
           <select name="task_status" id="task_status" required></select>
+          <div
+            class="modal-row"
+            style="
+              margin: 10px 0 0 0;
+              gap: 10px;
+              flex-wrap: wrap;
+              flex-direction: column;
+              align-items: stretch;
+            "
+          >
+            <div class="task-tags-select" style="margin-bottom: 14px">
+              <label class="tag-badge tag-sos"
+                ><input
+                  type="checkbox"
+                  value="Срочно"
+                  class="tag-checkbox"
+                />Срочно</label
+              >
+              <label class="tag-badge tag-bug"
+                ><input
+                  type="checkbox"
+                  value="Баг"
+                  class="tag-checkbox"
+                />Баг</label
+              >
+              <label class="tag-badge tag-feature"
+                ><input
+                  type="checkbox"
+                  value="Улучшение"
+                  class="tag-checkbox"
+                />Улучшение</label
+              >
+              <label class="tag-badge tag-discuss"
+                ><input
+                  type="checkbox"
+                  value="Обсудить"
+                  class="tag-checkbox"
+                />Обсудить</label
+              >
+              <label class="tag-badge tag-docs"
+                ><input
+                  type="checkbox"
+                  value="Документы"
+                  class="tag-checkbox"
+                />Документы</label
+              >
+            </div>
+            <div class="date-input-wrapper" style="margin-top: 2px">
+              <label class="date-label">
+                <span class="material-icons">event</span>
+                Срок выполнения
+              </label>
+              <input
+                type="date"
+                id="task_due_date"
+                name="task_due_date"
+                class="date-input"
+                placeholder="Выберите дату"
+              />
+            </div>
+          </div>
           <button type="submit" class="plus-btn" id="task-modal-submit-btn">
             <span class="material-icons">done</span>Сохранить
           </button>
@@ -413,6 +474,34 @@
         </form>
       </div>
     </div>
+    <!-- Модалка просмотра задачи -->
+    <div class="modal-backdrop" id="view-task-modal" style="display: none">
+      <div
+        class="modal view-task-modal"
+        style="min-width: 540px; max-width: 96vw"
+      >
+        <button class="modal-close" onclick="closeViewTaskModal()">
+          &times;
+        </button>
+        <div class="modal-title" id="view-task-title">Задача</div>
+        <div id="view-task-status" class="task-status-pill"></div>
+        <div id="view-task-tags" class="task-tags"></div>
+        <div id="view-task-date" class="task-date-badge"></div>
+        <div id="view-task-desc" class="task-desc-card"></div>
+        <div
+          id="view-task-updated"
+          class="task-updated-by"
+          style="font-size: 0.98em; color: #7d809f"
+        ></div>
+        <button
+          class="plus-btn"
+          id="view-task-edit-btn"
+          style="margin-top: 18px"
+        >
+          Редактировать
+        </button>
+      </div>
+    </div>
     <script>
       // ===================== Theme =====================
       function setTheme(dark) {
@@ -562,20 +651,59 @@
 
       // ===================== SPA: Fetch Board =====================
       async function fetchBoard() {
-        let [statuses, tasks] = await Promise.all([
-          fetch(`/${USERNAME}/api/statuses`).then((r) => r.json()),
-          fetch(`/${USERNAME}/api/tasks`).then((r) => r.json()),
-        ]);
-        if (Array.isArray(tasks)) TASKS = tasks;
-        else TASKS = tasks.tasks;
-        STATUSES = statuses;
-        renderBoard();
+        try {
+          let [statuses, tasks] = await Promise.all([
+            fetch(`/${USERNAME}/api/statuses`).then((r) => r.json()),
+            fetch(`/${USERNAME}/api/tasks`).then((r) => r.json()),
+          ]);
+
+          // Проверяем, что получили валидные данные
+          if (Array.isArray(tasks)) {
+            TASKS = tasks;
+          } else if (tasks && tasks.tasks && Array.isArray(tasks.tasks)) {
+            TASKS = tasks.tasks;
+          } else if (tasks && tasks.error) {
+            console.error("Error fetching tasks:", tasks.error);
+            TASKS = [];
+          } else {
+            console.error("Unexpected tasks format:", tasks);
+            TASKS = [];
+          }
+
+          if (Array.isArray(statuses)) {
+            STATUSES = statuses;
+          } else if (statuses && statuses.error) {
+            console.error("Error fetching statuses:", statuses.error);
+            STATUSES = [];
+          } else {
+            console.error("Unexpected statuses format:", statuses);
+            STATUSES = [];
+          }
+
+          renderBoard();
+        } catch (error) {
+          console.error("Error in fetchBoard:", error);
+          TASKS = [];
+          STATUSES = [];
+          renderBoard();
+        }
       }
 
       // ===================== Render =====================
       function renderBoard() {
         const row = document.getElementById("kanban-row");
         row.innerHTML = "";
+
+        // Проверяем, что STATUSES и TASKS определены
+        if (!STATUSES || !Array.isArray(STATUSES)) {
+          console.error("STATUSES is not valid:", STATUSES);
+          STATUSES = [];
+        }
+        if (!TASKS || !Array.isArray(TASKS)) {
+          console.error("TASKS is not valid:", TASKS);
+          TASKS = [];
+        }
+
         STATUSES.forEach((status) => {
           const col = document.createElement("div");
           col.className = "kanban-column";
@@ -609,6 +737,7 @@
         });
         bindAllHandlers();
         updateDnD();
+        bindTaskViewHandlers();
       }
 
       function createTaskCard(task) {
@@ -626,11 +755,29 @@
               task.assignee_name
             )}</span>`
           : "";
+        let tagsHtml = "";
+        if (task.tags && task.tags.length) {
+          tagsHtml =
+            `<div class='task-tags'>` +
+            task.tags
+              .map(
+                (tag) =>
+                  `<span class='task-tag tag-${tag.toLowerCase()}'>${tag}</span>`
+              )
+              .join("") +
+            `</div>`;
+        }
+        let dateHtml = task.due_date
+          ? `<span class='task-date-badge'>${formatRuDate(
+              task.due_date
+            )}</span>`
+          : "";
         div.innerHTML = `
           <div class="task-header">
             <div class="task-title">${escapeHTML(truncate(task.text, 80))}</div>
-            <div class="task-badges"></div>
+            <div class="task-badges">${dateHtml}</div>
           </div>
+          ${tagsHtml}
           ${
             task.description
               ? `<div class="task-desc">${escapeHTML(
@@ -712,6 +859,8 @@
         text = "",
         description = "",
         status = "",
+        tags = [],
+        due_date = null,
       } = {}) {
         document.getElementById("task-modal-title").innerText = edit
           ? "Редактировать задачу"
@@ -726,15 +875,79 @@
               (status || STATUSES[0].code) === s.code ? " selected" : ""
             }>${escapeHTML(s.title)}</option>`
         ).join("");
+        // --- новые поля ---
+        let tagSet = new Set(tags || []);
+        document.querySelectorAll(".tag-checkbox").forEach((cb) => {
+          cb.checked = tagSet.has(cb.value);
+          // Применяем стили сразу при установке состояния
+          const badge = cb.closest(".tag-badge");
+          if (cb.checked) {
+            badge.style.background = getTagColor(cb.value);
+            badge.style.color = "#fff";
+            badge.style.transform = "scale(1.05)";
+            badge.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+          } else {
+            badge.style.background = "";
+            badge.style.color = "";
+            badge.style.transform = "";
+            badge.style.boxShadow = "";
+          }
+        });
+        document.getElementById("task_due_date").value = due_date
+          ? due_date.slice(0, 10)
+          : "";
         document.getElementById("task-modal-error").innerText = "";
         document.getElementById("task-modal").style.display = "flex";
+        bindTagHandlers();
         setTimeout(() => {
           document.getElementById("task_text").focus();
         }, 120);
       }
+
+      // Обработчики для тегов
+      function bindTagHandlers() {
+        document.querySelectorAll(".tag-checkbox").forEach((checkbox) => {
+          checkbox.onchange = function () {
+            // Применяем стили сразу при изменении
+            const badge = this.closest(".tag-badge");
+            if (this.checked) {
+              badge.style.background = getTagColor(this.value);
+              badge.style.color = "#fff";
+              badge.style.transform = "scale(1.05)";
+              badge.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+            } else {
+              badge.style.background = "";
+              badge.style.color = "";
+              badge.style.transform = "";
+              badge.style.boxShadow = "";
+            }
+          };
+        });
+      }
+
+      // Получить цвет для тега
+      function getTagColor(tagName) {
+        const colors = {
+          Срочно: "#ff3a3a",
+          Баг: "#ff9800",
+          Улучшение: "#3a8dde",
+          Обсудить: "#a259ff",
+          Документы: "#00b894",
+        };
+        return colors[tagName] || "#666";
+      }
       function closeTaskModal() {
         document.getElementById("task-modal").style.display = "none";
         document.getElementById("task-modal-form").reset();
+        // Сбрасываем стили тегов
+        document.querySelectorAll(".tag-checkbox").forEach((cb) => {
+          cb.checked = false;
+          const badge = cb.closest(".tag-badge");
+          badge.style.background = "";
+          badge.style.color = "";
+          badge.style.transform = "";
+          badge.style.boxShadow = "";
+        });
       }
       document.getElementById("task-modal-form").onsubmit = async function (e) {
         e.preventDefault();
@@ -742,19 +955,33 @@
         let description = this.task_description.value.trim();
         let status = this.task_status.value;
         let id = this.edit_task_id.value;
+        let tags = Array.from(
+          this.querySelectorAll(".tag-checkbox:checked")
+        ).map((cb) => cb.value);
+        let due_date = this.task_due_date.value || null;
         let method = id ? "PATCH" : "POST";
         let url = `/${USERNAME}/api/tasks` + (id ? `/${id}` : "");
+        let body = { text, description, status, tags, due_date };
+        console.log("DEBUG: отправка задачи:", body);
         let resp = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, description, status }),
+          body: JSON.stringify(body),
         });
-        if (resp.ok) {
+        let data = null;
+        try {
+          data = await resp.json();
+        } catch (e) {
+          data = null;
+        }
+        console.log("Ответ API при создании задачи:", data);
+        if (resp.ok && data && (data.id || data.success)) {
           closeTaskModal();
           fetchBoard();
-        } else
-          document.getElementById("task-modal-error").innerText =
-            "Ошибка сохранения!";
+        } else {
+          let err = data && data.error ? data.error : "Ошибка сохранения!";
+          document.getElementById("task-modal-error").innerText = err;
+        }
       };
       document.getElementById("task-modal").onclick = function (e) {
         if (e.target === this) closeTaskModal();
@@ -967,7 +1194,7 @@
                 <div style=\"display:flex;gap:8px;margin-left:auto;\">
                   ${
                     !isLeader
-                      ? `<button class=\"member-remove-btn circle-btn\" title=\"Удалить\" data-username=\"${m}\"><span class=\"material-icons\">delete</span></button>`
+                      ? `<button class=\"member-remove-btn circle-btn\" title=\"Удалить\" data-username=\"${m}\"><span class="material-icons">delete</span></button>`
                       : ""
                   }
                   ${
@@ -1121,12 +1348,113 @@
           btn.onclick = async function () {
             if (!confirm("Удалить задачу?")) return;
             let id = btn.getAttribute("data-task-id");
-            let resp = await fetch(`/${USERNAME}/api/tasks/${id}`, {
-              method: "DELETE",
-            });
-            if (resp.ok) fetchBoard();
+            try {
+              let resp = await fetch(`/${USERNAME}/api/tasks/${id}`, {
+                method: "DELETE",
+              });
+              if (resp.ok) {
+                fetchBoard();
+              } else {
+                let data = await resp.json();
+                let errorMsg =
+                  data && data.error ? data.error : "Ошибка удаления задачи";
+                alert(errorMsg);
+              }
+            } catch (error) {
+              console.error("Ошибка при удалении задачи:", error);
+              alert("Ошибка удаления задачи");
+            }
           };
         });
+      }
+
+      function formatRuDate(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("ru-RU");
+      }
+
+      // Открытие по клику на задачу
+      function bindTaskViewHandlers() {
+        document.querySelectorAll(".kanban-task").forEach((div) => {
+          div.onclick = function (e) {
+            if (e.target.closest(".edit-btn,.delete-btn")) return;
+            const id = div.dataset.taskId;
+            const task = TASKS.find((t) => t.id == id);
+            if (task) openViewTaskModal(task);
+          };
+        });
+      }
+
+      async function getUserNameById(userId) {
+        if (!userId) return "-";
+        try {
+          let resp = await fetch(`/api/check_user_id/${userId}`);
+          if (resp.ok) {
+            let data = await resp.json();
+            if (data && data.username) return data.username;
+          }
+        } catch (e) {}
+        return "-";
+      }
+
+      async function openViewTaskModal(task) {
+        document.getElementById("view-task-title").textContent = task.text;
+        // Статус pill-style
+        let statusTitle =
+          (STATUSES.find((s) => s.code === task.status) || {}).title ||
+          task.status;
+        document.getElementById(
+          "view-task-status"
+        ).innerHTML = `<span class='task-status-pill-inner'>${escapeHTML(
+          statusTitle
+        )}</span>`;
+        document.getElementById("view-task-tags").innerHTML = (task.tags || [])
+          .map(
+            (tag) =>
+              `<span class='task-tag tag-${tag.toLowerCase()}'>${tag}</span>`
+          )
+          .join(" ");
+        document.getElementById("view-task-date").textContent = task.due_date
+          ? formatRuDate(task.due_date)
+          : "";
+        // Описание — выделенный блок
+        document.getElementById("view-task-desc").innerHTML = task.description
+          ? `<div class='task-desc-card-inner'>${escapeHTML(
+              task.description
+            )}</div>`
+          : "<div class='task-desc-card-inner empty'>Нет описания</div>";
+        // Изменил: всегда ник и дата/время
+        let updName = task.updated_by_name || "-";
+        if ((!updName || updName === "-") && task.updated_by) {
+          updName = await getUserNameById(task.updated_by);
+        }
+        let dateStr = "";
+        if (task.updated_at) {
+          let d = new Date(task.updated_at);
+          dateStr = isNaN(d)
+            ? ""
+            : d.toLocaleString("ru-RU", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+        }
+
+        let upd = `<span style='color:#7d809f;font-size:0.93em;'>Изменил: ${escapeHTML(
+          updName
+        )}${dateStr ? " — " + dateStr : ""}</span>`;
+        document.getElementById("view-task-updated").innerHTML = upd;
+        document.getElementById("view-task-modal").style.display = "flex";
+        document.getElementById("view-task-edit-btn").onclick = function () {
+          openTaskModal({ edit: true, ...task });
+          closeViewTaskModal();
+        };
+      }
+      function closeViewTaskModal() {
+        document.getElementById("view-task-modal").style.display = "none";
       }
     </script>
     <style>
@@ -1199,6 +1527,182 @@
       }
       body.dark .kanban-add-status-btn:hover {
         background: linear-gradient(90deg, #3a8dde 0%, #00fff0 100%);
+      }
+      .view-task-modal {
+        min-width: 540px;
+        max-width: 96vw;
+      }
+      @media (max-width: 700px) {
+        .view-task-modal {
+          min-width: 98vw;
+        }
+      }
+      .task-tags-select {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 8px;
+        padding: 3px 10px;
+        font-size: 1em;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.18s ease;
+      }
+      .tag-badge:hover {
+        box-shadow: 0 2px 8px #5271ff22;
+        opacity: 1;
+      }
+      .tag-checkbox {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .tag-badge.tag-sos {
+        background: #ff3a3a22;
+        color: #d11a2a;
+        border: 1.5px solid #ff3a3a;
+      }
+      .tag-badge.tag-bug {
+        background: #ff980022;
+        color: #ff9800;
+        border: 1.5px solid #ff9800;
+      }
+      .tag-badge.tag-feature {
+        background: #3a8dde22;
+        color: #3a8dde;
+        border: 1.5px solid #3a8dde;
+      }
+      .tag-badge.tag-discuss {
+        background: #a259ff22;
+        color: #a259ff;
+        border: 1.5px solid #a259ff;
+      }
+      .tag-badge.tag-docs {
+        background: #00b89422;
+        color: #00b894;
+        border: 1.5px solid #00b894;
+      }
+      /* Выбранные теги - яркий фон */
+      .tag-badge input:checked {
+        background: currentColor !important;
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+      }
+      .tag-badge.tag-sos input:checked {
+        background: #ff3a3a !important;
+      }
+      .tag-badge.tag-bug input:checked {
+        background: #ff9800 !important;
+      }
+      .tag-badge.tag-feature input:checked {
+        background: #3a8dde !important;
+      }
+      .tag-badge.tag-discuss input:checked {
+        background: #a259ff !important;
+      }
+      .tag-badge.tag-docs input:checked {
+        background: #00b894 !important;
+      }
+      /* Стили для поля даты */
+      .date-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 180px;
+      }
+      .date-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: var(--text-soft);
+        margin-bottom: 2px;
+      }
+      .date-label .material-icons {
+        font-size: 1.1em;
+        color: var(--accent);
+      }
+      .date-input {
+        padding: 10px 12px;
+        border: 1.5px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1em;
+        background: #fff;
+        color: var(--text);
+        transition: border-color 0.18s, box-shadow 0.18s;
+        cursor: pointer;
+      }
+      .date-input:hover {
+        border-color: var(--accent);
+      }
+      .date-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
+      body.dark .date-input {
+        background: #2a2d3e;
+        border-color: #3a3f55;
+        color: #e1e5e9;
+      }
+      body.dark .date-input:hover {
+        border-color: var(--accent);
+      }
+      body.dark .date-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-dark);
+      }
+      .task-status-pill {
+        display: flex;
+        align-items: center;
+        margin: 10px 0 8px 0;
+        min-height: 32px;
+      }
+      .task-status-pill-inner {
+        display: inline-block;
+        background: linear-gradient(90deg, #4fd1ff 0%, #5271ff 100%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.08em;
+        border-radius: 16px;
+        padding: 4px 18px;
+        margin-right: 8px;
+        box-shadow: 0 2px 8px #5271ff22;
+        letter-spacing: 0.01em;
+        user-select: none;
+      }
+      .task-desc-card {
+        background: #f7f8fd;
+        border-radius: 12px;
+        border: 1.5px solid #e1e5e9;
+        padding: 18px 18px 16px 18px;
+        margin: 18px 0 10px 0;
+        min-height: 44px;
+        box-shadow: 0 2px 8px #5271ff11;
+      }
+      body.dark .task-desc-card {
+        background: #23253e;
+        border-color: #3a3f55;
+      }
+      .task-desc-card-inner {
+        font-size: 1.15em;
+        color: var(--text-main);
+        font-weight: 500;
+      }
+      .task-desc-card-inner.empty {
+        color: #b9bccc;
+        font-size: 1.08em;
+        font-style: italic;
       }
     </style>
   </body>
