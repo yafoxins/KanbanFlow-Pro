@@ -157,17 +157,179 @@ main {
 
 /* ---------- FOOTER ---------- */
 footer {
-  width: 100vw; background: var(--footer-bg); color: #7c85af;
-  text-align: center; font-size: 1em; border-top: 1.2px solid #5271ff11;
-  letter-spacing: 0.01em; line-height: 1.5; user-select: none;
-  box-shadow: 0 -2px 20px #22295522; padding: 14px 0 8px 0; margin: 0; box-sizing: border-box;
+  width: 100vw;
+  background: linear-gradient(135deg, var(--footer-bg) 0%, #f0f4ff 50%, var(--footer-bg) 100%);
+  color: var(--text-soft);
+  text-align: center;
+  font-size: 1.02em;
+  border-top: 1.5px solid rgba(82, 113, 255, 0.08);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  user-select: none;
+  box-shadow: 
+    0 -4px 24px rgba(82, 113, 255, 0.06),
+    0 -1px 8px rgba(34, 41, 85, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 20px 0 16px 0;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
-footer a {
-  color: #5271ff; font-weight: 800; margin-left: 7px; text-decoration: underline;
-  transition: color 0.16s, text-decoration 0.16s;
+
+/* Декоративные элементы footer */
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(82, 113, 255, 0.15) 20%, 
+    rgba(82, 113, 255, 0.3) 50%, 
+    rgba(82, 113, 255, 0.15) 80%, 
+    transparent 100%);
 }
-footer a:hover, footer a:focus {
-  color: #3952d2; text-decoration: underline wavy; text-underline-offset: 2px;
+
+footer::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(82, 113, 255, 0.2) 20%, 
+    rgba(82, 113, 255, 0.4) 50%, 
+    rgba(82, 113, 255, 0.2) 80%, 
+    transparent 100%);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+/* Содержимое footer */
+footer .footer-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+footer .footer-main {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 1.05em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+footer .footer-subtitle {
+  font-size: 0.92em;
+  color: var(--text-soft);
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+footer .footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+footer .footer-link {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.95em;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+footer .footer-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(82, 113, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+footer .footer-link:hover::before {
+  left: 100%;
+}
+
+footer .footer-link:hover {
+  color: var(--primary-dark);
+  background: rgba(82, 113, 255, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(82, 113, 255, 0.15);
+}
+
+footer .footer-divider {
+  width: 1px;
+  height: 16px;
+  background: linear-gradient(180deg, transparent, var(--text-soft), transparent);
+  opacity: 0.4;
+}
+
+/* Темная тема для footer */
+body.dark footer {
+  background: linear-gradient(135deg, var(--footer-bg) 0%, #1a1f2e 50%, var(--footer-bg) 100%);
+  border-top: 1.5px solid rgba(82, 113, 255, 0.12);
+  box-shadow: 
+    0 -4px 24px rgba(0, 0, 0, 0.2),
+    0 -1px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body.dark footer::before {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(82, 113, 255, 0.2) 20%, 
+    rgba(82, 113, 255, 0.4) 50%, 
+    rgba(82, 113, 255, 0.2) 80%, 
+    transparent 100%);
+}
+
+body.dark footer::after {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(82, 113, 255, 0.3) 20%, 
+    rgba(82, 113, 255, 0.5) 50%, 
+    rgba(82, 113, 255, 0.3) 80%, 
+    transparent 100%);
+}
+
+body.dark footer .footer-main {
+  color: #dbe5ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.dark footer .footer-link:hover {
+  background: rgba(82, 113, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(82, 113, 255, 0.25);
+}
+
+/* Анимации для footer */
+@keyframes footerGlow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+footer:hover::after {
+  animation: footerGlow 2s ease-in-out infinite;
 }
 
 /* ---------- MODAL ---------- */
@@ -272,11 +434,20 @@ body.dark .kanban-home-form input:focus { background: #222a49; border-color: #72
   .kanban-home-form input[type="text"] { font-size: 0.98em; padding: 11px 7px; }
   .kanban-home-form button { font-size: 0.97em; padding: 11px 0 11px 0; }
   .kanban-home-subtitle { font-size: 0.92em; }
-  footer { font-size: 0.92em; padding: 10px 0 7px 0; }
+  footer { padding: 16px 0 12px 0; font-size: 0.95em; }
+  footer .footer-content { gap: 6px; }
+  footer .footer-main { font-size: 1em; }
+  footer .footer-subtitle { font-size: 0.88em; }
+  footer .footer-links { gap: 12px; margin-top: 2px; }
+  footer .footer-link { font-size: 0.9em; padding: 4px 8px; }
+  footer::after { width: 40px; height: 2px; }
 }
 @media (max-width: 400px) {
   .kanban-home { padding: 4vw 1vw 3vw 1vw; }
   .topbar-inner { padding: 0 3px; }
+  footer { padding: 14px 0 10px 0; font-size: 0.9em; }
+  footer .footer-links { flex-direction: column; gap: 8px; }
+  footer .footer-divider { display: none; }
 }
 /* -------- MODAL DESKTOP: шире и красивее -------- */
 @media (min-width: 700px) {

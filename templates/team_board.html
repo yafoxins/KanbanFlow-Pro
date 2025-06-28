@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Team Kanban — {{ username }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/simplebar@6.2.5/dist/simplebar.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/simplebar@6.2.5/dist/simplebar.min.js"></script>
+    <!-- Quill.js -->
+    <link
+      href="https://cdn.quilljs.com/1.3.6/quill.snow.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <link
+      href="{{ url_for('static', filename='style.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button
+          class="back-btn"
+          onclick="window.location.href='/{{ username }}/kanban'"
+        >
+          <span class="material-icons">arrow_back</span> Назад
+        </button>
+        <div
+          class="topbar-title"
+          id="team-title-dynamic"
+          style="display: flex; align-items: center; gap: 10px"
+        >
+          <span
+            class="material-icons topbar-team-icon"
+            style="font-size: 1.5em; padding: 4px 7px 4px 7px"
+            >groups</span
+          >
+          <span
+            class="team-board-label"
+            style="font-weight: 700; font-size: 1.13em; letter-spacing: 0.01em"
+            >Командная доска</span
+          >
+          <span
+            class="team-name-badge"
+            style="
+              background: var(--primary);
+              color: #fff;
+              font-weight: 600;
+              font-size: 1.08em;
+              border-radius: 12px;
+              padding: 3px 14px 3px 12px;
+              margin-left: 6px;
+              box-shadow: 0 2px 8px #5271ff22;
+            "
+            >{{ team_name or '...' }}</span
+          >
+        </div>
+        <button
+          id="theme-toggle-btn"
+          class="theme-toggle-btn"
+          title="Переключить тему"
+        >
+          <span class="material-icons" id="theme-icon">dark_mode</span>
+        </button>
+      </div>
+    </header>
+    <div
+      id="no-team-id"
+      style="
+        display: none;
+        max-width: 480px;
+        margin: 60px auto 0 auto;
+        padding: 32px 24px 28px 24px;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 4px 32px #5271ff13, 0 1px 6px #0001;
+        text-align: center;
+      "
+    >
+      <span
+        class="material-icons"
+        style="font-size: 3em; color: var(--primary); margin-bottom: 10px"
+        >error_outline</span
+      >
+      <div style="font-size: 1.25em; font-weight: 700; margin-bottom: 10px">
+        Не выбран ID команды
+      </div>
+      <div style="color: #7d809f; margin-bottom: 18px">
+        Пожалуйста, выберите команду из списка или вернитесь на главную
+        страницу.
+      </div>
+      <button
+        onclick="window.location.href='/'"
+        class="plus-btn"
+        style="font-size: 1.1em; padding: 8px 28px"
+      >
+        На главную
+      </button>
+    </div>
+    <main
+      id="main-board"
+      style="
+        flex: 1 1 auto;
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+      "
+    >
+      <div class="kanban-board-wrap" style="position: relative">
+        <div class="kanban-board" id="kanban-board">
+          <div
+            data-simplebar
+            class="kanban-scroll"
+            style="width: 100%; height: 100%; min-height: 380px"
+          >
+            <div class="kanban-row" id="kanban-row"></div>
+          </div>
+        </div>
+      </div>
+      <div class="kanban-add-status-wrap" style="margin-bottom: 38px">
+        <button
+          class="kanban-add-status-btn"
+          id="open-status-modal"
+          type="button"
+        >
+          <span class="material-icons">add</span> Новый статус
+        </button>
+      </div>
+    </main>
+    <footer>
+      <div class="footer-content">
+        <div class="footer-main">© 2025 — Flask Kanban</div>
+        <div class="footer-subtitle">
+          Современная система управления задачами
+        </div>
+        <div class="footer-links">
+          <a href="https://t.me/yafoxin" class="footer-link" target="_blank"
+            >Поддержка</a
+          >
+          <div class="footer-divider"></div>
+          <a
+            href="https://github.com/yafoxins"
+            class="footer-link"
+            target="_blank"
+            >GitHub</a
+          >
+        </div>
+      </div>
+    </footer>
+    <!-- Модалка: профиль пользователя -->
+    <div class="modal-backdrop" id="profile-modal" style="display: none">
+      <div class="modal modal-profile">
+        <button class="modal-close profile-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <span class="material-icons">account_circle</span>
+          </div>
+          <div class="profile-username" id="profile-username"></div>
+          <div class="profile-fields">
+            <div class="profile-field">
+              <span class="profile-label">E-mail:</span>
+              <span class="profile-value" id="profile-email"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Страна:</span>
+              <span class="profile-value" id="profile-country"></span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Имя:</span>
+              <span class="profile-value" id="profile-fullname"></span>
+            </div>
+          </div>
+          <button class="plus-btn profile-close" type="button">Закрыть</button>
+        </div>
+      </div>
+    </div>
+    <!-- Модалка: смена пароля -->
+    <div
+      class="modal-backdrop"
+      id="change-password-modal"
+      style="display: none"
+    >
+      <div class="modal modal-password">
+        <button class="modal-close" type="button" aria-label="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-password-content">
+          <div class="modal-password-icon">
+            <span class="material-icons">lock_reset</span>
+          </div>
+          <div class="modal-title modal-password-title">Смена пароля</div>
+          <form class="modal-form" id="change-password-form" autocomplete="off">
+            <input
+              type="password"
+              name="old_password"
+              id="old_password"
+              placeholder="Старый пароль"
+              required
+            />
+            <input
+              type="password"
+              name="new_password"
+              id="new_password"
+              placeholder="Новый пароль"
+              required
+              minlength="3"
+            />
+            <input
+              type="password"
+              name="new_password2"
+              id="new_password2"
+              placeholder="Повторите новый пароль"
+              required
+              minlength="3"
+            />
+            <button type="submit" class="plus-btn">
+              <span class="material-icons">sync_lock</span>
+              Сменить
+            </button>
+            <div id="change-password-error" class="modal-error"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Модалка: список команд -->
+    <div class="modal-backdrop" id="teams-modal" style="display: none">
+      <div class="modal teams-section">
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div
+          class="modal-title-block"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 18px;
+          "
+        >
+          <span class="modal-icon" style="margin-bottom: 8px">
+            <span class="material-icons" style="font-size: 2.2em">groups</span>
+          </span>
+          <span
+            class="modal-title"
+            style="text-align: center; font-size: 1.45em; font-weight: 900"
+            >Мои команды</span
+          >
+        </div>
+        <button
+          id="open-create-team-modal"
+          class="plus-btn create-team-btn"
+          style="
+            margin: 0 auto 18px auto;
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.13em;
+          "
+        >
+          <span class="material-icons">add</span>Создать команду
+        </button>
+        <div
+          id="teams-list"
+          class="teams-list"
+          style="display: flex; flex-direction: column; gap: 22px; width: 100%"
+        ></div>
+      </div>
+    </div>
+    <!-- Модалка: создать команду -->
+    <div class="modal-backdrop" id="create-team-modal" style="display: none">
+      <div class="modal team-modal">
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-title">Создать команду</div>
+        <form class="modal-form" id="create-team-form" autocomplete="off">
+          <input
+            type="text"
+            id="team-name-input"
+            placeholder="Название команды"
+            maxlength="40"
+            required
+          />
+          <button type="submit" class="plus-btn">
+            <span class="material-icons">add</span>Создать
+          </button>
+          <div id="create-team-error" class="modal-error"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Модалка: редактировать команду -->
+    <div class="modal-backdrop" id="edit-team-modal" style="display: none">
+      <div class="modal team-modal">
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div
+          class="modal-title-block"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <span class="modal-icon" style="margin-bottom: 8px">
+            <span class="material-icons" style="font-size: 2.2em">groups</span>
+          </span>
+          <span
+            class="modal-title"
+            style="text-align: center; font-size: 1.35em; font-weight: 900"
+            >Редактировать команду</span
+          >
+        </div>
+        <form class="modal-form" id="edit-team-form" autocomplete="off">
+          <input
+            type="text"
+            id="edit-team-name"
+            class="modal-input"
+            placeholder="Название команды"
+            maxlength="40"
+            required
+          />
+          <div
+            id="edit-team-members"
+            class="edit-team-members"
+            style="margin-bottom: 10px"
+          ></div>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              margin-bottom: 8px;
+            "
+          >
+            <input
+              type="text"
+              id="add-member-input"
+              class="modal-input"
+              placeholder="Добавить участника по username"
+              maxlength="32"
+              style="flex: 1"
+            />
+            <button
+              type="button"
+              class="plus-btn"
+              id="add-member-btn"
+              title="Добавить участника"
+            >
+              <span class="material-icons">person_add</span>
+            </button>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px">
+            <button type="submit" class="plus-btn">
+              <span class="material-icons">save</span>Сохранить
+            </button>
+            <button
+              type="button"
+              class="plus-btn danger-btn"
+              id="delete-team-btn"
+            >
+              <span class="material-icons">delete</span>Удалить
+            </button>
+          </div>
+          <div id="edit-team-error" class="modal-error"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Модалка: задача -->
+    <div class="modal-backdrop" id="task-modal" style="display: none">
+      <div class="modal modal-task" style="overflow: hidden">
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-title" id="task-modal-title">Новая задача</div>
+        <form class="modal-form" id="task-modal-form" autocomplete="off">
+          <input type="hidden" name="edit_task_id" id="edit_task_id" />
+          <div class="modal-field">
+            <label for="task_text"
+              ><span class="material-icons">title</span> Название задачи</label
+            >
+            <input
+              type="text"
+              name="task_text"
+              id="task_text"
+              placeholder="Название задачи"
+              required
+              maxlength="80"
+            />
+          </div>
+          <div class="modal-field">
+            <label for="task_description_editor"
+              ><span class="material-icons">description</span> Описание</label
+            >
+            <div id="task_description_editor" style="height: 200px"></div>
+          </div>
+          <div class="modal-field">
+            <label for="task_status"
+              ><span class="material-icons">flag</span> Статус</label
+            >
+            <select name="task_status" id="task_status" required></select>
+          </div>
+          <div class="modal-field">
+            <label><span class="material-icons">label</span> Теги</label>
+            <div class="task-tags-select" style="margin-bottom: 8px">
+              <span class="tag-badge tag-sos" data-tag="Срочно"
+                >Срочно<span class="checkmark material-icons">check</span></span
+              >
+              <span class="tag-badge tag-bug" data-tag="Баг"
+                >Баг<span class="checkmark material-icons">check</span></span
+              >
+              <span class="tag-badge tag-feature" data-tag="Улучшение"
+                >Улучшение<span class="checkmark material-icons"
+                  >check</span
+                ></span
+              >
+              <span class="tag-badge tag-discuss" data-tag="Обсудить"
+                >Обсудить<span class="checkmark material-icons"
+                  >check</span
+                ></span
+              >
+              <span class="tag-badge tag-docs" data-tag="Документы"
+                >Документы<span class="checkmark material-icons"
+                  >check</span
+                ></span
+              >
+            </div>
+          </div>
+          <div class="modal-field">
+            <label class="date-label" for="task_due_date">
+              <span class="material-icons date-icon">event</span>
+              Срок выполнения
+            </label>
+            <input
+              type="date"
+              id="task_due_date"
+              name="task_due_date"
+              class="date-input"
+              placeholder="Выберите дату"
+            />
+          </div>
+          <div class="modal-field">
+            <label for="task_assignee_input"
+              ><span class="material-icons">person</span> Исполнитель</label
+            >
+            <div class="modal-row" style="position: relative">
+              <input
+                type="text"
+                id="task_assignee_input"
+                placeholder="Исполнитель (ник)"
+                autocomplete="off"
+                style="flex: 1"
+              />
+              <input type="hidden" id="task_assignee" name="task_assignee" />
+              <div
+                id="assignee-autocomplete"
+                class="autocomplete-list"
+                style="display: none"
+              ></div>
+            </div>
+          </div>
+          <div
+            id="task-modal-error"
+            style="
+              color: #d11a2a;
+              text-align: center;
+              margin-top: 12px;
+              font-size: 1.08em;
+            "
+          ></div>
+          <button
+            type="submit"
+            class="plus-btn modal-save-btn"
+            id="task-modal-submit-btn"
+          >
+            <span class="material-icons">done</span>Сохранить
+          </button>
+        </form>
+      </div>
+    </div>
+    <!-- Модалка: статус -->
+    <div class="modal-backdrop" id="status-modal" style="display: none">
+      <div class="modal">
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-title">Добавить новый статус</div>
+        <form class="modal-form" id="status-modal-form" autocomplete="off">
+          <input
+            type="text"
+            name="new_status_title"
+            id="new_status_title"
+            placeholder="Название статуса"
+            maxlength="32"
+            required
+          />
+          <button type="submit" class="plus-btn">
+            <span class="material-icons">add</span>Добавить статус
+          </button>
+        </form>
+        <div
+          id="status-modal-error"
+          style="
+            color: #d11a2a;
+            text-align: center;
+            margin-top: 12px;
+            font-size: 1.08em;
+          "
+        ></div>
+      </div>
+    </div>
+    <!-- Модалка просмотра задачи -->
+    <div class="modal-backdrop" id="view-task-modal" style="display: none">
+      <div
+        class="modal view-task-modal"
+        style="min-width: 540px; max-width: 96vw"
+      >
+        <button class="modal-close" type="button" title="Закрыть">
+          <span class="material-icons">close</span>
+        </button>
+        <div class="modal-title" id="view-task-title">Задача</div>
+        <div id="view-task-content">
+          <!-- Контент будет загружен через JavaScript -->
+        </div>
+        <button
+          class="plus-btn"
+          id="view-task-edit-btn"
+          style="margin-top: 18px"
+        >
+          Редактировать
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // В самом начале:
+      let TEAM_ID = null;
+      let STATUSES = [];
+      let TASKS = [];
+      let MEMBERS = [];
+      let TEAM_INFO = null;
+      let USERNAME = "{{ username }}";
+      let socket = null;
+      let TEAMS = [];
+
+      // ===================== Team ID =====================
+      const urlParams = new URLSearchParams(window.location.search);
+      TEAM_ID = urlParams.get("team_id") || null;
+
+      if (!TEAM_ID) {
+        document.getElementById("main-board").style.display = "none";
+        document.getElementById("no-team-id").style.display = "block";
+      } else {
+        // ===================== Socket.IO =====================
+        socket = io();
+        socket.emit("join_team", { team_id: TEAM_ID });
+        socket.on("team_task_added", (task) => {
+          TASKS.push(task);
+          renderBoard();
+        });
+        socket.on("team_task_updated", (task) => {
+          let idx = TASKS.findIndex((t) => t.id === task.id);
+          if (idx !== -1) TASKS[idx] = task;
+          renderBoard();
+        });
+        socket.on("team_task_deleted", (data) => {
+          TASKS = TASKS.filter((t) => t.id !== data.id);
+          renderBoard();
+        });
+        socket.on("team_tasks_reordered", (data) => {
+          if (data.team_id == TEAM_ID) fetchTeamBoard();
+        });
+        // ===================== Socket.IO: статусы =====================
+        if (socket) {
+          socket.on("team_status_added", (data) => {
+            if (data.team_id == TEAM_ID) fetchTeamBoard();
+          });
+          socket.on("team_status_deleted", (data) => {
+            if (data.team_id == TEAM_ID) fetchTeamBoard();
+          });
+        }
+
+        // Гарантированная загрузка доски после инициализации
+        fetchTeamBoard();
+      }
+
+      // ===================== Theme =====================
+      function setTheme(dark) {
+        if (dark) {
+          document.body.classList.add("dark");
+          localStorage.setItem("kanban-theme", "dark");
+          document.getElementById("theme-icon").innerText = "light_mode";
+        } else {
+          document.body.classList.remove("dark");
+          localStorage.setItem("kanban-theme", "light");
+          document.getElementById("theme-icon").innerText = "dark_mode";
+        }
+      }
+      document.getElementById("theme-toggle-btn").onclick = function () {
+        setTheme(!document.body.classList.contains("dark"));
+      };
+      (function () {
+        const theme = localStorage.getItem("kanban-theme");
+        setTheme(theme === "dark");
+      })();
+
+      // ========== User Dropdown ==========
+      // const userMenuBtn = document.getElementById("user-menu-btn");
+      // const userDropdown = document.getElementById("user-dropdown");
+      // if (userMenuBtn && userDropdown) {
+      //   userMenuBtn.onclick = function (e) {
+      //     e.stopPropagation();
+      //     userDropdown.classList.toggle("show");
+      //   };
+      //   document.body.addEventListener("click", function () {
+      //     userDropdown.classList.remove("show");
+      //   });
+      //   userDropdown.onclick = function (e) {
+      //     e.stopPropagation();
+      //   };
+      // }
+
+      // ========== Кнопка Мои команды ==========
+      const teamsBtn = document.getElementById("teams-btn");
+      if (teamsBtn) {
+        teamsBtn.onclick = function () {
+          // if (userDropdown) userDropdown.classList.remove("show");
+          document.getElementById("teams-modal").style.display = "flex";
+          fetchTeams();
+        };
+      }
+      const teamsModal = document.getElementById("teams-modal");
+      if (teamsModal) {
+        teamsModal.onclick = function (e) {
+          if (e.target === this) closeTeamsModal();
+        };
+      }
+      function closeTeamsModal() {
+        const modal = document.getElementById("teams-modal");
+        if (modal) modal.style.display = "none";
+      }
+
+      // ========== Смена пароля ==========
+      const changePasswordBtn = document.getElementById("change-password-btn");
+      if (changePasswordBtn) {
+        changePasswordBtn.onclick = function () {
+          // if (userDropdown) userDropdown.classList.remove("show");
+          document.getElementById("change-password-form").reset();
+          document.getElementById("change-password-error").innerText = "";
+          document.getElementById("change-password-modal").style.display =
+            "flex";
+        };
+      }
+      function closeChangePasswordModal() {
+        document.getElementById("change-password-modal").style.display = "none";
+      }
+      const changePasswordModal = document.getElementById(
+        "change-password-modal"
+      );
+      if (changePasswordModal) {
+        changePasswordModal.onclick = function (e) {
+          if (e.target === this) closeChangePasswordModal();
+        };
+      }
+      const changePasswordForm = document.getElementById(
+        "change-password-form"
+      );
+      if (changePasswordForm) {
+        changePasswordForm.onsubmit = async function (e) {
+          e.preventDefault();
+          let oldPass = document.getElementById("old_password").value;
+          let newPass = document.getElementById("new_password").value;
+          let newPass2 = document.getElementById("new_password2").value;
+          let err = document.getElementById("change-password-error");
+          if (newPass !== newPass2) {
+            err.innerText = "Пароли не совпадают!";
+            return;
+          }
+          let resp = await fetch(`/{{ username }}/api/change_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              old_password: oldPass,
+              new_password: newPass,
+            }),
+          });
+          if (resp.ok) {
+            err.style.color = "#32c964";
+            err.innerText = "Пароль изменён!";
+            setTimeout(closeChangePasswordModal, 900);
+          } else {
+            err.style.color = "#d11a2a";
+            let data = await resp.json();
+            err.innerText = data.error || "Ошибка смены пароля!";
+          }
+        };
+      }
+
+      // ========== Команды: логика и рендер ==========
+      async function fetchTeams() {
+        let r = await fetch(`/{{ username }}/api/teams/list`);
+        let data = await r.json();
+        TEAMS = Array.isArray(data.teams)
+          ? data.teams
+          : Array.isArray(data)
+          ? data
+          : [];
+        renderTeams();
+      }
+      function renderTeams() {
+        const list = document.getElementById("teams-list");
+        if (!list) return;
+        list.innerHTML = "";
+        if (!TEAMS || TEAMS.length === 0) {
+          list.innerHTML = `<div style="padding: 18px 0; text-align: center; color: var(--text-soft); font-size: 1.08em;">Нет команд</div>`;
+          return;
+        }
+        TEAMS.forEach((team) => {
+          const card = document.createElement("div");
+          card.className = "team-card";
+          card.dataset.teamId = team.id;
+          let isLeader =
+            team.leader_name === USERNAME ||
+            team.leader === USERNAME ||
+            team.is_leader;
+          card.innerHTML = `
+            <div class="team-header">
+              <span class="team-icon material-icons">groups</span>
+              <span class="team-title">${escapeHTML(
+                team.name || team.title || "Без названия"
+              )}</span>
+              ${
+                isLeader
+                  ? `<button class="icon-btn edit-team-btn" data-team-id="${team.id}" title="Редактировать"><span class="material-icons">edit</span></button>`
+                  : ""
+              }
+            </div>
+            <div class="team-leader">
+              <span class="material-icons member-icon" title="Лидер">star</span>
+              <span>${escapeHTML(team.leader_name || team.leader || "-")}</span>
+            </div>
+            <div class="team-members">
+              ${(team.members || [])
+                .map((m) => `<span class="team-member">${escapeHTML(m)}</span>`)
+                .join("")}
+            </div>
+            <div class="team-actions">
+              <button class="plus-btn team-enter-btn" data-team-id="${
+                team.id
+              }"><span class="material-icons">login</span>Перейти</button>
+              ${
+                !isLeader
+                  ? `<button class="plus-btn danger-btn team-leave-btn" data-team-id="${team.id}"><span class="material-icons">logout</span>Выйти</button>`
+                  : ""
+              }
+            </div>
+          `;
+          list.appendChild(card);
+        });
+        // Назначение обработчиков только через JS
+        document.querySelectorAll(".edit-team-btn").forEach((btn) => {
+          btn.onclick = function (e) {
+            e.preventDefault();
+            const teamId = +btn.dataset.teamId;
+            const team = TEAMS.find((t) => t.id === teamId);
+            const isLeader =
+              team &&
+              (team.leader_name === USERNAME ||
+                team.leader === USERNAME ||
+                team.is_leader);
+            if (!isLeader) return;
+            openEditTeamModal(teamId);
+          };
+        });
+        document.querySelectorAll(".team-leave-btn").forEach((btn) => {
+          btn.onclick = async function (e) {
+            e.preventDefault();
+            if (!confirm("Выйти из команды?")) return;
+            let teamId = btn.dataset.teamId;
+            let resp = await fetch(
+              `/{{ username }}/api/teams/${teamId}/leave`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+            if (resp.ok) {
+              fetchTeams();
+            } else {
+              alert("Ошибка выхода из команды");
+            }
+          };
+        });
+        document.querySelectorAll(".team-enter-btn").forEach((btn) => {
+          btn.onclick = function () {
+            const teamId = btn.dataset.teamId;
+            window.location = `/${USERNAME}/team?team_id=${teamId}`;
+          };
+        });
+      }
+
+      // ========== Модалка редактирования команды ==========
+      async function openEditTeamModal(teamId) {
+        let r = await fetch(`/{{ username }}/api/teams/${teamId}/info`);
+        let data = await r.json();
+        document.getElementById("edit-team-name").value = data.name;
+        renderEditTeamMembers(data);
+        document.getElementById("edit-team-modal").style.display = "flex";
+        document.getElementById("edit-team-error").innerText = "";
+        setTimeout(() => {
+          document.getElementById("edit-team-name").focus();
+        }, 120);
+      }
+      function closeEditTeamModal() {
+        document.getElementById("edit-team-modal").style.display = "none";
+        document.getElementById("edit-team-form").reset();
+        document.getElementById("edit-team-members").innerHTML = "";
+      }
+      if (document.getElementById("edit-team-modal")) {
+        document.getElementById("edit-team-modal").onclick = function (e) {
+          if (e.target === this) closeEditTeamModal();
+        };
+      }
+      document.getElementById("add-member-btn").onclick = async function () {
+        let username = document.getElementById("add-member-input").value.trim();
+        if (!username) return;
+        let resp = await fetch(`/{{ username }}/api/teams/${TEAM_ID}/members`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username }),
+        });
+        if (resp.ok) {
+          document.getElementById("add-member-input").value = "";
+          fetchTeamInfo();
+        } else {
+          let data = await resp.json();
+          document.getElementById("edit-team-error").innerText =
+            data.error || "Ошибка добавления!";
+        }
+      };
+      document.getElementById("edit-team-form").onsubmit = async function (e) {
+        e.preventDefault();
+        let name = document.getElementById("edit-team-name").value.trim();
+        let resp = await fetch(`/{{ username }}/api/teams/${TEAM_ID}/edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
+        if (resp.ok) {
+          closeEditTeamModal();
+          fetchTeamInfo();
+        } else {
+          let data = await resp.json();
+          document.getElementById("edit-team-error").innerText =
+            data.error || "Ошибка сохранения!";
+        }
+      };
+      document.getElementById("delete-team-btn").onclick = async function () {
+        if (!confirm("Удалить команду?")) return;
+        let resp = await fetch(`/{{ username }}/api/teams/${TEAM_ID}/delete`, {
+          method: "POST",
+        });
+        if (resp.ok) {
+          closeEditTeamModal();
+          window.location.href = `/{{ username }}/kanban`;
+        } else {
+          let data = await resp.json();
+          document.getElementById("edit-team-error").innerText =
+            data.error || "Ошибка удаления!";
+        }
+      };
+
+      // ===================== Modal: Task (как в kanban.html)
+      function openTaskModal({
+        edit = false,
+        id = null,
+        text = "",
+        description = "",
+        status = "",
+        assignee_id = null,
+        tags = [],
+        due_date = null,
+      } = {}) {
+        const modal = document.getElementById("task-modal");
+        if (!modal) return;
+        document.getElementById("task-modal-title").innerText = edit
+          ? "Редактировать задачу"
+          : "Новая задача";
+        document.getElementById("edit_task_id").value = id || "";
+        document.getElementById("task_text").value = text || "";
+
+        // Инициализируем TinyMCE если ещё не инициализирован
+        if (!window.taskEditor) {
+          initTaskEditor();
+        }
+
+        // Устанавливаем содержимое редактора
+        if (window.taskEditor) {
+          window.taskEditor.root.innerHTML = description || "";
+        }
+
+        let statusSel = document.getElementById("task_status");
+        statusSel.innerHTML = STATUSES.map(
+          (s) =>
+            `<option value="${s.code}"${
+              (status || STATUSES[0].code) === s.code ? " selected" : ""
+            }>${escapeHTML(s.title)}</option>`
+        ).join("");
+        // --- новые поля ---
+        let tagSet = new Set(tags || []);
+        document.querySelectorAll(".tag-badge[data-tag]").forEach((badge) => {
+          if (tagSet.has(badge.dataset.tag)) {
+            badge.classList.add("selected");
+          } else {
+            badge.classList.remove("selected");
+          }
+        });
+        document.getElementById("task_due_date").value = due_date
+          ? due_date.slice(0, 10)
+          : "";
+        // Исполнитель
+        let assigneeInput = document.getElementById("task_assignee_input");
+        let assigneeHidden = document.getElementById("task_assignee");
+        if (assignee_id && Array.isArray(MEMBERS)) {
+          // Ищем по username, так как теперь id = username
+          let member = MEMBERS.find(
+            (m) => m.username == assignee_id || m.id == assignee_id
+          );
+          assigneeInput.value = member ? member.username : "";
+          assigneeHidden.value = member ? member.username : assignee_id;
+        } else {
+          assigneeInput.value = "";
+          assigneeHidden.value = "";
+        }
+        assigneeInput.oninput = function () {
+          let val = assigneeInput.value.toLowerCase();
+          let list = MEMBERS.filter(
+            (m) => m && m.username && m.username.toLowerCase().includes(val)
+          );
+          let ac = document.getElementById("assignee-autocomplete");
+          if (!val || list.length === 0) {
+            ac.style.display = "none";
+            assigneeHidden.value = "";
+            return;
+          }
+          ac.innerHTML = list
+            .map(
+              (m) =>
+                `<div class='autocomplete-item' data-id='${m.username}'>${m.username}</div>`
+            )
+            .join("");
+          ac.style.display = "block";
+          ac.querySelectorAll(".autocomplete-item").forEach((item) => {
+            item.onclick = function () {
+              assigneeInput.value = item.textContent;
+              assigneeHidden.value = item.dataset.id;
+              ac.style.display = "none";
+            };
+          });
+        };
+        assigneeInput.onblur = function () {
+          setTimeout(() => {
+            document.getElementById("assignee-autocomplete").style.display =
+              "none";
+          }, 120);
+        };
+        document.getElementById("task-modal-error").innerText = "";
+        modal.style.display = "flex";
+        bindTagBadges();
+        setTimeout(() => {
+          document.getElementById("task_text").focus();
+        }, 120);
+      }
+
+      // Кастомный image handler для загрузки на сервер
+      function imageHandler() {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
+        input.onchange = async () => {
+          const file = input.files[0];
+          if (!file) return;
+          const formData = new FormData();
+          formData.append("image", file);
+          try {
+            const res = await fetch("/api/upload_image", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.url) {
+              const range = window.taskEditor.getSelection();
+              window.taskEditor.insertEmbed(range.index, "image", data.url);
+            } else {
+              alert("Ошибка загрузки изображения: " + (data.error || ""));
+            }
+          } catch (e) {
+            alert("Ошибка загрузки изображения");
+          }
+        };
+      }
+
+      // Инициализация Quill.js редактора
+      function initTaskEditor() {
+        if (window.taskEditor) {
+          return; // Уже инициализирован
+        }
+
+        const quill = new Quill("#task_description_editor", {
+          theme: "snow",
+          modules: {
+            toolbar: {
+              container: [
+                [{ header: [1, 2, 3, false] }],
+                ["bold", "italic", "underline", "strike"],
+                [{ color: [] }, { background: [] }],
+                [{ list: "ordered" }, { list: "bullet" }],
+                [{ align: [] }],
+                ["link", "image", "code-block"],
+                ["clean"],
+              ],
+              handlers: {
+                image: imageHandler,
+              },
+            },
+          },
+          placeholder: "Опишите задачу...",
+          bounds: "#task_description_editor",
+        });
+        window.taskEditor = quill;
+      }
+      // Обработчики для тегов-бейджей (без чекбоксов)
+      function bindTagBadges() {
+        document.querySelectorAll(".tag-badge[data-tag]").forEach((badge) => {
+          badge.onclick = function () {
+            badge.classList.toggle("selected");
+          };
+        });
+      }
+      // Получить выбранные теги
+      function getSelectedTags() {
+        return Array.from(
+          document.querySelectorAll(".tag-badge.selected[data-tag]")
+        ).map((b) => b.dataset.tag);
+      }
+
+      // Обработчик отправки формы задачи
+      const taskModalForm = document.getElementById("task-modal-form");
+      if (taskModalForm) {
+        taskModalForm.onsubmit = async function (e) {
+          e.preventDefault();
+          let text = this.task_text.value.trim();
+          let description = window.taskEditor
+            ? window.taskEditor.root.innerHTML
+            : "";
+          let status = this.task_status.value;
+          let id = this.edit_task_id.value;
+          let tags = getSelectedTags();
+          let due_date = this.task_due_date.value || null;
+          let assignee_id = this.task_assignee.value || null;
+          let method = id ? "PATCH" : "POST";
+          let url =
+            `/${USERNAME}/api/teams/${TEAM_ID}/tasks` + (id ? `/${id}` : "");
+          let body = {
+            text,
+            description,
+            status,
+            tags,
+            due_date,
+            assignee_id,
+          };
+          let resp = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          let data = null;
+          try {
+            data = await resp.json();
+          } catch (e) {
+            data = null;
+          }
+          if (resp.ok && data && (data.id || data.success)) {
+            closeTaskModal();
+            fetchTeamBoard();
+          } else {
+            let err = data && data.error ? data.error : "Ошибка сохранения!";
+            document.getElementById("task-modal-error").innerText = err;
+          }
+        };
+      }
+
+      // Функция закрытия модалки задачи
+      function closeTaskModal() {
+        const modal = document.getElementById("task-modal");
+        if (modal) modal.style.display = "none";
+        const form = document.getElementById("task-modal-form");
+        if (form) form.reset();
+        // Очищаем Quill.js редактор
+        if (window.taskEditor) {
+          window.taskEditor.root.innerHTML = "";
+        }
+        // Сбрасываем стили тегов
+        document.querySelectorAll(".tag-badge").forEach((badge) => {
+          badge.classList.remove("selected");
+        });
+      }
+
+      // Обработчик закрытия модалки задачи по клику вне окна
+      const taskModal = document.getElementById("task-modal");
+      if (taskModal) {
+        taskModal.onclick = function (e) {
+          if (e.target === this) closeTaskModal();
+        };
+      }
+
+      // ===================== Modal: Status =====================
+      function openStatusModal() {
+        const modal = document.getElementById("status-modal");
+        if (!modal) return;
+        modal.style.display = "flex";
+        document.getElementById("status-modal-error").innerText = "";
+        document.getElementById("new_status_title").value = "";
+        setTimeout(() => {
+          document.getElementById("new_status_title").focus();
+        }, 120);
+      }
+      function closeStatusModal() {
+        const modal = document.getElementById("status-modal");
+        if (modal) modal.style.display = "none";
+        const form = document.getElementById("status-modal-form");
+        if (form) form.reset();
+      }
+      const statusModalForm = document.getElementById("status-modal-form");
+      if (statusModalForm) {
+        statusModalForm.onsubmit = async function (e) {
+          e.preventDefault();
+          let title = this.new_status_title.value.trim();
+          if (!title) return;
+          let code = "s" + Date.now();
+          let resp = await fetch(
+            `/{{ username }}/api/teams/${TEAM_ID}/statuses`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title, code }),
+            }
+          );
+          if (resp.ok) {
+            fetchTeamBoard();
+            closeStatusModal();
+          } else {
+            document.getElementById("status-modal-error").innerText =
+              "Ошибка создания статуса!";
+          }
+        };
+      }
+      const statusModal = document.getElementById("status-modal");
+      if (statusModal) {
+        statusModal.onclick = function (e) {
+          if (e.target === this) closeStatusModal();
+        };
+      }
+
+      // ===================== Modal: View Task =====================
+      async function openViewTaskModal(task) {
+        const modal = document.getElementById("view-task-modal");
+        const title = document.getElementById("view-task-title");
+        const content = document.getElementById("view-task-content");
+        title.textContent = task.text;
+        // Краткий просмотр с сохранением переносов строк
+        let descriptionPreview = task.description || "Описание отсутствует";
+        let hasImage = /<img\s/i.test(descriptionPreview);
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = descriptionPreview;
+        let textPreview = tempDiv.textContent || tempDiv.innerText || "";
+        // Проверка на длинный текст или переносы
+        let needShowFull = textPreview.length > 200 || /\n/.test(textPreview);
+        if (textPreview.length > 200)
+          textPreview = textPreview.substring(0, 200) + "...";
+        let imageNotice = hasImage
+          ? `<div class='view-task-has-image'><span class='material-icons' style='vertical-align:middle;color:#5271ff;'>image</span> <span style='color:#5271ff;font-weight:500;'>Есть вложения</span></div>`
+          : "";
+        // Исполнитель
+        let assigneeHtml = "";
+        if (task.assignee_id) {
+          let member = MEMBERS.find(
+            (m) => m.username == task.assignee_id || m.id == task.assignee_id
+          );
+          if (member) {
+            assigneeHtml = `<div class="view-task-field">
+              <span class="material-icons">person</span>
+              <span><strong>Исполнитель:</strong> ${escapeHTML(
+                member.username
+              )}</span>
+            </div>`;
+          }
+        } else if (task.assignee_name && task.assignee_name !== "null") {
+          assigneeHtml = `<div class="view-task-field">
+            <span class="material-icons">person</span>
+            <span><strong>Исполнитель:</strong> ${escapeHTML(
+              task.assignee_name
+            )}</span>
+          </div>`;
+        }
+        content.innerHTML = `
+          <div class="view-task-section">
+            <div class="view-task-field">
+              <span class="material-icons">flag</span>
+              <span><strong>Статус:</strong> ${getStatusTitle(
+                task.status
+              )}</span>
+            </div>
+            ${
+              task.due_date
+                ? `<div class="view-task-field"><span class="material-icons">event</span><span><strong>Срок:</strong> ${formatRuDate(
+                    task.due_date
+                  )}</span></div>`
+                : ""
+            }
+            ${
+              task.tags && task.tags.length > 0
+                ? `<div class="view-task-field"><span class="material-icons">label</span><span><strong>Теги:</strong> ${task.tags
+                    .map(
+                      (tag) =>
+                        `<span class="task-tag tag-${tag.toLowerCase()}">${escapeHTML(
+                          tag
+                        )}</span>`
+                    )
+                    .join(" ")}</span></div>`
+                : ""
+            }
+            ${assigneeHtml}
+            <div class="view-task-field"><span class="material-icons">description</span><span><strong>Описание:</strong></span></div>
+            <div class="view-task-description-preview" style="white-space:pre-line;word-break:break-word;">${textPreview}${imageNotice}</div>
+            ${
+              needShowFull
+                ? `<div class='view-task-more'><button class='view-full-task-btn plus-btn' data-task-id='${task.id}'><span class='material-icons'>open_in_new</span>Открыть полностью</button></div>`
+                : ""
+            }
+            <div class="view-task-field"><span class="material-icons">person</span><span><strong>Обновлено:</strong> ${
+              task.updated_by_name || "Неизвестно"
+            }</span></div>
+            <div class="view-task-field"><span class="material-icons">schedule</span><span><strong>Дата:</strong> ${formatDateTime(
+              task.updated_at
+            )}</span></div>
+          </div>
+        `;
+        modal.style.display = "flex";
+        const editBtn = document.getElementById("view-task-edit-btn");
+        if (editBtn) {
+          editBtn.onclick = function () {
+            openTaskModal({ edit: true, ...task });
+            closeViewTaskModal();
+          };
+        }
+
+        // Назначаем обработчик для кнопки "Открыть полностью"
+        const viewFullBtn = document.querySelector(".view-full-task-btn");
+        if (viewFullBtn) {
+          viewFullBtn.onclick = function (e) {
+            e.stopPropagation();
+            openFullTaskView(task.id);
+          };
+        }
+
+        bindViewFullTaskBtn();
+      }
+
+      function bindViewFullTaskBtn() {
+        // Функция для назначения обработчиков кнопки "Открыть полностью"
+        // Пока что оставляем пустой, так как обработчик уже назначен выше
+      }
+
+      function openFullTaskView(taskId) {
+        window.location.href = `/${USERNAME}/team_task/${taskId}`;
+      }
+
+      function closeViewTaskModal() {
+        const modal = document.getElementById("view-task-modal");
+        if (modal) modal.style.display = "none";
+      }
+
+      // ===================== Team Functions =====================
+      async function fetchTeamInfo() {
+        try {
+          let r = await fetch(`/{{ username }}/api/teams/${TEAM_ID}/info`);
+          let data = await r.json();
+          setTeamNameInTopbar(data.name);
+        } catch (error) {
+          // Ошибка получения информации о команде
+        }
+      }
+
+      // JS: Рендер участников в модалке редактирования команды
+      function renderEditTeamMembers(team) {
+        const membersDiv = document.getElementById("edit-team-members");
+        if (!membersDiv) return;
+
+        // Получаем участников с правильной структурой
+        let members = [];
+        if (team.members && Array.isArray(team.members)) {
+          // Если members - это массив строк (из api_team_info)
+          if (typeof team.members[0] === "string") {
+            members = team.members.map((username) => ({
+              username: username,
+              id: username,
+            }));
+          } else {
+            // Если members - это массив объектов (из get_team_members)
+            members = team.members;
+          }
+        }
+
+        membersDiv.innerHTML = members
+          .map((m) => {
+            const isLeader =
+              m.username === team.leader_name || m.username === team.leader;
+            let adminBtn = "";
+            if (!isLeader && team.is_leader) {
+              adminBtn = `<button class="member-admin-btn circle-btn" title="Передать права администратора" data-username="${escapeHTML(
+                m.username
+              )}"><span class="material-icons">star</span></button>`;
+            }
+            return `
+              <div class="member-item" style="display:flex;align-items:center;gap:10px;">
+                <span class="material-icons member-icon" style="color: var(--accent); font-size:1.3em;">${
+                  isLeader ? "star" : "person"
+                }</span>
+                <span class="member-info">${escapeHTML(m.username)}</span>
+                <div style="display:flex;gap:8px;margin-left:auto;">
+                ${
+                  !isLeader
+                    ? `<button class="member-remove-btn circle-btn" title="Удалить" data-username="${escapeHTML(
+                        m.username
+                      )}"><span class="material-icons">delete</span></button>`
+                    : ""
+                }
+                  ${
+                    isLeader
+                      ? '<span class="member-admin" style="color:var(--accent);font-weight:600;">админ</span>'
+                      : adminBtn
+                  }
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        // Назначить обработчики удаления
+        membersDiv.querySelectorAll(".member-remove-btn").forEach((btn) => {
+          btn.onclick = function () {
+            const username = btn.getAttribute("data-username");
+            if (username && confirm(`Удалить участника ${username}?`)) {
+              removeTeamMember(username);
+            }
+          };
+        });
+        // Обработчик передачи прав администратора
+        membersDiv.querySelectorAll(".member-admin-btn").forEach((btn) => {
+          btn.onclick = function () {
+            const username = btn.getAttribute("data-username");
+            if (
+              username &&
+              confirm(`Передать права администратора участнику ${username}?`)
+            ) {
+              fetch(`/{{ username }}/api/teams/${TEAM_ID}/set_leader`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username }),
+              }).then(() => fetchTeamInfo());
+            }
+          };
+        });
+      }
+
+      async function removeTeamMember(username) {
+        try {
+          let resp = await fetch(
+            `/{{ username }}/api/teams/${TEAM_ID}/members/${username}`,
+            {
+              method: "DELETE",
+            }
+          );
+          if (resp.ok) {
+            fetchTeamInfo();
+          } else {
+            alert("Ошибка удаления участника");
+          }
+        } catch (error) {
+          alert("Ошибка удаления участника");
+        }
+      }
+
+      // JS: красивые теги в карточках и просмотре задачи
+      function renderTags(tags) {
+        if (!tags || !tags.length) return "";
+        return (
+          `<div class='task-tags'>` +
+          tags
+            .map(
+              (tag) =>
+                `<span class='task-tag tag-${tag.toLowerCase()}'>${escapeHTML(
+                  tag
+                )}</span>`
+            )
+            .join("") +
+          `</div>`
+        );
+      }
+
+      // ===================== Инициализация обработчиков модалок =====================
+      // Универсальный обработчик закрытия модалок
+      function bindModalCloseHandlers() {
+        document.querySelectorAll(".modal-close").forEach((btn) => {
+          btn.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const modal = btn.closest(".modal-backdrop");
+            if (modal) modal.style.display = "none";
+          };
+        });
+        document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
+          backdrop.onclick = function (e) {
+            if (e.target === this) this.style.display = "none";
+          };
+        });
+      }
+
+      // Вызвать после DOMContentLoaded
+      bindModalCloseHandlers();
+
+      // ===================== SPA: Fetch Board (эталон kanban.html, но для команды)
+      async function fetchTeamBoard() {
+        try {
+          let [statuses, tasks, members] = await Promise.all([
+            fetch(`/{{ username }}/api/teams/${TEAM_ID}/statuses`).then((r) =>
+              r.json()
+            ),
+            fetch(`/{{ username }}/api/teams/${TEAM_ID}/tasks`).then((r) =>
+              r.json()
+            ),
+            fetch(`/{{ username }}/api/teams/${TEAM_ID}/members`).then((r) =>
+              r.json()
+            ),
+          ]);
+
+          // Проверяем, что получили валидные данные
+          if (Array.isArray(statuses)) {
+            STATUSES = statuses;
+          } else if (statuses && statuses.error) {
+            STATUSES = [];
+          } else {
+            STATUSES = [];
+          }
+
+          if (Array.isArray(tasks)) {
+            TASKS = tasks;
+          } else if (tasks && tasks.tasks && Array.isArray(tasks.tasks)) {
+            TASKS = tasks.tasks;
+          } else if (tasks && tasks.error) {
+            TASKS = [];
+          } else {
+            TASKS = [];
+          }
+
+          // Получаем участников с их ID
+          MEMBERS = [];
+          if (members && members.members && members.members.length > 0) {
+            // Используем структуру с id и username из API
+            MEMBERS = members.members;
+          }
+
+          // Удалить старую строку "Новый статус" если есть
+          const oldAddStatusRow = document.getElementById("add-status-row");
+          if (oldAddStatusRow && oldAddStatusRow.parentNode) {
+            oldAddStatusRow.parentNode.removeChild(oldAddStatusRow);
+          }
+          renderBoard();
+          bindAddStatusBtn();
+        } catch (error) {
+          STATUSES = [];
+          TASKS = [];
+          MEMBERS = [];
+          renderBoard();
+          bindAddStatusBtn();
+        }
+      }
+
+      // ===================== Render (эталон kanban.html, но для команды)
+      function renderBoard() {
+        const row = document.getElementById("kanban-row");
+        row.innerHTML = "";
+
+        // Проверяем, что STATUSES и TASKS определены
+        if (!STATUSES || !Array.isArray(STATUSES)) {
+          STATUSES = [];
+        }
+        if (!TASKS || !Array.isArray(TASKS)) {
+          TASKS = [];
+        }
+        if (!MEMBERS || !Array.isArray(MEMBERS)) {
+          MEMBERS = [];
+        }
+
+        STATUSES.forEach((status) => {
+          const col = document.createElement("div");
+          col.className = "kanban-column";
+          col.setAttribute("data-status-code", status.code);
+          col.innerHTML = `
+            <div class="kanban-col-title">
+              <span>${escapeHTML(status.title)}</span>
+            </div>
+            <div class="kanban-tasks"></div>
+            <button class="kanban-add-task-btn" data-status-code="${
+              status.code
+            }">
+              <span class="material-icons">add</span>Добавить задачу
+            </button>
+          `;
+          const tasksBlock = col.querySelector(".kanban-tasks");
+          const tasks = TASKS.filter((t) => t.status === status.code);
+          if (tasks.length === 0) {
+            tasksBlock.innerHTML = `<div class="no-tasks">Нет задач</div>`;
+          } else {
+            tasks.forEach((task) => {
+              tasksBlock.appendChild(createTaskCard(task));
+            });
+          }
+          // Кнопка удаления статуса — крестик справа
+          const delBtn = document.createElement("button");
+          delBtn.className = "icon-btn kanban-delete-status-btn";
+          delBtn.title = "Удалить статус";
+          delBtn.setAttribute("data-status-code", status.code);
+          delBtn.innerHTML = `<span class="material-icons">close</span>`;
+          col.querySelector(".kanban-col-title").appendChild(delBtn);
+          row.appendChild(col);
+        });
+        bindAllHandlers();
+        updateDnD();
+        bindAddStatusBtn();
+        bindTaskViewHandlers();
+      }
+
+      // ===================== Task View Handlers =====================
+      function bindTaskViewHandlers() {
+        document.querySelectorAll(".kanban-task").forEach((div) => {
+          div.onclick = function (e) {
+            if (e.target.closest(".edit-btn,.delete-btn")) return;
+            const id = div.dataset.taskId;
+            const task = TASKS.find((t) => t.id == id);
+            if (task) openViewTaskModal(task);
+          };
+        });
+      }
+
+      // ===================== Task Card Creation =====================
+      function getAvatarColor(id) {
+        const colors = [
+          "#5271ff",
+          "#ff9800",
+          "#ff5470",
+          "#00b894",
+          "#a29bfe",
+          "#00bcd4",
+        ];
+        if (!id) return colors[0];
+        let sum = 0;
+        for (let i = 0; i < id.length; ++i) sum += id.charCodeAt(i);
+        return colors[sum % colors.length];
+      }
+      function getInitials(name) {
+        if (!name) return "?";
+        return name[0].toUpperCase();
+      }
+      // Удаляет все HTML-теги и декодирует спецсимволы
+      function stripTags(html) {
+        let tmp = document.createElement("div");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+      }
+      function createTaskCard(task) {
+        const div = document.createElement("div");
+        div.className = "kanban-task";
+        div.dataset.taskId = task.id;
+        let tagsHtml = "";
+        if (task.tags && task.tags.length) {
+          tagsHtml = renderTags(task.tags);
+        }
+        let dateHtml = task.due_date
+          ? `<span class='task-date-badge'>${formatRuDate(
+              task.due_date
+            )}</span>`
+          : "";
+        let updatedByHtml = "";
+        // Аватарка исполнителя
+        let assignee = MEMBERS.find(
+          (m) => m.username == task.assignee_id || m.id == task.assignee_id
+        );
+        let avatarHtml = assignee
+          ? `<span class='task-avatar'>${getInitials(assignee.username)}</span>`
+          : "";
+        let assigneeNameHtml = assignee
+          ? `<span class='assignee-name'>${escapeHTML(
+              assignee.username
+            )}</span>`
+          : "<span style='color:#b9bccc'>Не назначено</span>";
+        let descPreview = "";
+        if (task.description) {
+          let tmp = document.createElement("div");
+          tmp.innerHTML = stripTags(task.description);
+          descPreview = tmp.textContent || tmp.innerText || "";
+          descPreview = truncate(descPreview, 120);
+        }
+        div.innerHTML = `
+          <div class="task-header">
+            <div class="task-title">${escapeHTML(truncate(task.text, 80))}</div>
+            <div class="task-badges">${dateHtml}</div>
+          </div>
+          ${tagsHtml}
+          ${
+            descPreview
+              ? `<div class="task-desc" style="white-space:pre-line;word-break:break-word;">${escapeHTML(
+                  descPreview
+                )}</div>`
+              : ""
+          }
+          <div class="task-meta">
+            ${avatarHtml}
+            ${assigneeNameHtml}
+          </div>
+          <div class="task-actions" style="margin-top: 6px; display: flex; flex-direction: row; gap: 6px; align-items: center;">
+            <button class="icon-btn edit-btn" data-task-id="${
+              task.id
+            }"><span class="material-icons">edit</span></button>
+            <button class="icon-btn delete-btn" data-task-id="${
+              task.id
+            }"><span class="material-icons">delete</span></button>
+          </div>
+        `;
+        return div;
+      }
+      function truncate(str, len) {
+        return str.length > len ? str.slice(0, len) + "…" : str;
+      }
+      function formatRuDate(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("ru-RU");
+      }
+      function formatDateTime(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        return d.toLocaleString("ru-RU");
+      }
+      function getStatusTitle(statusCode) {
+        const status = STATUSES.find((s) => s.code === statusCode);
+        return status ? status.title : statusCode;
+      }
+      // ===================== Вспомогательные функции =====================
+      function escapeHTML(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      // ===================== Event Handlers =====================
+      function bindAllHandlers() {
+        // Кнопки добавить задачу
+        document.querySelectorAll(".kanban-add-task-btn").forEach((btn) => {
+          btn.onclick = function () {
+            openTaskModal({ status: btn.getAttribute("data-status-code") });
+          };
+        });
+        // Кнопки удалить статус
+        document
+          .querySelectorAll(".kanban-delete-status-btn")
+          .forEach((btn) => {
+            btn.onclick = async function () {
+              if (!confirm("Удалить статус?")) return;
+              let code = btn.getAttribute("data-status-code");
+              let resp = await fetch(
+                `/${USERNAME}/api/teams/${TEAM_ID}/statuses/${code}`,
+                {
+                  method: "DELETE",
+                }
+              );
+              if (resp.ok) {
+                // Сообщаем через сокет
+                if (socket)
+                  socket.emit("team_status_deleted", {
+                    team_id: TEAM_ID,
+                    code,
+                  });
+                fetchTeamBoard();
+              }
+            };
+          });
+        // Кнопка добавить статус
+        const addStatusBtn = document.getElementById("open-status-modal");
+        if (addStatusBtn) addStatusBtn.onclick = openStatusModal;
+        // Кнопки редактировать задачу
+        document.querySelectorAll(".edit-btn").forEach((btn) => {
+          btn.onclick = function () {
+            let id = btn.getAttribute("data-task-id");
+            let task = TASKS.find((t) => t.id == id);
+            if (task) openTaskModal({ edit: true, ...task });
+          };
+        });
+        // Кнопки удалить задачу
+        document.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.onclick = async function () {
+            if (!confirm("Удалить задачу?")) return;
+            let id = btn.getAttribute("data-task-id");
+            let resp = await fetch(
+              `/${USERNAME}/api/teams/${TEAM_ID}/tasks/${id}`,
+              {
+                method: "DELETE",
+              }
+            );
+            if (resp.ok) fetchTeamBoard();
+          };
+        });
+      }
+
+      function updateDnD() {
+        document.querySelectorAll(".kanban-tasks").forEach(function (col) {
+          if (col._sortable) return;
+          col._sortable = new Sortable(col, {
+            group: "tasks",
+            animation: 220,
+            ghostClass: "drag-ghost",
+            onEnd: async function (evt) {
+              let orders = {};
+              document
+                .querySelectorAll(".kanban-tasks")
+                .forEach(function (list) {
+                  const status =
+                    list.closest(".kanban-column").dataset.statusCode ||
+                    list
+                      .closest(".kanban-column")
+                      .getAttribute("data-status-code");
+                  orders[status] = Array.from(
+                    list.querySelectorAll(".kanban-task")
+                  ).map((x) => +x.dataset.taskId);
+                });
+              let resp = await fetch(
+                `/${USERNAME}/api/teams/${TEAM_ID}/tasks/order`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ orders }),
+                }
+              );
+              if (resp.ok) fetchTeamBoard();
+            },
+          });
+        });
+      }
+
+      function bindAddStatusBtn() {
+        const btn = document.getElementById("open-status-modal");
+        if (btn) btn.onclick = openStatusModal;
+      }
+
+      // ===================== Topbar: название команды в Team-Nav =====================
+      function setTeamNameInTopbar(teamName) {
+        const badge = document.querySelector(".team-name-badge");
+        if (badge) badge.textContent = teamName;
+      }
+
+      // После получения данных о команде:
+      async function fetchTeamInfoAndSetName() {
+        let r = await fetch(`/{{ username }}/api/teams/${TEAM_ID}/info`);
+        let data = await r.json();
+        setTeamNameInTopbar(data.name);
+      }
+
+      // Вызвать при загрузке страницы и после смены команды
+      fetchTeamInfoAndSetName();
+
+      // Инициализация при первой загрузке
+      document.addEventListener("DOMContentLoaded", function () {
+        // Функция для перетаскивания скролла
+        function enableDragToScroll(selector) {
+          const element = document.querySelector(selector);
+          if (!element) return;
+
+          let isDown = false;
+          let startX;
+          let scrollLeft;
+
+          element.addEventListener("mousedown", (e) => {
+            isDown = true;
+            element.style.cursor = "grabbing";
+            startX = e.pageX - element.offsetLeft;
+            scrollLeft = element.scrollLeft;
+          });
+
+          element.addEventListener("mouseleave", () => {
+            isDown = false;
+            element.style.cursor = "grab";
+          });
+
+          element.addEventListener("mouseup", () => {
+            isDown = false;
+            element.style.cursor = "grab";
+          });
+
+          element.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - element.offsetLeft;
+            const walk = (x - startX) * 2;
+            element.scrollLeft = scrollLeft - walk;
+          });
+        }
+
+        enableDragToScroll(".kanban-row");
+      });
+
+      // ===================== Team Creation =====================
+      const createTeamForm = document.getElementById("create-team-form");
+      if (createTeamForm) {
+        createTeamForm.onsubmit = async function (e) {
+          e.preventDefault();
+          let name = document.getElementById("team-name-input").value.trim();
+          if (!name) return;
+          let resp = await fetch(`/{{ username }}/api/teams`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name }),
+          });
+          if (resp.ok) {
+            let data = await resp.json();
+            document.getElementById("create-team-modal").style.display = "none";
+            document.getElementById("create-team-form").reset();
+            fetchTeams();
+          } else {
+            let data = await resp.json();
+            document.getElementById("create-team-error").innerText =
+              data.error || "Ошибка создания команды!";
+          }
+        };
+      }
+
+      const createTeamModal = document.getElementById("create-team-modal");
+      if (createTeamModal) {
+        createTeamModal.onclick = function (e) {
+          if (e.target === this) {
+            this.style.display = "none";
+            document.getElementById("create-team-form").reset();
+            document.getElementById("create-team-error").innerText = "";
+          }
+        };
+      }
+
+      // ===================== Profile Handlers =====================
+      // 1. Нижняя кнопка "Закрыть" в профиле
+      document.querySelectorAll(".profile-close").forEach((btn) => {
+        btn.onclick = function () {
+          document.getElementById("profile-modal").style.display = "none";
+        };
+      });
+
+      // 2. Кнопка создания команды
+      const openCreateTeamBtn = document.getElementById(
+        "open-create-team-modal"
+      );
+      if (openCreateTeamBtn) {
+        openCreateTeamBtn.onclick = function () {
+          document.getElementById("create-team-modal").style.display = "flex";
+          document.getElementById("create-team-error").innerText = "";
+          document.getElementById("team-name-input").value = "";
+        };
+      }
+    </script>
+  </body>
+</html>
