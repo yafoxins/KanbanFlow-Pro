@@ -21,19 +21,11 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div class="topbar-nav">
-          <button
-            class="nav-btn{% if active_page == 'kanban' %} active{% endif %}"
-            id="kanban-btn"
-            type="button"
-          >
+          <button class="nav-btn" id="kanban-btn" type="button">
             <span class="material-icons">dashboard</span>
             <span>Kanban</span>
           </button>
-          <button
-            class="nav-btn{% if active_page == 'todo' %} active{% endif %}"
-            id="todo-btn"
-            type="button"
-          >
+          <button class="nav-btn active" id="todo-btn" type="button">
             <span class="material-icons">check_circle</span>
             <span>ToDo‑лист</span>
           </button>
@@ -101,7 +93,26 @@
         </div>
       </div>
     </main>
-    <footer>© 2025 — Flask Kanban.</footer>
+    <footer>
+      <div class="footer-content">
+        <div class="footer-main">© 2025 — Flask Kanban</div>
+        <div class="footer-subtitle">
+          Современная система управления задачами
+        </div>
+        <div class="footer-links">
+          <a href="https://t.me/yafoxin" class="footer-link" target="_blank"
+            >Поддержка</a
+          >
+          <div class="footer-divider"></div>
+          <a
+            href="https://github.com/yafoxins"
+            class="footer-link"
+            target="_blank"
+            >GitHub</a
+          >
+        </div>
+      </div>
+    </footer>
 
     <!-- Модалка: профиль пользователя -->
     <div class="modal-backdrop" id="profile-modal" style="display: none">
@@ -225,6 +236,13 @@
         userDropdown.classList.remove("show");
         let r = await fetch(`/api/profile/{{ username }}`);
         let data = await r.json();
+        // Аватар с инициалом
+        const avatar = document.querySelector(".profile-avatar");
+        if (avatar) {
+          avatar.innerHTML = `<span class="profile-avatar-initial" style="background:${getAvatarColor(
+            data.username
+          )}">${getInitials(data.username)}</span>`;
+        }
         document.getElementById(
           "profile-username"
         ).innerHTML = `<span>${data.username}</span>`;
@@ -236,6 +254,24 @@
           data.fullname || "-";
         document.getElementById("profile-modal").style.display = "flex";
       };
+      function getAvatarColor(id) {
+        const colors = [
+          "#5271ff",
+          "#ff9800",
+          "#ff5470",
+          "#00b894",
+          "#a29bfe",
+          "#00bcd4",
+        ];
+        if (!id) return colors[0];
+        let sum = 0;
+        for (let i = 0; i < id.length; ++i) sum += id.charCodeAt(i);
+        return colors[sum % colors.length];
+      }
+      function getInitials(name) {
+        if (!name) return "?";
+        return name[0].toUpperCase();
+      }
       function closeProfileModal() {
         document.getElementById("profile-modal").style.display = "none";
       }
@@ -290,7 +326,7 @@
         };
 
       // Topbar навигация
-      let USERNAME = "{{ username }}";
+      const USERNAME = "{{ username }}";
       document.getElementById("kanban-btn").onclick = () =>
         (location.href = `/${USERNAME}/kanban`);
       document.getElementById("todo-btn").onclick = () =>
@@ -319,28 +355,62 @@
           let li = document.createElement("li");
           li.className = "todo-item" + (t.done ? " completed" : "");
           li.innerHTML = `
-          <label>
-            <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
-            <span>${escapeHTML(t.text)}</span>
-          </label>
-          <span class="date">${t.date ? formatDate(t.date) : ""}</span>
-          <button class="remove-btn" data-i="${i}" title="Удалить">&times;</button>
-        `;
+      <label class="todo-checkbox">
+        <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
+      </label>
+      <div class="todo-content">
+        <span class="todo-text${
+          t.done ? " completed" : ""
+        }" title="${escapeHTML(t.text)}" data-i="${i}">${escapeHTML(
+            t.text
+          )}</span>
+        <span class="date${t.done ? " completed" : ""}">${
+            t.date ? formatDate(t.date) : ""
+          }</span>
+      </div>
+      <button class="remove-btn" data-i="${i}" title="Удалить">
+        <span class="material-icons">close</span>
+      </button>
+    `;
           todoList.appendChild(li);
         });
+
+        // WOW-раскрытие длинного текста задачи
+        document.querySelectorAll(".todo-text").forEach((el) => {
+          el.addEventListener("click", function () {
+            if (el.closest(".todo-item").classList.contains("completed"))
+              return;
+            if (
+              el.scrollWidth > el.clientWidth ||
+              el.classList.contains("expanded")
+            ) {
+              el.classList.toggle("expanded");
+            }
+          });
+        });
+
+        // Обновляем стиль и текст кнопки
+        if (showCompleted) {
+          toggleCompletedBtn.classList.remove("active");
+          toggleCompletedBtn.innerHTML = `<span class="material-icons" style="font-size: 1.22em; vertical-align: -2px; margin-right: 7px">checklist</span>Скрыть завершённые`;
+        } else {
+          toggleCompletedBtn.classList.add("active");
+          toggleCompletedBtn.innerHTML = `<span class="material-icons" style="font-size: 1.22em; vertical-align: -2px; margin-right: 7px">checklist</span>Показать завершённые`;
+        }
       }
       todoList.onclick = async function (e) {
-        // Проверка для чекбокса (без изменений)
         if (e.target.type === "checkbox") {
           let i = e.target.getAttribute("data-i");
           let todo = todos[i];
-          await fetch(`/${USERNAME}/api/todos/${todo.id}`, {
+          let resp = await fetch(`/${USERNAME}/api/todos/${todo.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ done: !todo.done }),
           });
-          todos[i].done = !todos[i].done;
-          renderTodos();
+          if (resp.ok) {
+            todos[i].done = !todos[i].done;
+            renderTodos();
+          }
         }
         // Универсально ищем .remove-btn (по кнопке или вложенной иконке)
         let btn = e.target.closest(".remove-btn");
@@ -356,18 +426,21 @@
       };
       todoForm.onsubmit = async function (e) {
         e.preventDefault();
-        let text = todoInput.value;
+        let text = todoInput.value.trim();
         let dateVal = todoDate.value || null;
+        if (!text) return;
         let resp = await fetch(`/${USERNAME}/api/todos`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, date: dateVal }),
         });
-        let data = await resp.json();
-        todos.unshift(data);
-        todoInput.value = "";
-        todoDate.value = "";
-        renderTodos();
+        if (resp.ok) {
+          let data = await resp.json();
+          todos.unshift(data);
+          todoInput.value = "";
+          todoDate.value = "";
+          renderTodos();
+        }
       };
       toggleCompletedBtn.onclick = function () {
         showCompleted = !showCompleted;
@@ -408,48 +481,6 @@
       document.getElementById("logout-btn").onclick = function () {
         window.location.href = "{{ url_for('logout', username=username) }}";
       };
-
-      //Render initial todos
-      function renderTodos() {
-        todoList.innerHTML = "";
-        todos.forEach((t, i) => {
-          if (!showCompleted && t.done) return;
-          let li = document.createElement("li");
-          li.className = "todo-item" + (t.done ? " completed" : "");
-          li.innerHTML = `
-      <label class="todo-checkbox">
-        <input type="checkbox" ${t.done ? "checked" : ""} data-i="${i}" />
-        <span></span>
-      </label>
-      <div class="todo-content">
-        <span class="todo-text" title="${escapeHTML(
-          t.text
-        )}" data-i="${i}">${escapeHTML(t.text)}</span>
-        <span class="date">${t.date ? formatDate(t.date) : ""}</span>
-      </div>
-      <button class="remove-btn" data-i="${i}" title="Удалить">
-        <span class="material-icons">close</span>
-      </button>
-    `;
-          todoList.appendChild(li);
-        });
-
-        // Логика разворачивания по клику только если текст реально обрезан (скрыт)
-        document.querySelectorAll(".todo-text").forEach((el) => {
-          el.addEventListener("click", function () {
-            // Если задача завершена, не раскрываем
-            if (el.closest(".todo-item").classList.contains("completed"))
-              return;
-            // Проверим: текст реально обрезается (scrollWidth > clientWidth)
-            if (
-              el.scrollWidth > el.clientWidth ||
-              el.classList.contains("expanded")
-            ) {
-              el.classList.toggle("expanded");
-            }
-          });
-        });
-      }
     </script>
   </body>
 </html>
