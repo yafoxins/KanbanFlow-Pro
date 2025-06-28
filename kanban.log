@@ -1,0 +1,41 @@
+2025-06-28 14:06:29 [WARNING]  * Debugger is active!
+2025-06-28 14:06:29 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:06:46 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:06:48 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:06:51 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:06:55 [WARNING] Попытка входа без team_id: user=test
+2025-06-28 14:07:50 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:07:54 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:07:55 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:07:58 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:08:05 [WARNING] Попытка входа без team_id: user=test
+2025-06-28 14:08:18 [INFO]  * Detected change in '/app/app.py', reloading
+2025-06-28 14:08:18 [WARNING]  * Debugger is active!
+2025-06-28 14:08:18 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:10:24 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:11:33 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:11:35 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:11:48 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:11:50 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:12:30 [INFO]  * Detected change in '/app/app.py', reloading
+2025-06-28 14:12:30 [WARNING]  * Debugger is active!
+2025-06-28 14:12:30 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:12:41 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:12:46 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:12:50 [WARNING] Попытка входа без team_id: user=test
+2025-06-28 14:13:14 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:13:20 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:13:24 [WARNING] Попытка входа без team_id: user=test
+2025-06-28 14:14:29 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:16:21 [INFO]  * Detected change in '/app/app.py', reloading
+2025-06-28 14:16:22 [WARNING]  * Debugger is active!
+2025-06-28 14:16:22 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:17:24 [INFO]  * Detected change in '/app/app.py', reloading
+2025-06-28 14:17:24 [WARNING]  * Debugger is active!
+2025-06-28 14:17:24 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:17:38 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:17:41 [INFO]  * Detected change in '/app/app.py', reloading
+2025-06-28 14:17:42 [WARNING]  * Debugger is active!
+2025-06-28 14:17:42 [INFO]  * Debugger PIN: 101-873-460
+2025-06-28 14:17:48 [INFO] Пользователь test открыл команду 2 (Testing)
+2025-06-28 14:17:51 [INFO] Пользователь test открыл команду 2 (Testing)

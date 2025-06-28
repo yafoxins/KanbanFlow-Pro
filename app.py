@@ -1,10 +1,13 @@
 import os
 import time
 import psycopg2
+import re
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from werkzeug.utils import secure_filename
+import logging
 
 
 app = Flask(__name__)
@@ -14,6 +17,25 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 DATABASE_URL = os.getenv(
     'DATABASE_URL', 'postgres://kanban_user:kanban_pass@localhost:5432/kanban_db')
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Настройка логгера
+logging.basicConfig(
+    filename='kanban.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def get_db():
@@ -357,6 +379,13 @@ def api_modify_task(username, task_id):
     conn = get_db()
     cur = conn.cursor()
     if request.method == 'DELETE':
+        # Получаем описание задачи перед удалением для очистки картинок
+        cur.execute(
+            'SELECT description FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
+        row = cur.fetchone()
+        if row and row[0]:
+            delete_task_images(row[0])
+
         cur.execute(
             'DELETE FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
         conn.commit()
@@ -367,6 +396,17 @@ def api_modify_task(username, task_id):
         data = request.get_json()
         if not data:
             return jsonify({'error': 'no data'}), 400
+
+        # Получаем старое описание для сравнения
+        cur.execute(
+            'SELECT description FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
+        row = cur.fetchone()
+        old_description = row[0] if row else ''
+        new_description = data.get('description', '')
+
+        # Очищаем неиспользуемые картинки
+        cleanup_unused_images(old_description, new_description)
+
         tags = data.get('tags', [])
         due_date = data.get('due_date')
         updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
@@ -381,7 +421,7 @@ def api_modify_task(username, task_id):
         user_id = user_row[0]
         user_name = user_row[1]
         cur.execute('UPDATE tasks SET text=%s, description=%s, status=%s, tags=%s, due_date=%s, updated_by=%s, updated_at=%s WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)',
-                    (data['text'], data.get('description', ''), data['status'], tags, due_date, user_id, updated_at, task_id, username))
+                    (data['text'], new_description, data['status'], tags, due_date, user_id, updated_at, task_id, username))
         conn.commit()
         cur.close()
         conn.close()
@@ -571,9 +611,42 @@ def api_todo_modify(username, todo_id):
 
 @app.route('/<username>/team')
 def team_page(username):
-    if not is_authenticated(username):
+    user = session.get('user')
+    if not user or not is_authenticated(user):
         return redirect(url_for('home'))
-    return render_template('team_board.html', username=username)
+    if user != username:
+        return redirect(url_for('team_page', username=user, team_id=request.args.get('team_id')))
+    team_id = request.args.get('team_id')
+    team_name = None
+    if team_id:
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute('''
+                SELECT t.name FROM teams t
+                JOIN team_members tm ON tm.team_id = t.id
+                JOIN users u ON u.id = tm.user_id
+                WHERE t.id=%s AND u.username=%s
+            ''', (team_id, username))
+            row = cur.fetchone()
+            if row:
+                team_name = row[0]
+                logger.info(
+                    f"Пользователь {username} открыл команду {team_id} ({team_name})")
+            cur.close()
+            conn.close()
+            if not team_name:
+                logger.warning(
+                    f"Попытка доступа к чужой или несуществующей команде: user={username}, team_id={team_id}")
+                return redirect(url_for('home'))
+        except Exception as e:
+            logger.error(
+                f"Ошибка при доступе к команде: user={username}, team_id={team_id}, error={e}")
+            return redirect(url_for('home'))
+    else:
+        logger.warning(f"Попытка входа без team_id: user={username}")
+        return redirect(url_for('home'))
+    return render_template('team_board.html', username=username, team_name=team_name)
 
 
 @app.route('/<username>/api/teams', methods=['POST'])
@@ -690,11 +763,12 @@ def get_team_members(username, team_id):
         conn = get_db()
         cur = conn.cursor()
         cur.execute('''
-            SELECT u.username FROM team_members tm
+            SELECT u.id, u.username FROM team_members tm
             JOIN users u ON tm.user_id = u.id
             WHERE tm.team_id = %s
         ''', (team_id,))
-        members = [row[0] for row in cur.fetchall()]
+        members = [{'id': row[0], 'username': row[1]}
+                   for row in cur.fetchall()]
         return jsonify({'members': members})
     except Exception as e:
         print(f"Error in get_team_members for {username}, team {team_id}: {e}")
@@ -775,12 +849,26 @@ def team_tasks(username, team_id):
             tags = data.get('tags', [])
             due_date = data.get('due_date')
             updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+
+            # Обрабатываем assignee_id - если передан username, находим id
+            if assignee_id and not str(assignee_id).isdigit():
+                # Если assignee_id - это username, находим соответствующий id
+                cur.execute(
+                    'SELECT id FROM users WHERE username=%s', (assignee_id,))
+                user_row_assignee = cur.fetchone()
+                if user_row_assignee:
+                    assignee_id = user_row_assignee[0]
+                else:
+                    assignee_id = None
+
             # Получаем user_id
-            cur.execute('SELECT id FROM users WHERE username=%s', (username,))
+            cur.execute(
+                'SELECT id, username FROM users WHERE username=%s', (username,))
             user_row = cur.fetchone()
             if not user_row:
                 return jsonify({'error': 'user not found'}), 400
             user_id = user_row[0]
+            user_name = user_row[1]
             cur.execute('INSERT INTO team_tasks (team_id, text, description, status, assignee_id, tags, due_date, updated_by, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
                         (team_id, data['text'], data.get('description', ''), data['status'], assignee_id, tags, due_date, user_id, updated_at))
             row = cur.fetchone()
@@ -826,6 +914,13 @@ def team_task_modify(username, team_id, task_id):
     conn = get_db()
     cur = conn.cursor()
     if request.method == 'DELETE':
+        # Получаем описание задачи перед удалением для очистки картинок
+        cur.execute(
+            'SELECT description FROM team_tasks WHERE id=%s AND team_id=%s', (task_id, team_id))
+        row = cur.fetchone()
+        if row and row[0]:
+            delete_task_images(row[0])
+
         cur.execute(
             'DELETE FROM team_tasks WHERE id=%s AND team_id=%s', (task_id, team_id))
         conn.commit()
@@ -838,10 +933,33 @@ def team_task_modify(username, team_id, task_id):
         data = request.get_json()
         if not data:
             return jsonify({'error': 'no data'}), 400
+
+        # Получаем старое описание для сравнения
+        cur.execute(
+            'SELECT description FROM team_tasks WHERE id=%s AND team_id=%s', (task_id, team_id))
+        row = cur.fetchone()
+        old_description = row[0] if row else ''
+        new_description = data.get('description', '')
+
+        # Очищаем неиспользуемые картинки
+        cleanup_unused_images(old_description, new_description)
+
         assignee_id = data.get('assignee_id')
         tags = data.get('tags', [])
         due_date = data.get('due_date')
         updated_at = time.strftime('%Y-%m-%dT%H:%M:%S')
+
+        # Обрабатываем assignee_id - если передан username, находим id
+        if assignee_id and not str(assignee_id).isdigit():
+            # Если assignee_id - это username, находим соответствующий id
+            cur.execute('SELECT id FROM users WHERE username=%s',
+                        (assignee_id,))
+            user_row_assignee = cur.fetchone()
+            if user_row_assignee:
+                assignee_id = user_row_assignee[0]
+            else:
+                assignee_id = None
+
         # Получаем user_id
         cur.execute(
             'SELECT id, username FROM users WHERE username=%s', (username,))
@@ -853,14 +971,14 @@ def team_task_modify(username, team_id, task_id):
         user_id = user_row[0]
         user_name = user_row[1]
         cur.execute('UPDATE team_tasks SET text=%s, description=%s, status=%s, assignee_id=%s, tags=%s, due_date=%s, updated_by=%s, updated_at=%s WHERE id=%s AND team_id=%s',
-                    (data['text'], data.get('description', ''), data['status'], assignee_id, tags, due_date, user_id, updated_at, task_id, team_id))
+                    (data['text'], new_description, data['status'], assignee_id, tags, due_date, user_id, updated_at, task_id, team_id))
         conn.commit()
         cur.close()
         conn.close()
         socketio.emit('team_task_updated', {
             'id': task_id,
             'text': data['text'],
-            'description': data.get('description', ''),
+            'description': new_description,
             'status': data['status'],
             'assignee_id': assignee_id,
             'tags': tags,
@@ -943,12 +1061,17 @@ def api_team_info(username, team_id):
         conn.close()
         return jsonify({'error': 'team not found'}), 404
     is_leader = (row[2] == user_id)
+    leader_id = row[2]
+    # Получаем username лидера
+    cur.execute('SELECT username FROM users WHERE id=%s', (leader_id,))
+    leader_name_row = cur.fetchone()
+    leader_name = leader_name_row[0] if leader_name_row else None
     cur.execute(
         '''SELECT u.username FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE tm.team_id = %s''', (team_id,))
     members = [row[0] for row in cur.fetchall()]
     cur.close()
     conn.close()
-    return jsonify({'id': row[0], 'name': row[1], 'leader_id': row[2], 'is_leader': is_leader, 'members': members})
+    return jsonify({'id': row[0], 'name': row[1], 'leader_id': leader_id, 'leader_name': leader_name, 'is_leader': is_leader, 'members': members})
 
 
 @app.route('/<username>/api/teams/<int:team_id>/edit', methods=['POST'])
@@ -1154,6 +1277,222 @@ def api_check_user_id(user_id):
     if not row:
         return jsonify({'error': 'not found'}), 404
     return jsonify({'username': row[0]})
+
+
+@app.route('/api/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['image']
+    if not file or not file.filename:
+        return jsonify({'error': 'No selected file'}), 400
+    if allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        # Избегаем перезаписи файлов
+        i = 1
+        orig_filename = filename
+        while os.path.exists(filepath):
+            name, ext = os.path.splitext(orig_filename)
+            filename = f"{name}_{i}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            i += 1
+        file.save(filepath)
+        url = f"/static/uploads/{filename}"
+        return jsonify({'url': url})
+    return jsonify({'error': 'Invalid file type'}), 400
+
+
+def extract_image_paths(html_content):
+    """Извлекает пути к картинкам из HTML описания задачи"""
+    if not html_content:
+        return []
+
+    # Ищем все <img src="/static/uploads/...">
+    pattern = r'<img[^>]+src=["\'](/static/uploads/[^"\']+)["\'][^>]*>'
+    matches = re.findall(pattern, html_content)
+    return matches
+
+
+def cleanup_unused_images(old_description, new_description):
+    """Удаляет картинки, которые были в старом описании, но исчезли в новом"""
+    old_images = set(extract_image_paths(old_description))
+    new_images = set(extract_image_paths(new_description))
+
+    # Файлы, которые нужно удалить
+    files_to_delete = old_images - new_images
+
+    for image_path in files_to_delete:
+        # Убираем /static/ из пути для получения относительного пути
+        if image_path.startswith('/static/'):
+            file_path = image_path[7:]  # Убираем '/static/'
+            full_path = os.path.join(os.getcwd(), file_path)
+
+            try:
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                    print(f"Удален файл: {full_path}")
+            except Exception as e:
+                print(f"Ошибка при удалении файла {full_path}: {e}")
+
+
+def delete_task_images(description):
+    """Удаляет все картинки из описания задачи при её удалении"""
+    if not description:
+        return
+
+    image_paths = extract_image_paths(description)
+    for image_path in image_paths:
+        if image_path.startswith('/static/'):
+            file_path = image_path[7:]
+            full_path = os.path.join(os.getcwd(), file_path)
+
+            try:
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                    print(f"Удален файл при удалении задачи: {full_path}")
+            except Exception as e:
+                print(f"Ошибка при удалении файла {full_path}: {e}")
+
+
+@app.route('/<username>/task/<int:task_id>')
+def task_view_page(username, task_id):
+    if not is_authenticated(username):
+        return redirect(url_for('home'))
+    return render_template('task_view.html', username=username, task_id=task_id)
+
+
+@app.route('/<username>/team_task/<int:task_id>')
+def team_task_view_page(username, task_id):
+    user = session.get('user')
+    if not user or not is_authenticated(user):
+        return redirect(url_for('home'))
+    if user != username:
+        return redirect(url_for('team_task_view_page', username=user, task_id=task_id))
+    # Найти team_id по задаче
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT team_id FROM team_tasks WHERE id=%s', (task_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    team_id = row[0] if row else None
+    return render_template('team_task_view.html', username=username, task_id=task_id, team_id=team_id)
+
+
+@app.route('/<username>/team_task/<int:task_id>/edit')
+def team_task_edit_page(username, task_id):
+    user = session.get('user')
+    if not user or not is_authenticated(user):
+        return redirect(url_for('home'))
+    if user != username:
+        return redirect(url_for('team_task_edit_page', username=user, task_id=task_id))
+    # Найти team_id по задаче
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT team_id FROM team_tasks WHERE id=%s', (task_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    team_id = row[0] if row else None
+    return render_template('team_task_edit.html', username=username, task_id=task_id, team_id=team_id)
+
+
+@app.route('/<username>/task/<int:task_id>/edit')
+def task_edit_page(username, task_id):
+    if not is_authenticated(username):
+        return redirect(url_for('home'))
+    return render_template('task_edit.html', username=username, task_id=task_id)
+
+
+@app.route('/<username>/api/tasks/<int:task_id>/data', methods=['GET'])
+def api_get_task_data(username, task_id):
+    if not is_authenticated(username):
+        return jsonify({'error': 'auth'}), 401
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'SELECT t.id, t.text, t.description, t.status, t.tags, t.due_date, t.updated_by, t.updated_at, u.username as updated_by_name '
+            'FROM tasks t LEFT JOIN users u ON t.updated_by = u.id '
+            'WHERE t.id=%s AND t.user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'task not found'}), 404
+        task = {
+            'id': row[0],
+            'text': row[1],
+            'description': row[2],
+            'status': row[3],
+            'tags': row[4] or [],
+            'due_date': to_iso(row[5]),
+            'updated_by': row[6],
+            'updated_by_name': row[8],
+            'updated_at': to_iso(row[7])
+        }
+        return jsonify(task)
+    except Exception as e:
+        print(
+            f"Error in api_get_task_data for {username}, task {task_id}: {e}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+@app.route('/<username>/api/teams/<int:team_id>/tasks/<int:task_id>/data', methods=['GET'])
+def api_get_team_task_data(username, team_id, task_id):
+    user = session.get('user')
+    if not user or not is_authenticated(user):
+        return jsonify({'error': 'auth'}), 401
+    if user != username:
+        # Возвращаем ошибку, чтобы фронт мог перезапросить с правильным username
+        return jsonify({'error': 'redirect', 'username': user}), 401
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'SELECT t.id, t.text, t.description, t.status, t.assignee_id, u.username as assignee_name, t.tags, t.due_date, t.updated_by, t.updated_at, u2.username as updated_by_name '
+            'FROM team_tasks t '
+            'LEFT JOIN users u ON t.assignee_id = u.id '
+            'LEFT JOIN users u2 ON t.updated_by = u2.id '
+            'WHERE t.id=%s AND t.team_id=%s', (task_id, team_id))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'task not found'}), 404
+        task = {
+            'id': row[0],
+            'text': row[1],
+            'description': row[2],
+            'status': row[3],
+            'assignee_id': row[4],
+            'assignee_name': row[5],
+            'tags': row[6] or [],
+            'due_date': to_iso(row[7]),
+            'updated_by': row[8],
+            'updated_at': to_iso(row[9]),
+            'updated_by_name': row[10]
+        }
+        return jsonify(task)
+    except Exception as e:
+        print(
+            f"Error in api_get_team_task_data for {username}, team {team_id}, task {task_id}: {e}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'database error'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 if __name__ == '__main__':
