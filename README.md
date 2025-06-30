@@ -16,14 +16,16 @@
 
 ## 🌐 **Живые демо**
 
-<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+**🇷🇺 [Работающие демо](https://kanban.yafoxin.ru)**  
+[![Kanban.yafoxin.ru](https://img.shields.io/badge/kanban.yafoxin.ru-222222?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.ru)
 
-[![Live Demo RU](https://img.shields.io/badge/🇷🇺_Работающие_демо-kanban.yafoxin.ru-00ff88?style=for-the-badge&logo=globe)](https://kanban.yafoxin.ru)
-[![Live Demo EN](https://img.shields.io/badge/🇺🇸_Live_Demo-kanban.yafoxin.tech-00ff88?style=for-the-badge&logo=globe)](https://kanban.yafoxin.tech)
+**🇺🇸 [Live Demo](https://kanban.yafoxin.tech)**  
+[![Kanban.yafoxin.tech](https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.tech)
 
-</div>
+---
 
-**🎮 Попробуйте прямо сейчас!** Создайте аккаунт и испытайте все возможности системы.
+**🎮 Попробуйте прямо сейчас!**  
+Создайте аккаунт и испытайте все возможности системы.
 
 ---
 
