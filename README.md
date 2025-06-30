@@ -309,39 +309,43 @@ python app.py
 
 ## 📱 Скриншоты / Screenshots
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/board.png" alt="Канбан-доска / Kanban board" width="800"/>
+<details>
+  <summary>📸 Больше скриншотов — почувствуй атмосферу проекта! / More screenshots — feel the vibe!</summary>
   <br>
-  <i>Канбан-доска / Kanban board</i>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/todo.png" alt="ToDo-лист / ToDo list" width="800"/>
-  <br>
-  <i>ToDo-лист / ToDo list</i>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/task.png" alt="Создание задачи / New task" width="500"/>
-  <br>
-  <i>Создание задачи / New task</i>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskview.png" alt="Просмотр задачи / Task view" width="600"/>
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskfullview.png" alt="Полный просмотр задачи / Full task view" width="600"/>
-  <br>
-  <i>Просмотр задачи / Task view</i>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/teamboard.png" alt="Командная доска / Team board" width="800"/>
-  <br>
-  <i>Командная доска / Team board</i>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/profile.png" alt="Профиль пользователя / User profile" width="400"/>
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/about.png" alt="О проекте / About project" width="400"/>
-  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/password.png" alt="Смена пароля / Change password" width="400"/>
-  <br>
-  <i>Профиль, О проекте, Смена пароля / Profile, About, Change password</i>
-</p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/board.png" alt="Канбан-доска / Kanban board" width="800"/>
+    <br>
+    <i>Канбан-доска / Kanban board</i>
+  </p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/todo.png" alt="ToDo-лист / ToDo list" width="800"/>
+    <br>
+    <i>ToDo-лист / ToDo list</i>
+  </p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/task.png" alt="Создание задачи / New task" width="500"/>
+    <br>
+    <i>Создание задачи / New task</i>
+  </p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskview.png" alt="Просмотр задачи / Task view" width="600"/>
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskfullview.png" alt="Полный просмотр задачи / Full task view" width="600"/>
+    <br>
+    <i>Просмотр задачи / Task view</i>
+  </p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/teamboard.png" alt="Командная доска / Team board" width="800"/>
+    <br>
+    <i>Командная доска / Team board</i>
+  </p>
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/profile.png" alt="Профиль пользователя / User profile" width="400"/>
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/about.png" alt="О проекте / About project" width="400"/>
+    <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/password.png" alt="Смена пароля / Change password" width="400"/>
+    <br>
+    <i>Профиль, О проекте, Смена пароля / Profile, About, Change password</i>
+  </p>
+</details>
 
 ---
 
