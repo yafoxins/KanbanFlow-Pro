@@ -72,8 +72,6 @@
 
 ### 🏗️ Архитектура / Architecture
 
-<details>
-<summary>Показать схему / Show diagram</summary>
 ```mermaid
 flowchart LR
     FE[Frontend<br/>HTML/CSS/JS]
@@ -86,7 +84,6 @@ flowchart LR
     FE <--> WS
     BE <--> WS
 ```
-</details>
 
 **🇷🇺 Архитектура проекта** — Вся система построена по принципу клиент-сервер с поддержкой real-time через WebSocket.  
 **🇬🇧 Project architecture** — The whole system is built on a client-server principle with real-time support via WebSocket.
@@ -202,14 +199,16 @@ python app.py
 
 ### ✨ Key Features
 
-- 🎨 **Modern UI/UX** — Responsive design with dark/light theme support
-- 📋 **Kanban Board** — Drag & Drop interface with customizable statuses
-- ✅ **Todo Lists** — Personal tasks with dates and priorities
-- 👥 **Team Collaboration** — Create teams, assign tasks, work together
-- 🔐 **Security** — CSRF protection, password hashing, sessions
-- 📱 **Responsive** — Full mobile device support
-- ⚡ **Real-time** — WebSocket for instant updates
-- 🖼️ **Media** — Image uploads in tasks and avatars
+<table>
+  <tr><td>🎨 Modern UI/UX</td><td>Responsive design with dark/light theme support</td></tr>
+  <tr><td>📋 Kanban Board</td><td>Drag & Drop interface with customizable statuses</td></tr>
+  <tr><td>✅ Todo Lists</td><td>Personal tasks with dates and priorities</td></tr>
+  <tr><td>👥 Team Collaboration</td><td>Create teams, assign tasks, work together</td></tr>
+  <tr><td>🔐 Security</td><td>CSRF protection, password hashing, sessions</td></tr>
+  <tr><td>📱 Responsive</td><td>Full mobile device support</td></tr>
+  <tr><td>⚡ Real-time</td><td>WebSocket for instant updates</td></tr>
+  <tr><td>🖼️ Media</td><td>Image uploads in tasks and avatars</td></tr>
+</table>
 
 ### 🚀 Quick Start
 
