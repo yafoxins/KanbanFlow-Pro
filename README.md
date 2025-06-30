@@ -16,9 +16,24 @@
 
 ## 🌐 Живые демо
 
-**🇷🇺 Работающее демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru) [![RU Demo](https://img.shields.io/badge/kanban.yafoxin.ru-1976d2?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.ru)
-
-**🇺🇸 Live Demo:** [kanban.yafoxin.tech](https://kanban.yafoxin.tech) [![EN Demo](https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.tech)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>🇷🇺 Работающее демо</b><br>
+      <a href="https://kanban.yafoxin.ru">
+        <img src="https://img.shields.io/badge/kanban.yafoxin.ru-1976d2?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="RU Demo">
+      </a><br>
+      <a href="https://kanban.yafoxin.ru">kanban.yafoxin.ru</a>
+    </td>
+    <td align="center" width="50%">
+      <b>🇺🇸 Live Demo</b><br>
+      <a href="https://kanban.yafoxin.tech">
+        <img src="https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="EN Demo">
+      </a><br>
+      <a href="https://kanban.yafoxin.tech">kanban.yafoxin.tech</a>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -44,7 +59,7 @@
 
 **KanbanFlow Pro** — это современное веб-приложение для управления задачами и проектами, построенное на Flask и PostgreSQL. Приложение объединяет в себе канбан-доску, ToDo-листы и систему командной работы в едином интуитивном интерфейсе.
 
-**🌐 Работающие демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru)
+**🌐 Работающее демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru)
 
 ### ✨ Ключевые особенности
 

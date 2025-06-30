@@ -14,7 +14,7 @@ import datetime
 
 
 app = Flask(__name__)
-app.secret_key = 'cGQRPuvxkCqTerOmIDGmNXxXhjynGl'
+app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 SESSION_LIFETIME = 1800  # 30 минут
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -53,7 +53,7 @@ def cleanup_invalid_dates():
                 EXTRACT(YEAR FROM due_date) < 1900
             )
         ''')
-        
+
         # Очищаем все подозрительные даты в таблице team_tasks
         cur.execute('''
             UPDATE team_tasks 
@@ -66,12 +66,10 @@ def cleanup_invalid_dates():
                 EXTRACT(YEAR FROM due_date) < 1900
             )
         ''')
-        
+
         conn.commit()
-        print("Некорректные даты очищены")
     except Exception as e:
         conn.rollback()
-        print(f"Ошибка очистки дат: {e}")
     finally:
         cur.close()
         conn.close()
@@ -163,12 +161,14 @@ def generate_csrf_token():
     """Генерирует уникальный CSRF-токен"""
     return secrets.token_urlsafe(32)
 
+
 def validate_csrf_token(username, token):
     """Проверяет CSRF-токен для пользователя"""
     if not token:
         return False
     stored_token = session.get(f'csrf_token_{username}')
     return stored_token and secrets.compare_digest(stored_token, token)
+
 
 def require_csrf_token(f):
     """Декоратор для проверки CSRF-токена"""
@@ -177,15 +177,15 @@ def require_csrf_token(f):
         username = kwargs.get('username')
         if not username:
             return jsonify({'error': 'Неверный запрос.'}), 400
-        
+
         if not is_authenticated(username):
             return jsonify({'error': 'Требуется авторизация.'}), 401
-        
+
         # Получаем токен из заголовка
         csrf_token = request.headers.get('X-CSRF-Token')
         if not validate_csrf_token(username, csrf_token):
             return jsonify({'error': 'Неверный CSRF-токен. Обновите страницу.'}), 403
-        
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -454,26 +454,21 @@ def api_add_task(username):
 @app.route('/<username>/api/tasks/<int:task_id>', methods=['PATCH', 'DELETE'])
 @require_csrf_token
 def api_modify_task(username, task_id):
-    app.logger.info(f"API_MODIFY_TASK: {username}, {task_id}, {request.method}")
     if not is_authenticated(username):
         return jsonify({'error': 'Требуется авторизация.'}), 401
     conn = get_db()
     cur = conn.cursor()
     if request.method == 'DELETE':
-        app.logger.info(f"=== УДАЛЕНИЕ ЗАДАЧИ {task_id} ===")
         # Получаем описание задачи перед удалением для очистки картинок
-        cur.execute('SELECT description FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
+        cur.execute(
+            'SELECT description FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
         task_row = cur.fetchone()
-        app.logger.info(f"Описание задачи: {task_row[0] if task_row else 'None'}")
         if task_row:
-            app.logger.info("Вызываем delete_task_images")
             # Удаляем картинки из описания задачи
             delete_task_images(task_row[0])
-        else:
-            app.logger.info("Задача не найдена в базе данных")
-        
-        cur.execute('DELETE FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
-        app.logger.info(f"Результат удаления: {cur.rowcount} строк")
+
+        cur.execute(
+            'DELETE FROM tasks WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (task_id, username))
         if cur.rowcount == 0:
             cur.close()
             conn.close()
@@ -481,14 +476,14 @@ def api_modify_task(username, task_id):
         conn.commit()
         cur.close()
         conn.close()
-        app.logger.info("=== ЗАДАЧА УДАЛЕНА ===")
         return jsonify({'success': True})
     else:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Нет данных.'}), 400
         # Получаем user_id
-        cur.execute('SELECT id, username FROM users WHERE username=%s', (username,))
+        cur.execute(
+            'SELECT id, username FROM users WHERE username=%s', (username,))
         user_row = cur.fetchone()
         if not user_row:
             cur.close()
@@ -496,15 +491,16 @@ def api_modify_task(username, task_id):
             return jsonify({'error': 'Пользователь не найден.'}), 400
         user_id = user_row[0]
         user_name = user_row[1]
-        
+
         # Получаем старое описание для очистки неиспользуемых картинок
-        cur.execute('SELECT description FROM tasks WHERE id=%s AND user_id=%s', (task_id, user_id))
+        cur.execute(
+            'SELECT description FROM tasks WHERE id=%s AND user_id=%s', (task_id, user_id))
         old_task = cur.fetchone()
         old_description = old_task[0] if old_task else ''
-        
+
         updated_at = validate_date(time.strftime('%Y-%m-%dT%H:%M:%S'))
         new_description = data.get('description', '')
-        
+
         cur.execute('UPDATE tasks SET text=%s, description=%s, status=%s, tags=%s, due_date=%s, updated_by=%s, updated_at=%s WHERE id=%s AND user_id=%s RETURNING id',
                     (data['text'], new_description, data['status'], data.get('tags', []), validate_date(data.get('due_date')), user_id, updated_at, task_id, user_id))
         row = cur.fetchone()
@@ -512,10 +508,10 @@ def api_modify_task(username, task_id):
             cur.close()
             conn.close()
             return jsonify({'error': 'Задача не найдена.'}), 404
-        
+
         # Очищаем неиспользуемые картинки
         cleanup_unused_images(old_description, new_description)
-        
+
         conn.commit()
         cur.close()
         conn.close()
@@ -527,37 +523,37 @@ def api_modify_task(username, task_id):
 def api_reorder_tasks(username):
     if not is_authenticated(username):
         return jsonify({'error': 'Требуется авторизация.'}), 401
-    
+
     data = request.get_json()
     if not data or 'orders' not in data:
         return jsonify({'error': 'Нет данных о порядке задач.'}), 400
-    
+
     orders = data['orders']
     conn = get_db()
     cur = conn.cursor()
-    
+
     try:
         # Обрабатываем каждую колонку (статус)
         for status, task_ids in orders.items():
             if not isinstance(task_ids, list):
                 continue
-            
+
             # Обновляем статус для каждой задачи в этой колонке
             for task_id in task_ids:
                 if not isinstance(task_id, int):
                     continue
-                    
+
                 cur.execute('''
                     UPDATE tasks 
                     SET status = %s 
                     WHERE id = %s AND user_id = (SELECT id FROM users WHERE username = %s)
                 ''', (status, task_id, username))
-        
+
         conn.commit()
         cur.close()
         conn.close()
         return jsonify({'success': True})
-        
+
     except Exception as e:
         conn.rollback()
         cur.close()
@@ -592,13 +588,15 @@ def api_delete_status(username, code):
     conn = get_db()
     cur = conn.cursor()
     # Проверяем, что это не последний статус
-    cur.execute('SELECT COUNT(*) FROM statuses WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
+    cur.execute(
+        'SELECT COUNT(*) FROM statuses WHERE user_id=(SELECT id FROM users WHERE username=%s)', (username,))
     count = cur.fetchone()[0]
     if count <= 1:
         cur.close()
         conn.close()
         return jsonify({'error': 'Нельзя удалить последний статус.'}), 400
-    cur.execute('DELETE FROM statuses WHERE code=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (code, username))
+    cur.execute(
+        'DELETE FROM statuses WHERE code=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (code, username))
     conn.commit()
     cur.close()
     conn.close()
@@ -616,13 +614,13 @@ def api_profile(username):
     conn.close()
     if not row:
         return jsonify({'error': 'Профиль не найден.'}), 404
-    
+
     # Добавляем timestamp к avatar_url для предотвращения кеширования
     avatar_url = row[4]
     if avatar_url and '?' not in avatar_url:  # Если timestamp еще не добавлен
         timestamp = int(time.time())
         avatar_url = f"{avatar_url}?t={timestamp}"
-    
+
     return jsonify({
         'username': row[0],
         'email': row[1],
@@ -686,7 +684,7 @@ def api_todos(username):
         csrf_token = request.headers.get('X-CSRF-Token')
         if not validate_csrf_token(username, csrf_token):
             return jsonify({'error': 'Неверный CSRF-токен. Обновите страницу.'}), 403
-        
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Нет данных.'}), 400
@@ -717,7 +715,8 @@ def api_todo_modify(username, todo_id):
     conn = get_db()
     cur = conn.cursor()
     if request.method == 'DELETE':
-        cur.execute('DELETE FROM todos WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (todo_id, username))
+        cur.execute(
+            'DELETE FROM todos WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (todo_id, username))
         conn.commit()
         cur.close()
         conn.close()
@@ -726,26 +725,27 @@ def api_todo_modify(username, todo_id):
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Нет данных.'}), 400
-        
+
         # Получаем текущие данные задачи
-        cur.execute('SELECT text, done, date FROM todos WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (todo_id, username))
+        cur.execute(
+            'SELECT text, done, date FROM todos WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s)', (todo_id, username))
         row = cur.fetchone()
         if not row:
             cur.close()
             conn.close()
             return jsonify({'error': 'Задача не найдена.'}), 404
-        
+
         current_text, current_done, current_date = row
-        
+
         # Обновляем только переданные поля
         text = data.get('text', current_text)
         done = data.get('done', current_done)
         date_val = data.get('date', current_date)
-        
+
         # Проверяем, что текст не пустой (если он передаётся)
         if 'text' in data and not text.strip():
             return jsonify({'error': 'Пустой текст задачи.'}), 400
-        
+
         cur.execute('UPDATE todos SET text=%s, done=%s, date=%s WHERE id=%s AND user_id=(SELECT id FROM users WHERE username=%s) RETURNING id, text, date, done',
                     (text, done, date_val, todo_id, username))
         row = cur.fetchone()
@@ -757,9 +757,9 @@ def api_todo_modify(username, todo_id):
         cur.close()
         conn.close()
         return jsonify({
-            'id': row[0], 
-            'text': row[1], 
-            'date': row[2].isoformat() if row[2] else None, 
+            'id': row[0],
+            'text': row[1],
+            'date': row[2].isoformat() if row[2] else None,
             'done': row[3]
         })
 
@@ -788,7 +788,8 @@ def team_page(username):
             if row:
                 team_name = row[0]
             # Получаем avatar_url пользователя
-            cur.execute('SELECT avatar_url FROM users WHERE username=%s', (username,))
+            cur.execute(
+                'SELECT avatar_url FROM users WHERE username=%s', (username,))
             avatar_row = cur.fetchone()
             if avatar_row:
                 avatar_url = avatar_row[0]
@@ -827,24 +828,28 @@ def create_team(username):
         return jsonify({'error': 'Пользователь не найден.'}), 400
     user_id = user_row[0]
     # Проверка уникальности имени команды глобально (без учёта регистра)
-    cur.execute('SELECT id FROM teams WHERE LOWER(name) = LOWER(%s)', (team_name,))
+    cur.execute(
+        'SELECT id FROM teams WHERE LOWER(name) = LOWER(%s)', (team_name,))
     if cur.fetchone():
         cur.close()
         conn.close()
         return jsonify({'error': 'Команда с таким названием уже существует.'}), 409
-    cur.execute('INSERT INTO teams (name, leader_id) VALUES (%s, %s) RETURNING id', (team_name, user_id))
+    cur.execute(
+        'INSERT INTO teams (name, leader_id) VALUES (%s, %s) RETURNING id', (team_name, user_id))
     team_id = cur.fetchone()[0]
-    cur.execute('INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)', (team_id, user_id))
-    
+    cur.execute(
+        'INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)', (team_id, user_id))
+
     # Создаём стандартные статусы для команды
     default_statuses = [
         ("todo", "Запланировано"),
-        ("progress", "В работе"), 
+        ("progress", "В работе"),
         ("done", "Готово")
     ]
     for code, title in default_statuses:
-        cur.execute('INSERT INTO team_statuses (team_id, code, title) VALUES (%s, %s, %s)', (team_id, code, title))
-    
+        cur.execute(
+            'INSERT INTO team_statuses (team_id, code, title) VALUES (%s, %s, %s)', (team_id, code, title))
+
     conn.commit()
     cur.close()
     conn.close()
@@ -860,10 +865,10 @@ def add_team_member(username, team_id):
     member_username = data.get('username', '').strip()
     if not member_username:
         return jsonify({'error': 'Не указано имя пользователя.'}), 400
-    
+
     # Проверяем, нужно ли удалить участника
     remove_member = data.get('remove', False)
-    
+
     conn = get_db()
     cur = conn.cursor()
     # Проверяем, что текущий пользователь - лидер команды
@@ -880,7 +885,7 @@ def add_team_member(username, team_id):
         cur.close()
         conn.close()
         return jsonify({'error': 'Недостаточно прав.'}), 403
-    
+
     # Находим ID участника
     cur.execute('SELECT id FROM users WHERE username=%s', (member_username,))
     member_row = cur.fetchone()
@@ -889,18 +894,20 @@ def add_team_member(username, team_id):
         conn.close()
         return jsonify({'error': 'Пользователь не найден.'}), 404
     member_id = member_row[0]
-    
+
     if remove_member:
         # Удаляем участника
-        cur.execute('DELETE FROM team_members WHERE team_id=%s AND user_id=%s', (team_id, member_id))
+        cur.execute(
+            'DELETE FROM team_members WHERE team_id=%s AND user_id=%s', (team_id, member_id))
         if cur.rowcount == 0:
             cur.close()
             conn.close()
             return jsonify({'error': 'Пользователь не найден в команде.'}), 404
-        
+
         # Снимаем все задачи с удаляемого участника
-        cur.execute('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = %s AND assignee_id = %s', (team_id, member_id))
-        
+        cur.execute(
+            'UPDATE team_tasks SET assignee_id = NULL WHERE team_id = %s AND assignee_id = %s', (team_id, member_id))
+
         conn.commit()
         cur.close()
         conn.close()
@@ -908,7 +915,8 @@ def add_team_member(username, team_id):
     else:
         # Добавляем участника
         try:
-            cur.execute('INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)', (team_id, member_id))
+            cur.execute(
+                'INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)', (team_id, member_id))
             conn.commit()
             cur.close()
             conn.close()
@@ -934,7 +942,7 @@ def get_team_members(username, team_id):
             JOIN users u ON tm.user_id = u.id
             WHERE tm.team_id = %s
         ''', (team_id,))
-        
+
         # Добавляем timestamp к avatar_url для предотвращения кеширования
         members = []
         for row in cur.fetchall():
@@ -942,13 +950,13 @@ def get_team_members(username, team_id):
             if avatar_url and '?' not in avatar_url:  # Если timestamp еще не добавлен
                 timestamp = int(time.time())
                 avatar_url = f"{avatar_url}?t={timestamp}"
-            
+
             members.append({
-                'id': row[0], 
-                'username': row[1], 
+                'id': row[0],
+                'username': row[1],
                 'avatar_url': avatar_url
             })
-        
+
         return jsonify({'members': members})
     except Exception as e:
         if conn:
@@ -1020,12 +1028,13 @@ def team_tasks(username, team_id):
         csrf_token = request.headers.get('X-CSRF-Token')
         if not validate_csrf_token(username, csrf_token):
             return jsonify({'error': 'Неверный CSRF-токен. Обновите страницу.'}), 403
-        
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Нет данных.'}), 400
         # Получаем user_id
-        cur.execute('SELECT id, username FROM users WHERE username=%s', (username,))
+        cur.execute(
+            'SELECT id, username FROM users WHERE username=%s', (username,))
         user_row = cur.fetchone()
         if not user_row:
             cur.close()
@@ -1035,12 +1044,13 @@ def team_tasks(username, team_id):
         user_name = user_row[1]
         tags = data.get('tags', [])
         due_date = validate_date(data.get('due_date'))
-        
+
         # Обрабатываем assignee_id - если передан username, находим его ID
         assignee_id = data.get('assignee_id')
         if assignee_id is not None and not str(assignee_id).isdigit():
             # Если assignee_id не число, значит это username - находим его ID
-            cur.execute('SELECT id FROM users WHERE username=%s', (assignee_id,))
+            cur.execute('SELECT id FROM users WHERE username=%s',
+                        (assignee_id,))
             assignee_row = cur.fetchone()
             if assignee_row:
                 assignee_id = assignee_row[0]
@@ -1051,10 +1061,10 @@ def team_tasks(username, team_id):
                 assignee_id = int(assignee_id)
             except Exception:
                 assignee_id = None
-        
+
         updated_at = validate_date(time.strftime('%Y-%m-%dT%H:%M:%S'))
         new_description = data.get('description', '')
-        
+
         # Вставляем новую задачу
         cur.execute('INSERT INTO team_tasks (team_id, text, description, status, tags, due_date, assignee_id, updated_by, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
                     (team_id, data['text'], new_description, data['status'], tags, due_date, assignee_id, user_id, updated_at))
@@ -1064,7 +1074,7 @@ def team_tasks(username, team_id):
             conn.close()
             return jsonify({'error': 'Ошибка создания задачи.'}), 500
         task_id = row[0]
-        
+
         # Получаем полные данные новой задачи для WebSocket
         cur.execute('''
             SELECT tt.id, tt.text, tt.description, tt.status, tt.tags, tt.due_date, tt.assignee_id, tt.updated_by, tt.updated_at, 
@@ -1075,11 +1085,11 @@ def team_tasks(username, team_id):
             WHERE tt.id = %s
         ''', (task_id,))
         task_row = cur.fetchone()
-        
+
         conn.commit()
         cur.close()
         conn.close()
-        
+
         # Отправляем уведомление через WebSocket
         if socketio and task_row:
             task_data = {
@@ -1096,7 +1106,7 @@ def team_tasks(username, team_id):
                 'updated_at': to_iso(validate_date(task_row[8]))
             }
             socketio.emit('team_task_added', task_data, room=f'team_{team_id}')
-        
+
         return jsonify({'success': True, 'id': task_id, 'updated_by': user_id, 'updated_by_name': user_name, 'updated_at': updated_at})
 
 
@@ -1106,20 +1116,13 @@ def team_task_modify(username, team_id, task_id):
     conn = get_db()
     cur = conn.cursor()
     if request.method == 'DELETE':
-        app.logger.info(f"=== УДАЛЕНИЕ ЗАДАЧИ {task_id} ===")
         # Получаем описание задачи перед удалением для очистки картинок
         cur.execute('SELECT description FROM team_tasks WHERE id=%s AND team_id=%s AND team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s)', (task_id, team_id, username))
         task_row = cur.fetchone()
-        app.logger.info(f"Описание задачи: {task_row[0] if task_row else 'None'}")
         if task_row:
-            app.logger.info("Вызываем delete_task_images")
-            # Удаляем картинки из описания задачи
             delete_task_images(task_row[0])
-        else:
-            app.logger.info("Задача не найдена в базе данных")
-        
+
         cur.execute('DELETE FROM team_tasks WHERE id=%s AND team_id=%s AND team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s)', (task_id, team_id, username))
-        app.logger.info(f"Результат удаления: {cur.rowcount} строк")
         if cur.rowcount == 0:
             cur.close()
             conn.close()
@@ -1127,14 +1130,14 @@ def team_task_modify(username, team_id, task_id):
         conn.commit()
         cur.close()
         conn.close()
-        app.logger.info("=== ЗАДАЧА УДАЛЕНА ===")
         return jsonify({'success': True})
     else:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Нет данных.'}), 400
         # Получаем user_id
-        cur.execute('SELECT id, username FROM users WHERE username=%s', (username,))
+        cur.execute(
+            'SELECT id, username FROM users WHERE username=%s', (username,))
         user_row = cur.fetchone()
         if not user_row:
             cur.close()
@@ -1142,15 +1145,15 @@ def team_task_modify(username, team_id, task_id):
             return jsonify({'error': 'Пользователь не найден.'}), 400
         user_id = user_row[0]
         user_name = user_row[1]
-        
+
         # Получаем старое описание для очистки неиспользуемых картинок
         cur.execute('SELECT description FROM team_tasks WHERE id=%s AND team_id=%s AND team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s)', (task_id, team_id, username))
         old_task = cur.fetchone()
         old_description = old_task[0] if old_task else ''
-        
+
         updated_at = validate_date(time.strftime('%Y-%m-%dT%H:%M:%S'))
         new_description = data.get('description', '')
-        
+
         cur.execute('UPDATE team_tasks SET text=%s, description=%s, status=%s, tags=%s, due_date=%s, assignee_id=%s, updated_by=%s, updated_at=%s WHERE id=%s AND team_id=%s AND team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s) RETURNING id',
                     (data['text'], new_description, data['status'], data.get('tags', []), validate_date(data.get('due_date')), data.get('assignee_id'), user_id, updated_at, task_id, team_id, username))
         row = cur.fetchone()
@@ -1158,10 +1161,10 @@ def team_task_modify(username, team_id, task_id):
             cur.close()
             conn.close()
             return jsonify({'error': 'Задача не найдена.'}), 404
-        
+
         # Очищаем неиспользуемые картинки
         cleanup_unused_images(old_description, new_description)
-        
+
         # Получаем полные данные обновленной задачи для WebSocket
         try:
             cur.execute('''
@@ -1185,11 +1188,11 @@ def team_task_modify(username, team_id, task_id):
                 WHERE tt.id = %s
             ''', (task_id,))
             task_row = cur.fetchone()
-        
+
         conn.commit()
         cur.close()
         conn.close()
-        
+
         # Отправляем уведомление через WebSocket
         if socketio and task_row:
             task_data = {
@@ -1205,8 +1208,9 @@ def team_task_modify(username, team_id, task_id):
                 'updated_by_name': task_row[9],
                 'updated_at': to_iso(validate_date(task_row[8]))
             }
-            socketio.emit('team_task_updated', task_data, room=f'team_{team_id}')
-        
+            socketio.emit('team_task_updated', task_data,
+                          room=f'team_{team_id}')
+
         return jsonify({'success': True, 'id': task_id, 'updated_by': user_id, 'updated_by_name': user_name, 'updated_at': updated_at})
 
 
@@ -1215,26 +1219,26 @@ def team_task_modify(username, team_id, task_id):
 def team_tasks_order(username, team_id):
     if not is_authenticated(username):
         return jsonify({'error': 'Требуется авторизация.'}), 401
-    
+
     data = request.get_json()
     if not data or 'orders' not in data:
         return jsonify({'error': 'Нет данных о порядке задач.'}), 400
-    
+
     orders = data['orders']
     conn = get_db()
     cur = conn.cursor()
-    
+
     try:
         # Обрабатываем каждую колонку (статус)
         for status, task_ids in orders.items():
             if not isinstance(task_ids, list):
                 continue
-            
+
             # Обновляем статус для каждой задачи в этой колонке
             for task_id in task_ids:
                 if not isinstance(task_id, int):
                     continue
-                
+
                 cur.execute('''
                     UPDATE team_tasks 
                     SET status = %s 
@@ -1246,18 +1250,18 @@ def team_tasks_order(username, team_id):
                         WHERE u.username = %s
                     )
                 ''', (status, task_id, team_id, username))
-        
+
         conn.commit()
-        
+
         # Отправляем уведомление через WebSocket
         if socketio:
             socketio.emit('team_tasks_reordered', {
                 'team_id': team_id,
                 'orders': orders
             }, room=f'team_{team_id}')
-        
+
         return jsonify({'success': True})
-        
+
     except Exception as e:
         if conn:
             conn.rollback()
@@ -1349,14 +1353,15 @@ def api_edit_team(username, team_id):
         cur.close()
         conn.close()
         return jsonify({'error': 'Недостаточно прав.'}), 403
-    
+
     # Проверка уникальности имени команды глобально (без учёта регистра), исключая текущую команду
-    cur.execute('SELECT id FROM teams WHERE LOWER(name) = LOWER(%s) AND id != %s', (team_name, team_id))
+    cur.execute(
+        'SELECT id FROM teams WHERE LOWER(name) = LOWER(%s) AND id != %s', (team_name, team_id))
     if cur.fetchone():
         cur.close()
         conn.close()
         return jsonify({'error': 'Команда с таким названием уже существует.'}), 409
-    
+
     cur.execute('UPDATE teams SET name=%s WHERE id=%s', (team_name, team_id))
     conn.commit()
     cur.close()
@@ -1385,14 +1390,15 @@ def api_delete_team(username, team_id):
         return jsonify({'error': 'Недостаточно прав.'}), 403
     # Удаляем команду и все связанные данные
     # Сначала получаем все описания задач для очистки картинок
-    cur.execute('SELECT description FROM team_tasks WHERE team_id=%s', (team_id,))
+    cur.execute(
+        'SELECT description FROM team_tasks WHERE team_id=%s', (team_id,))
     task_descriptions = cur.fetchall()
-    
+
     # Удаляем картинки из всех задач команды
     for task_desc in task_descriptions:
         if task_desc[0]:  # Если описание не пустое
             delete_task_images(task_desc[0])
-    
+
     cur.execute('DELETE FROM team_tasks WHERE team_id=%s', (team_id,))
     cur.execute('DELETE FROM team_members WHERE team_id=%s', (team_id,))
     cur.execute('DELETE FROM team_statuses WHERE team_id=%s', (team_id,))
@@ -1429,7 +1435,8 @@ def api_set_team_leader(username, team_id):
         conn.close()
         return jsonify({'error': 'Недостаточно прав.'}), 403
     # Находим нового лидера
-    cur.execute('SELECT id FROM users WHERE username=%s', (new_leader_username,))
+    cur.execute('SELECT id FROM users WHERE username=%s',
+                (new_leader_username,))
     new_leader_row = cur.fetchone()
     if not new_leader_row:
         cur.close()
@@ -1437,13 +1444,15 @@ def api_set_team_leader(username, team_id):
         return jsonify({'error': 'Пользователь не найден.'}), 404
     new_leader_id = new_leader_row[0]
     # Проверяем, что новый лидер в команде
-    cur.execute('SELECT team_id FROM team_members WHERE team_id=%s AND user_id=%s', (team_id, new_leader_id))
+    cur.execute('SELECT team_id FROM team_members WHERE team_id=%s AND user_id=%s',
+                (team_id, new_leader_id))
     if not cur.fetchone():
         cur.close()
         conn.close()
         return jsonify({'error': 'Пользователь не в команде.'}), 400
     # Передаём права
-    cur.execute('UPDATE teams SET leader_id=%s WHERE id=%s', (new_leader_id, team_id))
+    cur.execute('UPDATE teams SET leader_id=%s WHERE id=%s',
+                (new_leader_id, team_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -1475,12 +1484,14 @@ def leave_team(username, team_id):
         cur.close()
         conn.close()
         return jsonify({'error': 'Лидер не может покинуть команду. Передайте права другому участнику.'}), 400
-    
+
     # Снимаем все задачи с участника, который покидает команду
-    cur.execute('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = %s AND assignee_id = %s', (team_id, user_id))
-    
+    cur.execute(
+        'UPDATE team_tasks SET assignee_id = NULL WHERE team_id = %s AND assignee_id = %s', (team_id, user_id))
+
     # Удаляем из команды
-    cur.execute('DELETE FROM team_members WHERE team_id=%s AND user_id=%s', (team_id, user_id))
+    cur.execute(
+        'DELETE FROM team_members WHERE team_id=%s AND user_id=%s', (team_id, user_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -1499,11 +1510,12 @@ def add_team_status(username, team_id):
         return jsonify({'error': 'Название статуса должно быть не короче 2 символов.'}), 400
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('INSERT INTO team_statuses (team_id, code, title) VALUES (%s, %s, %s)', (team_id, code, title))
+    cur.execute('INSERT INTO team_statuses (team_id, code, title) VALUES (%s, %s, %s)',
+                (team_id, code, title))
     conn.commit()
     cur.close()
     conn.close()
-    
+
     # Отправляем уведомление через WebSocket
     if socketio:
         socketio.emit('team_status_added', {
@@ -1511,7 +1523,7 @@ def add_team_status(username, team_id):
             'code': code,
             'title': title
         }, room=f'team_{team_id}')
-    
+
     return jsonify({'code': code, 'title': title})
 
 
@@ -1521,24 +1533,26 @@ def delete_team_status(username, team_id, code):
     conn = get_db()
     cur = conn.cursor()
     # Проверяем, что это не последний статус
-    cur.execute('SELECT COUNT(*) FROM team_statuses WHERE team_id=%s', (team_id,))
+    cur.execute(
+        'SELECT COUNT(*) FROM team_statuses WHERE team_id=%s', (team_id,))
     count = cur.fetchone()[0]
     if count <= 1:
         cur.close()
         conn.close()
         return jsonify({'error': 'Нельзя удалить последний статус.'}), 400
-    cur.execute('DELETE FROM team_statuses WHERE code=%s AND team_id=%s', (code, team_id))
+    cur.execute(
+        'DELETE FROM team_statuses WHERE code=%s AND team_id=%s', (code, team_id))
     conn.commit()
     cur.close()
     conn.close()
-    
+
     # Отправляем уведомление через WebSocket
     if socketio:
         socketio.emit('team_status_deleted', {
             'team_id': team_id,
             'code': code
         }, room=f'team_{team_id}')
-    
+
     return jsonify({'success': True})
 
 
@@ -1596,12 +1610,12 @@ def extract_image_paths(description):
     """Извлекает пути к изображениям из HTML описания"""
     if not description:
         return []
-    
+
     import re
     # Ищем все img теги с src атрибутами
     img_pattern = r'<img[^>]+src=["\']([^"\']+)["\'][^>]*>'
     matches = re.findall(img_pattern, description)
-    
+
     # Фильтруем только локальные изображения
     local_images = [match for match in matches if match.startswith('/static/')]
     return local_images
@@ -1634,36 +1648,25 @@ def cleanup_unused_images(old_description, new_description):
 
 def delete_task_images(description):
     """Удаляет все картинки из описания задачи при её удалении"""
-    app.logger.info("=== УДАЛЕНИЕ КАРТИНОК ===")
-    app.logger.info("description: %s", repr(description))
     if not description:
-        app.logger.info("Нет description")
         return
 
     image_paths = extract_image_paths(description)
-    app.logger.info("🔍 Найдено %d изображений для удаления: %s", len(image_paths), image_paths)
-    
+
     for image_path in image_paths:
-        app.logger.info("Обрабатываем путь: %s", image_path)
         if image_path.startswith('/static/'):
             file_path = image_path[8:]  # Убираем '/static/' (8 символов)
-            # Используем app.root_path для правильного пути к файлу
-            app.logger.info("DEBUG: app.root_path = %s", app.root_path)
-            app.logger.info("DEBUG: file_path = %s", file_path)
             full_path = os.path.join(app.root_path, 'static', file_path)
-            app.logger.info("Полный путь к файлу: %s", full_path)
-            app.logger.info("Файл существует: %s", os.path.exists(full_path))
 
             try:
                 if os.path.exists(full_path):
                     os.remove(full_path)
-                    app.logger.info("🗑️ Удален файл задачи: %s", full_path)
                 else:
-                    app.logger.info("⚠️ Файл задачи не найден: %s", full_path)
+                    print(f"⚠️ Файл задачи не найден: {full_path}")
             except Exception as e:
-                app.logger.error("❌ Ошибка удаления файла задачи %s: %s", full_path, e)
+                print(f"❌ Ошибка удаления файла задачи {full_path}: {e}")
         else:
-            app.logger.info("⚠️ Путь не начинается с /static/: %s", image_path)
+            print(f"⚠️ Путь не начинается с /static/: {image_path}")
 
 
 @app.route('/<username>/task/<int:task_id>')
@@ -1763,7 +1766,7 @@ def api_get_team_task_data(username, team_id, task_id):
         cur.execute(
             'SELECT tt.id, tt.text, tt.description, tt.status, tt.tags, tt.due_date, tt.assignee_id, tt.updated_by, tt.updated_at, u.username as updated_by_name, u2.username as assignee_name '
             'FROM team_tasks tt LEFT JOIN users u ON tt.updated_by = u.id LEFT JOIN users u2 ON tt.assignee_id = u2.id '
-            'WHERE tt.id=%s AND tt.team_id=%s AND tt.team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s)', 
+            'WHERE tt.id=%s AND tt.team_id=%s AND tt.team_id IN (SELECT team_id FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE u.username=%s)',
             (task_id, team_id, username))
         row = cur.fetchone()
         if not row:
@@ -1826,7 +1829,8 @@ def upload_avatar(username):
     # Обновляем avatar_url в базе
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('UPDATE users SET avatar_url=%s WHERE username=%s', (avatar_url, username))
+    cur.execute('UPDATE users SET avatar_url=%s WHERE username=%s',
+                (avatar_url, username))
     conn.commit()
     cur.close()
     conn.close()
@@ -1841,7 +1845,8 @@ def get_user_avatar(username):
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute('SELECT avatar_url FROM users WHERE username=%s', (username,))
+        cur.execute(
+            'SELECT avatar_url FROM users WHERE username=%s', (username,))
         row = cur.fetchone()
         if row and row[0]:
             # Добавляем timestamp для предотвращения кеширования
@@ -1867,26 +1872,29 @@ def delete_avatar(username):
     """Удалить аватар пользователя"""
     if not is_authenticated(username):
         return jsonify({'error': 'Требуется авторизация.'}), 401
-    
+
     conn = None
     cur = None
     try:
         conn = get_db()
         cur = conn.cursor()
-        
+
         # Получаем текущий avatar_url
-        cur.execute('SELECT avatar_url FROM users WHERE username=%s', (username,))
+        cur.execute(
+            'SELECT avatar_url FROM users WHERE username=%s', (username,))
         row = cur.fetchone()
         if row and row[0]:
             # Удаляем файл аватара
-            avatar_path = os.path.join(app.root_path, 'static', 'avatars', os.path.basename(row[0]))
+            avatar_path = os.path.join(
+                app.root_path, 'static', 'avatars', os.path.basename(row[0]))
             if os.path.exists(avatar_path):
                 os.remove(avatar_path)
-        
+
         # Очищаем avatar_url в базе
-        cur.execute('UPDATE users SET avatar_url=NULL WHERE username=%s', (username,))
+        cur.execute(
+            'UPDATE users SET avatar_url=NULL WHERE username=%s', (username,))
         conn.commit()
-        
+
         return jsonify({'success': True})
     except Exception as e:
         if conn:
@@ -1908,41 +1916,42 @@ def api_update_profile(username):
     data = request.get_json()
     if not data:
         return jsonify({'error': 'Нет данных.'}), 400
-    
+
     # Получаем значения полей
     email = data.get('email', '').strip()
     country = data.get('country', '').strip()
     fullname = data.get('fullname', '').strip()
-    
+
     conn = None
     cur = None
     try:
         conn = get_db()
         cur = conn.cursor()
-        
+
         # Валидация email
         if not email or '@' not in email:
             return jsonify({'error': 'Некорректный email.'}), 400
-        
+
         # Проверяем уникальность email (если он изменился)
         cur.execute('SELECT email FROM users WHERE username=%s', (username,))
         current_email_row = cur.fetchone()
         if current_email_row and current_email_row[0] != email:
-            cur.execute('SELECT id FROM users WHERE email=%s AND username!=%s', (email, username))
+            cur.execute(
+                'SELECT id FROM users WHERE email=%s AND username!=%s', (email, username))
             if cur.fetchone():
                 return jsonify({'error': 'Email уже используется другим пользователем.'}), 409
-        
+
         # Валидация страны
         if not country or len(country) < 2:
             return jsonify({'error': 'Страна должна содержать минимум 2 символа.'}), 400
-        
+
         # Обновляем все поля
-        cur.execute('UPDATE users SET email=%s, country=%s, fullname=%s WHERE username=%s', 
-                   (email, country, fullname, username))
-        
+        cur.execute('UPDATE users SET email=%s, country=%s, fullname=%s WHERE username=%s',
+                    (email, country, fullname, username))
+
         if cur.rowcount == 0:
             return jsonify({'error': 'Пользователь не найден.'}), 404
-        
+
         conn.commit()
         return jsonify({'success': True, 'email': email, 'country': country, 'fullname': fullname})
     except Exception as e:
@@ -1959,14 +1968,18 @@ def api_update_profile(username):
 # --- Безопасные cookie ---
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 # SESSION_COOKIE_SECURE только для HTTPS (продакшен)
-app.config['SESSION_COOKIE_SECURE'] = False  # Изменено для локальной разработки
+# Изменено для локальной разработки
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = SESSION_LIFETIME  # 30 минут
 
 # --- Отключаем отображение ошибок пользователю и используем красивый шаблон ---
+
+
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('error.html', code=500, message='Внутренняя ошибка сервера. Попробуйте позже.'), 500
+
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -1979,6 +1992,8 @@ def not_found_error(error):
     return render_template('error.html', code=404, message="Страница не найдена"), 404
 
 # --- CSP и XSS ---
+
+
 @app.after_request
 def set_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -1987,6 +2002,7 @@ def set_security_headers(response):
     # CSP политика с более строгими ограничениями
     response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.socket.io; script-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss:;"
     return response
+
 
 def validate_date(val):
     """Проверяет, что дата валидна и находится в разумном диапазоне (1900-2100). Если невалидна — возвращает None."""
@@ -2005,6 +2021,7 @@ def validate_date(val):
     except Exception:
         return None
 
+
 if __name__ == '__main__':
     # Инициализируем базу данных при запуске
     try:
@@ -2013,7 +2030,6 @@ if __name__ == '__main__':
         print("База данных инициализирована успешно")
     except Exception as e:
         print(f"Ошибка инициализации базы данных: {e}")
-    
+
     # Отключаем debug-режим для продакшена
     socketio.run(app, debug=False, host='0.0.0.0')
-
