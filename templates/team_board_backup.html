@@ -9,19 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <script src="{{ url_for('static', filename='js/sortable.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/simplebar.min.css') }}">
   <script src="{{ url_for('static', filename='js/simplebar.min.js') }}"></script>
   <!-- Quill.js -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
   <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
-  <script src="{{ url_for('static', filename='countries.js') }}"></script>
-
-  <!-- Передаю avatar_url пользователя -->
-  <script>
-    window.USER_AVATAR_URL = {{ user_avatar_url | tojson }};
-  </script>
+  <link href="{{ url_for('static', filename='style.css') }}?v=6" rel="stylesheet" />
 
   <!-- CSRF Token -->
   <script>
@@ -38,9 +32,11 @@
       return headers;
     }
   </script>
+  <script src="/static/countries.js"></script>
+  <script src="{{ url_for('static', filename='js/team_board.js') }}?v=4"></script>
 </head>
 
-<body data-csrf-token="{{ csrf_token }}" data-username="{{ username }}">
+<body>
   <!-- Удаляю старый navbar и делаю современный topbar -->
   <header class="topbar">
     <div class="topbar-inner">
@@ -60,8 +56,7 @@
           </button>
           <div class="user-dropdown" id="user-dropdown">
             <button class="dropdown-item" id="profile-btn" type="button">
-              <span class="material-icons">account_circle</span>
-              <span class="user-menu-name">Профиль</span>
+              <span class="material-icons">person</span>Профиль
             </button>
             <button class="dropdown-item" id="teams-btn" type="button">
               <span class="material-icons">groups</span>Команды
@@ -87,14 +82,14 @@
       <!-- Новый блок с названием команды и описанием -->
       <!-- Сообщение об ошибке -->
       <div id="no-team-id" class="d-none" style="
-        max-width: 480px;
-        margin: 60px auto 0 auto;
+            max-width: 480px;
+            margin: 60px auto 0 auto;
             padding: var(--spacing-2xl);
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border-radius: var(--border-radius-lg);
             box-shadow: var(--shadow-lg);
-        text-align: center;
+            text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
           ">
         <span class="material-icons"
@@ -145,21 +140,21 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Профиль пользователя</h2>
-        <button class="modal-close">
+        <button class="modal-close" onclick="closeProfileModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
-      <div class="profile-card">
+      <div class="profile-card modern-profile-card">
         <div class="profile-avatar" id="profile-avatar-container">
           <img id="profile-avatar-img" class="profile-avatar-img" />
           <span class="profile-avatar-initial" id="profile-avatar-initial">{{ username[0]|upper }}</span>
         </div>
         <div class="profile-username" id="profile-username"></div>
-        <button class="btn btn-secondary profile-edit-btn center-btn" id="edit-profile-btn">
+        <button class="btn btn-secondary profile-edit-btn" id="edit-profile-btn">
           <span class="material-icons">edit</span>Редактировать профиль
         </button>
         <div class="profile-avatar-actions">
-          <label for="avatar-upload" class="btn btn-primary">
+          <label for="avatar-upload" class="btn btn-secondary">
             <span class="material-icons">photo_camera</span>
             Загрузить аватарку
           </label>
@@ -169,38 +164,26 @@
             Удалить
           </button>
         </div>
-        <!-- Блок красивого просмотра -->
-        <div class="profile-info" id="profile-info-block">
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">mail</span><span
-              class="profile-info-label">E-mail:</span><span class="profile-info-value" id="profile-email"></span></div>
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">public</span><span
-              class="profile-info-label">Страна:</span><span class="profile-info-value" id="profile-country"></span>
-          </div>
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">person</span><span
-              class="profile-info-label">Имя:</span><span class="profile-info-value" id="profile-fullname"></span></div>
-        </div>
-        <!-- Элемент успешного сообщения -->
-        <div id="profile-success-message" class="profile-success-message" style="display: none;"></div>
-        <!-- Форма редактирования -->
         <form class="profile-form" id="profile-form" autocomplete="off">
           <div class="profile-fields">
             <div class="profile-field">
               <span class="profile-label">E-mail:</span>
+              <span class="profile-value" id="profile-email"></span>
               <input type="email" id="profile-email-input" class="profile-input" disabled placeholder="Введите email" />
             </div>
             <div class="profile-field">
               <span class="profile-label">Страна:</span>
-              <select id="profile-country-select" class="profile-input custom-select" disabled>
-                <option value="">Выберите страну</option>
-              </select>
+              <span class="profile-value" id="profile-country"></span>
+              <select id="profile-country-select" class="profile-input custom-select" disabled></select>
             </div>
             <div class="profile-field">
               <span class="profile-label">Имя:</span>
+              <span class="profile-value" id="profile-fullname"></span>
               <input type="text" id="profile-fullname-input" class="profile-input" disabled
                 placeholder="Введите полное имя" />
             </div>
           </div>
-          <div class="profile-actions">
+          <div class="profile-actions d-flex gap-3 justify-center">
             <button type="button" class="btn btn-secondary" id="cancel-profile-btn">
               <span class="material-icons">close</span>Отмена
             </button>
@@ -208,7 +191,7 @@
               <span class="material-icons">save</span>Сохранить
             </button>
           </div>
-          <div id="profile-error" class="profile-error"></div>
+          <div id="profile-error" class="modal-error"></div>
         </form>
       </div>
     </div>
@@ -222,7 +205,7 @@
           <span class="material-icons">lock_reset</span>
           Смена пароля
         </h2>
-        <button class="modal-close">
+        <button class="modal-close" onclick="closeChangePasswordModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -258,7 +241,7 @@
               required />
           </div>
           <div class="d-flex gap-3">
-            <button type="button" class="btn btn-secondary" id="cancel-change-password-btn">
+            <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">
               <span class="material-icons">close</span>Отмена
             </button>
             <button type="submit" class="btn btn-primary" id="change-password-submit">
@@ -321,7 +304,7 @@
           <span class="material-icons">groups</span>
           Редактировать команду
         </h2>
-        <button class="modal-close">
+        <button class="modal-close" onclick="closeEditTeamModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -468,7 +451,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title" id="view-task-title">Задача</h2>
-        <button class="modal-close" id="close-view-task-modal-btn">
+        <button class="modal-close" onclick="closeViewTaskModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -497,12 +480,9 @@
         <div class="about-project">
           <h3 class="about-subtitle">Kanban Board</h3>
           <p class="about-description">
-            Kanban Board — современная система управления задачами с акцентом на <b>безопасность</b> и удобство. Все
-            действия защищены <b>CSRF Token</b>, реализована строгая авторизация, а данные пользователей надёжно
-            хранятся и передаются только по защищённым каналам.<br>
-            <br>
-            Проект построен на Flask, использует Docker для изоляции, WebSocket для мгновенных обновлений, а также
-            современный UI и адаптивный дизайн.<br>
+            Современная система управления задачами, построенная на Flask с использованием
+            современных веб-технологий. Проект включает в себя Kanban-доску, ToDo-лист,
+            систему команд и real-time обновления через WebSocket.
           </p>
           <div class="tech-stack">
             <h4>Технологии:</h4>
@@ -545,7 +525,7 @@
           </div>
         </div>
         <div class="about-footer">
-          <p class="about-version">Версия <b>5.2.3</b><span class="dev-badge">dev</span></p>
+          <p class="about-version">Версия 1.0.0</p>
           <p class="about-copyright">© 2025 Александр Тимков. Все права защищены.</p>
         </div>
       </div>
@@ -624,240 +604,47 @@
     const profileBtn = document.getElementById("profile-btn");
     if (profileBtn) {
       profileBtn.onclick = async function () {
-        if (userDropdown) userDropdown.classList.remove("open");
+        userDropdown.classList.remove("show");
         try {
           let r = await fetch(`/api/profile/${USERNAME}`, { headers: getHeaders() });
           let data = await r.json();
-          // Заполняем username через innerHTML с <span>
-          const usernameEl = document.getElementById("profile-username");
-          if (usernameEl) usernameEl.innerHTML = `<span>${data.username || ""}</span>`;
-          // Обновляем данные профиля
-          window.lastProfileData = {
-            email: data.email || '',
-            country: data.country || '',
-            fullname: data.fullname || ''
-          };
-          // Заполняем поля
-          const emailEl = document.getElementById("profile-email");
-          const emailInput = document.getElementById("profile-email-input");
-          const countryEl = document.getElementById("profile-country");
-          const countrySelect = document.getElementById("profile-country-select");
-          const fullnameEl = document.getElementById("profile-fullname");
-          const fullnameInput = document.getElementById("profile-fullname-input");
-          if (emailEl) emailEl.textContent = data.email || '';
-          if (emailInput) emailInput.value = data.email || '';
-          if (countryEl) countryEl.textContent = data.country || '';
-          if (countrySelect) countrySelect.value = data.country || '';
-          if (fullnameEl) fullnameEl.textContent = data.fullname || '';
-          if (fullnameInput) fullnameInput.value = data.fullname || '';
-          // Проверяем, что функция updateProfileAvatar доступна
-          if (typeof window.updateProfileAvatar === 'function') {
-            window.updateProfileAvatar(data.avatar_url);
+          document.getElementById("profile-username").innerHTML = `<span>${data.username}</span>`;
+          updateProfileAvatar(data.avatar_url);
+          resetProfileEditFields(data);
+          const profileModal = document.getElementById("profile-modal");
+          if (profileModal) {
+            profileModal.classList.add("show");
           }
-          setProfileEditMode(false);
-          showProfileModal();
         } catch (error) {
           console.error("Error fetching profile:", error);
         }
       };
     }
 
-    // ========== Современная логика профиля ==========
-    const profileForm = document.getElementById('profile-form');
-    const saveBtn = document.getElementById('save-profile-btn');
-    const cancelBtn = document.getElementById('cancel-profile-btn');
-    const errorDiv = document.getElementById('profile-error');
-    const fields = ['email', 'country', 'fullname'];
-
-    function setProfileEditMode(on) {
-      const profileInfo = document.getElementById('profile-info-block');
-      if (profileInfo) profileInfo.style.display = on ? 'none' : 'flex';
-      if (profileForm) profileForm.style.display = on ? 'block' : 'none';
-      fields.forEach(f => {
-        const input = document.getElementById(`profile-${f}-input`);
-        const display = document.getElementById(`profile-${f}`);
-        const select = document.getElementById('profile-country-select');
-        if (f === 'country' && select) {
-          if (on) fillCountryOptions(select, select.value || '');
-          select.disabled = !on;
-          select.style.display = on ? 'block' : 'none';
-          if (display) display.style.display = on ? 'none' : 'block';
-          select.classList.toggle('active', on);
-        } else if (input && display) {
-          input.disabled = !on;
-          input.style.display = on ? 'block' : 'none';
-          display.style.display = on ? 'none' : 'block';
-          input.classList.toggle('active', on);
-        }
-      });
-      if (saveBtn) {
-        saveBtn.style.display = on ? 'inline-flex' : 'none';
-        saveBtn.classList.toggle('active', on);
-      }
-      if (cancelBtn) {
-        cancelBtn.style.display = on ? 'inline-flex' : 'none';
-        cancelBtn.classList.toggle('active', on);
-      }
-      if (profileForm) {
-        profileForm.classList.toggle('active', on);
-      }
+    // Инициализация профиля из team_board.js
+    if (typeof initProfileModal === 'function') {
+      initProfileModal();
     }
 
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    if (editProfileBtn) {
-      editProfileBtn.onclick = function () {
-        setProfileEditMode(true);
-      };
-    }
-
-    if (cancelBtn) {
-      cancelBtn.onclick = function () {
-        setProfileEditMode(false);
-        resetProfileEditFields(window.lastProfileData || {});
-        if (errorDiv) {
-          errorDiv.textContent = '';
-          errorDiv.className = 'profile-error';
-        }
-      };
-    }
-
-    if (saveBtn && profileForm) {
-      profileForm.onsubmit = async function (e) {
-        e.preventDefault();
-        saveBtn.disabled = true;
-        errorDiv.textContent = '';
-        errorDiv.className = 'profile-error';
-        // Скрываем предыдущее успешное сообщение
-        const successMessage = document.getElementById('profile-success-message');
-        if (successMessage) successMessage.style.display = 'none';
-        const email = document.getElementById('profile-email-input')?.value?.trim() || '';
-        const country = document.getElementById('profile-country-select')?.value?.trim() || '';
-        const fullname = document.getElementById('profile-fullname-input')?.value?.trim() || '';
-        // Валидация email
-        const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-        if (!emailPattern.test(email)) {
-          errorDiv.textContent = 'Введите корректный e-mail';
-          errorDiv.className = 'profile-error visible';
-          saveBtn.disabled = false;
-          return;
-        }
-        try {
-          const resp = await fetch(`/${USERNAME}/api/update_profile`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ email, country, fullname })
-          });
-          const data = await resp.json();
-          if (resp.ok && data.success) {
-            // Обновляем отображаемые значения
-            const emailEl = document.getElementById('profile-email');
-            const countryEl = document.getElementById('profile-country');
-            const fullnameEl = document.getElementById('profile-fullname');
-            if (emailEl) emailEl.textContent = email;
-            if (countryEl) countryEl.textContent = country;
-            if (fullnameEl) fullnameEl.textContent = fullname;
-            // Показываем успешное сообщение в блоке информации
-            if (successMessage) {
-              successMessage.textContent = 'Профиль успешно обновлён!';
-              successMessage.style.display = 'flex';
-              setTimeout(() => {
-                if (successMessage) successMessage.style.display = 'none';
-              }, 3000);
-            }
-            window.lastProfileData = { email, country, fullname };
-            setProfileEditMode(false);
-          } else {
-            errorDiv.textContent = data.error || 'Ошибка обновления профиля';
-            errorDiv.className = 'profile-error visible';
-          }
-        } catch (err) {
-          errorDiv.textContent = 'Ошибка сети';
-          errorDiv.className = 'profile-error visible';
-        }
-        saveBtn.disabled = false;
-      };
-    }
-
-    function resetProfileEditFields(data) {
-      fields.forEach(f => {
-        const input = document.getElementById(`profile-${f}-input`);
-        const display = document.getElementById(`profile-${f}`);
-        const select = document.getElementById('profile-country-select');
-        if (f === 'country' && select) {
-          if (select) select.value = data[f] || '';
-          if (display) display.textContent = data[f] || '';
-        } else {
-          if (input) input.value = data[f] || '';
-          if (display) display.textContent = data[f] || '';
-        }
-      });
-    }
-
-    // Инициализация данных профиля
-    window.lastProfileData = {
-      email: '',
-      country: '',
-      fullname: ''
-    };
-
-    // Инициализация селектора стран
-    function initializeCountrySelect() {
-      const countrySelect = document.getElementById('profile-country-select');
-      if (countrySelect && window.COUNTRIES) {
-        fillCountryOptions(countrySelect, countrySelect.value || '');
-      }
-    }
-    setTimeout(initializeCountrySelect, 100);
-
-    // Также инициализируем при открытии модалки профиля
-    window.showProfileModal = function () {
-      const profileModal = document.getElementById('profile-modal');
-      if (profileModal) profileModal.classList.add('show');
-      setTimeout(initializeCountrySelect, 100);
-    };
-
-    // Аватарка
+    // Функция обновления аватарки в профиле
     function updateProfileAvatar(avatarUrl) {
       const avatarImg = document.getElementById("profile-avatar-img");
       const avatarInitial = document.getElementById("profile-avatar-initial");
       const deleteBtn = document.getElementById("delete-avatar-btn");
-      if (!avatarImg || !avatarInitial || !deleteBtn) return;
+
       if (avatarUrl) {
+        // Показываем изображение
         avatarImg.src = avatarUrl;
         avatarImg.style.display = "block";
         avatarInitial.style.display = "none";
         deleteBtn.style.display = "inline-flex";
       } else {
+        // Показываем инициал
         avatarImg.style.display = "none";
         avatarInitial.style.display = "block";
         deleteBtn.style.display = "none";
       }
     }
-    window.updateProfileAvatar = updateProfileAvatar;
-
-    // Topbar-аватарка
-    function updateTopbarAvatar(avatarUrl) {
-      const userMenuBtn = document.getElementById("user-menu-btn");
-      if (userMenuBtn) {
-        const avatarSpan = userMenuBtn.querySelector(".material-icons");
-        let avatarImg = userMenuBtn.querySelector(".user-avatar-img");
-        if (avatarUrl) {
-          if (!avatarImg) {
-            avatarImg = document.createElement("img");
-            avatarImg.className = "user-avatar-img";
-            avatarImg.style.cssText = "width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 8px;";
-            userMenuBtn.insertBefore(avatarImg, avatarSpan);
-          }
-          avatarImg.src = avatarUrl;
-          avatarImg.style.display = "block";
-          avatarSpan.style.display = "none";
-        } else {
-          if (avatarImg) avatarImg.style.display = "none";
-          avatarSpan.style.display = "inline-block";
-        }
-      }
-    }
-    window.updateTopbarAvatar = updateTopbarAvatar;
 
     // Обработчик загрузки аватарки
     const avatarUpload = document.getElementById("avatar-upload");
@@ -865,26 +652,30 @@
       avatarUpload.onchange = async function (e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Проверяем размер файла (максимум 5MB)
         if (file.size > 5 * 1024 * 1024) {
           alert("Файл слишком большой. Максимальный размер: 5MB");
           return;
         }
+
         const formData = new FormData();
         formData.append("avatar", file);
+
         try {
           const response = await fetch(`/${USERNAME}/api/upload_avatar`, {
             method: "POST",
-            headers: getHeaders(null),
+            headers: getHeaders(null), // Не добавляем Content-Type для FormData
             body: formData,
           });
+
           const data = await response.json();
+
           if (response.ok && data.success) {
+            // Обновляем аватарку
             updateProfileAvatar(data.avatar_url);
+            // Обновляем аватарку в topbar
             updateTopbarAvatar(data.avatar_url);
-            // Обновляем avatar_url в MEMBERS и перерисовываем доску
-            const me = MEMBERS.find(m => m.username === USERNAME);
-            if (me) me.avatar_url = data.avatar_url;
-            renderBoard();
             alert("Аватарка успешно загружена!");
           } else {
             alert(data.error || "Ошибка загрузки аватарки");
@@ -901,19 +692,20 @@
     if (deleteAvatarBtn) {
       deleteAvatarBtn.onclick = async function () {
         if (!confirm("Удалить аватарку?")) return;
+
         try {
           const response = await fetch(`/${USERNAME}/api/delete_avatar`, {
             method: "POST",
             headers: getHeaders(),
           });
+
           const data = await response.json();
+
           if (response.ok && data.success) {
+            // Обновляем аватарку
             updateProfileAvatar(null);
+            // Обновляем аватарку в topbar
             updateTopbarAvatar(null);
-            // Обновляем avatar_url в MEMBERS и перерисовываем доску
-            const me = MEMBERS.find(m => m.username === USERNAME);
-            if (me) me.avatar_url = null;
-            renderBoard();
             alert("Аватарка удалена!");
           } else {
             alert(data.error || "Ошибка удаления аватарки");
@@ -924,6 +716,50 @@
         }
       };
     }
+
+    // Функция обновления аватарки в topbar
+    function updateTopbarAvatar(avatarUrl) {
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      if (userMenuBtn) {
+        const avatarSpan = userMenuBtn.querySelector(".material-icons");
+        if (avatarUrl) {
+          // Создаем изображение аватарки
+          avatarSpan.style.display = "none";
+          let avatarImg = userMenuBtn.querySelector(".user-avatar-img");
+          if (!avatarImg) {
+            avatarImg = document.createElement("img");
+            avatarImg.className = "user-avatar-img";
+            avatarImg.style.cssText = "width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px;";
+            userMenuBtn.insertBefore(avatarImg, avatarSpan);
+          }
+          avatarImg.src = avatarUrl;
+          avatarImg.style.display = "block";
+        } else {
+          // Показываем иконку по умолчанию
+          avatarSpan.style.display = "inline-block";
+          const avatarImg = userMenuBtn.querySelector(".user-avatar-img");
+          if (avatarImg) {
+            avatarImg.style.display = "none";
+          }
+        }
+      }
+    }
+
+    // Загружаем аватарку при загрузке страницы
+    async function loadUserAvatar() {
+      try {
+        const response = await fetch(`/api/avatar/${USERNAME}`, { headers: getHeaders() });
+        const data = await response.json();
+        if (data.avatar_url) {
+          updateTopbarAvatar(data.avatar_url);
+        }
+      } catch (error) {
+        console.error("Error loading avatar:", error);
+      }
+    }
+
+    // Вызываем загрузку аватарки при инициализации
+    loadUserAvatar();
 
     function getAvatarColor(id) {
       const colors = [
@@ -945,20 +781,6 @@
       return name[0].toUpperCase();
     }
 
-    function fillCountryOptions(select, selectedValue) {
-      if (!window.COUNTRIES) return;
-      select.innerHTML = '<option value="">Выберите страну</option>';
-      window.COUNTRIES.forEach(country => {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        if (country === selectedValue) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-    }
-
     function closeProfileModal() {
       const profileModal = document.getElementById("profile-modal");
       if (profileModal) {
@@ -966,12 +788,23 @@
       }
     }
 
+    function resetProfileEditFields(data) {
+      fields.forEach(f => {
+        const input = document.getElementById(`profile-${f}-input`);
+        const value = document.getElementById(`profile-${f}`);
+        if (input && value) {
+          input.value = data[f] || '';
+          value.textContent = data[f] || '';
+        }
+      });
+    }
+
     // ========== Выход ==========
     const logoutBtn = document.getElementById("logout-btn");
     if (logoutBtn) {
       logoutBtn.onclick = function () {
         if (userDropdown) userDropdown.classList.remove("open");
-        window.location.href = "/{{ username }}/logout";
+        window.location.href = "/logout";
       };
     }
 
@@ -1214,14 +1047,14 @@
       let assigneeHidden = document.getElementById("task_assignee");
       if (assignee_id && Array.isArray(MEMBERS)) {
         let member = MEMBERS.find(
-          (m) => m.username == assignee_id || m.id == assignee_id
+          (m) => m.id == assignee_id || m.username == assignee_id
         );
         if (member) {
           assigneeInput.value = member.username;
-          assigneeHidden.value = member.username;
+          assigneeHidden.value = member.id;
         } else {
-          assigneeInput.value = assignee_id;
-          assigneeHidden.value = assignee_id;
+          assigneeInput.value = "";
+          assigneeHidden.value = "";
         }
       } else {
         assigneeInput.value = "";
@@ -1243,7 +1076,7 @@
         ac.innerHTML = list
           .map(
             (m) =>
-              `<div class='autocomplete-item' data-id='${m.username}'>${m.username}</div>`
+              `<div class='autocomplete-item' data-id='${m.id}'>${m.username}</div>`
           )
           .join("");
         ac.style.display = "block";
@@ -1284,11 +1117,7 @@
         let tags = getSelectedTags();
         let due_date = this.task_due_date.value || null;
         let assignee_id = this.task_assignee.value || null;
-        // Всегда подставляем ID, если выбран из MEMBERS
-        if (assignee_id && Array.isArray(MEMBERS)) {
-          const member = MEMBERS.find(m => m.username == assignee_id || m.id == assignee_id);
-          if (member) assignee_id = member.id;
-        }
+        if (assignee_id && isNaN(Number(assignee_id))) assignee_id = null;
         let method = id ? "PATCH" : "POST";
         let url =
           `/${USERNAME}/api/teams/${TEAM_ID}/tasks` + (id ? `/${id}` : "");
@@ -1551,8 +1380,8 @@
               <button class="make-leader" onclick="makeLeader('${member}')">
                 <span class="material-icons">star</span>
               </button>
-              </div>
-            `;
+            </div>
+          `;
         }
       });
     }
@@ -1577,8 +1406,8 @@
       }).then(async (resp) => {
         setTimeout(() => starBtn.classList.remove('btn-animate'), 350);
         if (resp.ok) {
-          // Закрываем модалку редактирования
-          closeEditTeamModal();
+          // Обновляем модалку только при успешном запросе
+          openEditTeamModal(currentEditTeamId);
           // Также обновляем список команд в модалке "Мои команды"
           fetchTeams();
           // Обновляем список участников команды для автодополнения исполнителей
@@ -1782,7 +1611,7 @@
     function renderBoard() {
       const row = document.getElementById("kanban-board");
       if (!row) {
-        console.error("❌ Element with id 'kanban-board' not found");
+        console.error("Element with id 'kanban-board' not found");
         return;
       }
       row.innerHTML = "";
@@ -1796,21 +1625,6 @@
       }
       if (!MEMBERS || !Array.isArray(MEMBERS)) {
         MEMBERS = [];
-      }
-
-      if (STATUSES.length === 0) {
-        row.innerHTML = `
-          <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-            <span class="material-icons" style="font-size: 3em; margin-bottom: 16px; opacity: 0.5;">dashboard</span>
-            <h3>Нет статусов</h3>
-            <p>Создайте первый статус для начала работы с доской</p>
-            <button class="btn btn-primary" onclick="openStatusModal()">
-              <span class="material-icons">add_circle</span>
-              Создать статус
-            </button>
-          </div>
-        `;
-        return;
       }
 
       STATUSES.forEach((status) => {
@@ -1864,68 +1678,77 @@
     }
 
     // ===================== Task Card Creation =====================
+    function getAvatarColor(id) {
+      const colors = [
+        "#5271ff",
+        "#ff9800",
+        "#ff5470",
+        "#00b894",
+        "#a29bfe",
+        "#00bcd4",
+      ];
+      if (!id) return colors[0];
+      let sum = 0;
+      for (let i = 0; i < id.length; ++i) sum += id.charCodeAt(i);
+      return colors[sum % colors.length];
+    }
+    function getInitials(name) {
+      if (!name) return "?";
+      return name[0].toUpperCase();
+    }
+    // Удаляет все HTML-теги и декодирует спецсимволы
+    function stripTags(html) {
+      let tmp = document.createElement("div");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    }
     function createTaskCard(task) {
-      try {
-        if (!task || !task.id) {
-          return document.createElement("div"); // Пустой элемент
-        }
-
-        const div = document.createElement("div");
-        div.className = "kanban-task";
-        div.dataset.taskId = task.id;
-
-        let tagsHtml = "";
-        if (task.tags && task.tags.length) {
-          tagsHtml = renderTags(task.tags);
-        }
-
-        let dateHtml = task.due_date
-          ? `<span class='task-date-badge'>${formatRuDate(task.due_date)}</span>`
-          : "";
-
-        // Аватарка исполнителя
-        let assignee = null;
-        if (task.assignee_id && Array.isArray(MEMBERS)) {
-          assignee = MEMBERS.find(
-            (m) => m.username == task.assignee_id || m.id == task.assignee_id
-          );
-        }
-
-        let avatarHtml = "";
-        if (assignee) {
-          if (assignee.avatar_url) {
-            avatarHtml = `<img src="${assignee.avatar_url}" alt="${escapeHTML(assignee.username)}" class="task-avatar-img" />`;
-          } else {
-            avatarHtml = `<span class='task-avatar' style="background-color: ${getAvatarColor(assignee.username)}">${getInitials(assignee.username)}</span>`;
-          }
-        }
-
-        let assigneeNameHtml = assignee
-          ? `<span class='assignee-name'>${escapeHTML(assignee.username)}</span>`
-          : task.assignee_id
-            ? `<span class='assignee-name'>${escapeHTML(task.assignee_id)}</span>`
-            : "<span style='color:#b9bccc'>Не назначено</span>";
-
-        let descPreview = "";
-        if (task.description) {
-          try {
-            descPreview = stripTags(task.description);
-            descPreview = truncate(descPreview, 120);
-          } catch (e) {
-            descPreview = "";
-          }
-        }
-
-        div.innerHTML = `
+      const div = document.createElement("div");
+      div.className = "kanban-task";
+      div.dataset.taskId = task.id;
+      let tagsHtml = "";
+      if (task.tags && task.tags.length) {
+        tagsHtml = renderTags(task.tags);
+      }
+      let dateHtml = task.due_date
+        ? `<span class='task-date-badge'>${formatRuDate(task.due_date)}</span>`
+        : "";
+      let updatedByHtml = "";
+      // Аватарка исполнителя
+      let assignee = null;
+      if (task.assignee_id && Array.isArray(MEMBERS)) {
+        assignee = MEMBERS.find(
+          (m) => m.username == task.assignee_id || m.id == task.assignee_id
+        );
+      }
+      let avatarHtml = "";
+      if (assignee) {
+        avatarHtml = `<span class='task-avatar' data-username='${assignee.username}'>${getInitials(assignee.username)}</span>`;
+      } else if (task.assignee_id) {
+        avatarHtml = `<span class='task-avatar' data-username='${task.assignee_id}'>${getInitials(task.assignee_id)}</span>`;
+      }
+      let assigneeNameHtml = assignee
+        ? `<span class='assignee-name'>${escapeHTML(assignee.username)}</span>`
+        : task.assignee_id
+          ? `<span class='assignee-name'>${escapeHTML(task.assignee_id)}</span>`
+          : "<span style='color:#b9bccc'>Не назначено</span>";
+      let descPreview = "";
+      if (task.description) {
+        let tmp = document.createElement("div");
+        tmp.innerHTML = stripTags(task.description);
+        descPreview = tmp.textContent || tmp.innerText || "";
+        descPreview = truncate(descPreview, 120);
+      }
+      div.innerHTML = `
           <div class="task-header">
-            <div class="task-title">${escapeHTML(truncate(task.text || "", 80))}</div>
+            <div class="task-title">${escapeHTML(truncate(task.text, 80))}</div>
             <div class="task-badges">${dateHtml}</div>
           </div>
           ${tagsHtml}
           ${descPreview
-            ? `<div class="task-desc" style="white-space:pre-line;word-break:break-word;">${escapeHTML(descPreview)}</div>`
-            : ""
-          }
+          ? `<div class="task-desc" style="white-space:pre-line;word-break:break-word;">${escapeHTML(descPreview)}</div>`
+          : ""
+        }
           <div class="task-meta">
             ${avatarHtml}
             ${assigneeNameHtml}
@@ -1936,45 +1759,58 @@
           </div>
         `;
 
-        return div;
+      // Загружаем аватарку для исполнителя если есть
+      if (assignee && assignee.username) {
+        loadUserAvatarForTask(div, assignee.username);
+      } else if (task.assignee_id) {
+        loadUserAvatarForTask(div, task.assignee_id);
+      }
+
+      return div;
+    }
+
+    // Функция загрузки аватарки пользователя для карточки задачи
+    async function loadUserAvatarForTask(taskElement, username) {
+      try {
+        const response = await fetch(`/api/avatar/${username}`, { headers: getHeaders() });
+        const data = await response.json();
+
+        if (data.avatar_url) {
+          const avatarElement = taskElement.querySelector('.task-avatar');
+          if (avatarElement) {
+            // Создаем изображение аватарки
+            const avatarImg = document.createElement('img');
+            avatarImg.src = data.avatar_url;
+            avatarImg.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%;';
+            avatarImg.alt = username;
+
+            // Очищаем содержимое и добавляем изображение
+            avatarElement.innerHTML = '';
+            avatarElement.appendChild(avatarImg);
+          }
+        }
       } catch (error) {
-        // Возвращаем простую карточку с ошибкой
-        const errorDiv = document.createElement("div");
-        errorDiv.className = "kanban-task error-task";
-        errorDiv.innerHTML = `
-          <div class="task-header">
-            <div class="task-title" style="color: #ff5470;">Ошибка загрузки задачи</div>
-          </div>
-          <div class="task-desc" style="color: #b9bccc; font-size: 0.9em;">
-            Не удалось отобразить задачу (ID: ${task?.id || 'неизвестен'})
-          </div>
-        `;
-        return errorDiv;
+        console.error("Error loading avatar for task:", error);
       }
     }
 
     function truncate(str, len) {
-      if (!str) return "";
       return str.length > len ? str.slice(0, len) + "…" : str;
     }
-
     function formatRuDate(dateStr) {
       if (!dateStr) return "";
       const d = new Date(dateStr);
       return d.toLocaleDateString("ru-RU");
     }
-
     function formatDateTime(dateStr) {
       if (!dateStr) return "";
       const d = new Date(dateStr);
       return d.toLocaleString("ru-RU");
     }
-
     function getStatusTitle(statusCode) {
       const status = STATUSES.find((s) => s.code === statusCode);
       return status ? status.title : statusCode;
     }
-
     // ===================== Вспомогательные функции =====================
     function escapeHTML(str) {
       return String(str)
@@ -1983,36 +1819,6 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
-    }
-
-    // Добавляем недостающую функцию stripTags
-    function stripTags(html) {
-      if (!html) return "";
-      const tmp = document.createElement("div");
-      tmp.innerHTML = html;
-      return tmp.textContent || tmp.innerText || "";
-    }
-
-    function truncate(str, len) {
-      if (!str) return "";
-      return str.length > len ? str.slice(0, len) + "…" : str;
-    }
-
-    function formatRuDate(dateStr) {
-      if (!dateStr) return "";
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("ru-RU");
-    }
-
-    function formatDateTime(dateStr) {
-      if (!dateStr) return "";
-      const d = new Date(dateStr);
-      return d.toLocaleString("ru-RU");
-    }
-
-    function getStatusTitle(statusCode) {
-      const status = STATUSES.find((s) => s.code === statusCode);
-      return status ? status.title : statusCode;
     }
 
     // ===================== Event Handlers =====================
@@ -2064,24 +1870,14 @@
         btn.onclick = async function () {
           if (!confirm("Удалить задачу?")) return;
           let id = btn.getAttribute("data-task-id");
-          try {
-            let resp = await fetch(
-              `/${USERNAME}/api/teams/${TEAM_ID}/tasks/${id}`,
-              {
-                method: "DELETE",
-                headers: getHeaders(),
-              }
-            );
-            if (resp.ok) {
-              fetchTeamBoard();
-            } else {
-              let data = await resp.json();
-              let errorMsg = data && data.error ? data.error : "Ошибка удаления задачи";
-              alert(errorMsg);
+          let resp = await fetch(
+            `/${USERNAME}/api/teams/${TEAM_ID}/tasks/${id}`,
+            {
+              method: "DELETE",
+              headers: getHeaders(),
             }
-          } catch (error) {
-            alert("Ошибка удаления задачи");
-          }
+          );
+          if (resp.ok) fetchTeamBoard();
         };
       });
     }
@@ -2409,103 +2205,219 @@
       };
     }
 
-    // ========== Универсальные обработчики модалок ==========
-    function bindModalCloseHandlers() {
-      document.querySelectorAll(".modal-close").forEach((btn) => {
-        btn.onclick = function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          const modal = btn.closest(".modal");
-          if (modal) modal.classList.remove("show");
+    // ====== Новый UX для профиля ======
+    let editingField = null;
+    const profileForm = document.getElementById('profile-form');
+    const fields = ['email', 'country', 'fullname'];
+    const errorDivs = {};
+    fields.forEach(f => {
+      const input = document.getElementById(`profile-${f}-input`);
+      if (!input || !input.parentElement) return; // Исправление ошибки
+      let err = document.createElement('div');
+      err.className = 'profile-error';
+      err.id = `profile-${f}-error`;
+      err.style.display = 'none';
+      input.parentElement.appendChild(err);
+      errorDivs[f] = err;
+      // Для страны — выпадающий список
+      if (f === 'country') {
+        input.type = 'text';
+        let sel = document.createElement('select');
+        sel.id = 'profile-country-select';
+        sel.className = 'profile-input';
+        sel.style.display = 'none';
+        fillCountryOptions(sel, input.value);
+        input.parentElement.insertBefore(sel, input);
+        sel.onchange = function () {
+          input.value = sel.value;
         };
+        input.onfocus = function () {
+          sel.style.display = 'block';
+          input.style.display = 'none';
+        };
+        sel.onblur = function () {
+          sel.style.display = 'none';
+          input.style.display = 'block';
+        };
+      }
+    });
+    function startEditProfileField(field) {
+      if (editingField && editingField !== field) finishEditProfileField(editingField, false);
+      editingField = field;
+      fields.forEach(f => {
+        document.getElementById(`profile-${f}-input`).style.display = (f === field) ? 'block' : 'none';
+        document.getElementById(`profile-${f}`).style.display = (f === field) ? 'none' : 'block';
+        document.querySelector(`.profile-edit-btn[onclick*="${f}"]`).style.display = (f === field) ? 'none' : '';
+        errorDivs[f].style.display = 'none';
+      });
+      document.getElementById('save-profile-btn').style.display = 'inline-flex';
+      document.getElementById(`profile-${field}-input`).focus();
+    }
+    function finishEditProfileField(field, save = false) {
+      const input = document.getElementById(`profile-${field}-input`);
+      const value = document.getElementById(`profile-${field}`);
+      if (save) {
+        // Сохраняем только одно поле
+        updateProfileField(field, input.value);
+      } else {
+        input.style.display = 'none';
+        value.style.display = 'block';
+        document.querySelector(`.profile-edit-btn[onclick*="${field}"]`).style.display = '';
+        document.getElementById('save-profile-btn').style.display = 'none';
+        editingField = null;
+      }
+    }
+    function showProfileMessage(field, type, message) {
+      const icon = type === 'error' ? '<span class="material-icons" style="font-size:1.2em;vertical-align:middle;">error_outline</span>' : '<span class="material-icons" style="color:#32c964;font-size:1.2em;vertical-align:middle;">check_circle</span>';
+      errorDivs[field].innerHTML = icon + '<span style="margin-left:7px;">' + message + '</span>';
+      errorDivs[field].className = 'profile-' + type + ' visible';
+      errorDivs[field].classList.add('profile-anim-fade');
+      setTimeout(() => { errorDivs[field].classList.remove('profile-anim-fade'); }, 1200);
+      const input = document.getElementById(`profile-${field}-input`);
+      input.classList.remove('error', 'success');
+      if (type === 'error') input.classList.add('error');
+      if (type === 'success') input.classList.add('success');
+    }
+    function updateProfileField(field, value) {
+      errorDivs[field].style.display = 'none';
+      fetch(`/${USERNAME}/api/update_profile`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ [field]: value })
+      }).then(async resp => {
+        let data = await resp.json();
+        const input = document.getElementById(`profile-${field}-input`);
+        if (resp.ok && data.success) {
+          document.getElementById(`profile-${field}`).textContent = value;
+          document.getElementById(`profile-${field}-input`).value = value;
+          showProfileMessage(field, 'success', 'Успешно!');
+          document.getElementById('save-profile-btn').classList.add('profile-anim-fade');
+          setTimeout(() => { document.getElementById('save-profile-btn').classList.remove('profile-anim-fade'); }, 1200);
+          finishEditProfileField(field, false);
+        } else {
+          showProfileMessage(field, 'error', data.error || 'Ошибка');
+        }
+      }).catch(() => {
+        showProfileMessage(field, 'error', 'Ошибка сети');
       });
     }
+    fields.forEach(f => {
+      const input = document.getElementById(`profile-${f}-input`);
+      if (!input) return; // Проверяем существование input
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') { finishEditProfileField(f, true); e.preventDefault(); } });
+      input.addEventListener('blur', () => setTimeout(() => finishEditProfileField(f, false), 120));
+      input.classList.remove('error', 'success');
+    });
+    if (profileForm) {
+      profileForm.onsubmit = function (e) { e.preventDefault(); if (editingField) finishEditProfileField(editingField, true); };
+    }
 
-    // ========== Обработчики кнопок отмены ==========
-    function bindCancelButtons() {
-      document.querySelectorAll('[onclick*="close"]').forEach((btn) => {
-        const onclick = btn.getAttribute('onclick');
-        if (onclick && onclick.includes('close')) {
-          btn.onclick = function (e) {
-            e.preventDefault();
-            const modalName = onclick.match(/close(\w+)Modal/);
-            if (modalName) {
-              const modal = document.getElementById(modalName[1].toLowerCase() + '-modal');
-              if (modal) modal.classList.remove('show');
-            }
-          };
-        }
+    // === Централизованный режим редактирования профиля ===
+    let profileEditMode = false;
+    const saveBtn = document.getElementById('save-profile-btn');
+    const cancelBtn = document.getElementById('cancel-profile-btn');
+    const errorDiv = document.getElementById('profile-error');
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    // fields уже объявлена выше в строке 2210
+
+    function setProfileEditMode(on) {
+      profileEditMode = on;
+      fields.forEach(f => {
+        const input = document.getElementById(`profile-${f}-input`);
+        const value = document.getElementById(`profile-${f}`);
+        if (!input || !value) return; // Проверяем существование элементов
+        input.disabled = !on;
+        input.style.display = on ? 'block' : 'none';
+        value.style.display = on ? 'none' : 'block';
       });
+      if (saveBtn) saveBtn.style.display = on ? 'inline-flex' : 'none';
+      if (cancelBtn) cancelBtn.style.display = on ? 'inline-flex' : 'none';
     }
 
-    // ========== Инициализация ==========
-    bindModalCloseHandlers();
-    bindCancelButtons();
-
-    document.getElementById('close-view-task-modal-btn')?.addEventListener('click', closeViewTaskModal);
-
-    // Добавим вызов при старте страницы, если window.USER_AVATAR_URL определён
-    if (window.USER_AVATAR_URL) {
-      updateTopbarAvatar(window.USER_AVATAR_URL);
-    }
-
-    document.getElementById('close-change-password-modal-btn')?.addEventListener('click', closeChangePasswordModal);
-    document.getElementById('cancel-change-password-btn')?.addEventListener('click', closeChangePasswordModal);
-
-    // ========== Инициализация аватарки в topbar ==========
-    // Проверяем, есть ли аватарка при загрузке страницы
-    if (window.USER_AVATAR_URL) {
-      updateTopbarAvatar(window.USER_AVATAR_URL);
-    }
-
-    // Также обновляем аватарку после загрузки профиля
-    const originalProfileBtn = document.getElementById("profile-btn");
-    if (originalProfileBtn) {
-      const originalOnClick = originalProfileBtn.onclick;
-      originalProfileBtn.onclick = async function () {
-        if (userDropdown) userDropdown.classList.remove("open");
-        try {
-          let r = await fetch(`/api/profile/${USERNAME}`, { headers: getHeaders() });
-          let data = await r.json();
-
-          // Обновляем аватарку в topbar
-          if (data.avatar_url) {
-            updateTopbarAvatar(data.avatar_url);
-          }
-
-          // Заполняем username через innerHTML с <span>
-          const usernameEl = document.getElementById("profile-username");
-          if (usernameEl) usernameEl.innerHTML = `<span>${data.username || ""}</span>`;
-          // Обновляем данные профиля
-          window.lastProfileData = {
-            email: data.email || '',
-            country: data.country || '',
-            fullname: data.fullname || ''
-          };
-          // Заполняем поля
-          const emailEl = document.getElementById("profile-email");
-          const emailInput = document.getElementById("profile-email-input");
-          const countryEl = document.getElementById("profile-country");
-          const countrySelect = document.getElementById("profile-country-select");
-          const fullnameEl = document.getElementById("profile-fullname");
-          const fullnameInput = document.getElementById("profile-fullname-input");
-          if (emailEl) emailEl.textContent = data.email || '';
-          if (emailInput) emailInput.value = data.email || '';
-          if (countryEl) countryEl.textContent = data.country || '';
-          if (countrySelect) countrySelect.value = data.country || '';
-          if (fullnameEl) fullnameEl.textContent = data.fullname || '';
-          if (fullnameInput) fullnameInput.value = data.fullname || '';
-          // Проверяем, что функция updateProfileAvatar доступна
-          if (typeof window.updateProfileAvatar === 'function') {
-            window.updateProfileAvatar(data.avatar_url);
-          }
-          setProfileEditMode(false);
-          showProfileModal();
-        } catch (error) {
-          // Ошибка загрузки профиля
-        }
+    if (editProfileBtn) {
+      editProfileBtn.onclick = function () {
+        setProfileEditMode(true);
       };
     }
+    if (cancelBtn) {
+      cancelBtn.onclick = function () {
+        setProfileEditMode(false);
+        resetProfileEditFields(window.lastProfileData || {});
+        if (errorDiv) errorDiv.textContent = '';
+      };
+    }
+    if (profileForm) {
+      profileForm.onsubmit = async function (e) {
+        e.preventDefault();
+        if (saveBtn) saveBtn.disabled = true;
+        if (errorDiv) errorDiv.textContent = '';
+        const emailInput = document.getElementById('profile-email-input');
+        const countrySelect = document.getElementById('profile-country-select');
+        const fullnameInput = document.getElementById('profile-fullname-input');
+
+        if (!emailInput || !countrySelect || !fullnameInput) return;
+
+        const email = emailInput.value.trim();
+        const country = countrySelect.value.trim();
+        const fullname = fullnameInput.value.trim();
+        try {
+          const resp = await fetch(`/${USERNAME}/api/update_profile`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ email, country, fullname })
+          });
+          const data = await resp.json();
+          if (resp.ok && data.success) {
+            fields.forEach(f => {
+              const valueElement = document.getElementById(`profile-${f}`);
+              if (valueElement) {
+                valueElement.textContent = eval(f);
+              }
+            });
+            setProfileEditMode(false);
+            if (errorDiv) {
+              errorDiv.textContent = 'Профиль успешно обновлён!';
+              errorDiv.className = 'profile-success visible';
+              setTimeout(() => { errorDiv.className = 'profile-success'; errorDiv.textContent = ''; }, 2000);
+            }
+            window.lastProfileData = { email, country, fullname };
+          } else {
+            if (errorDiv) {
+              errorDiv.textContent = data.error || 'Ошибка обновления профиля';
+              errorDiv.className = 'profile-error visible';
+            }
+          }
+        } catch {
+          if (errorDiv) {
+            errorDiv.textContent = 'Ошибка сети';
+            errorDiv.className = 'profile-error visible';
+          }
+        }
+        if (saveBtn) saveBtn.disabled = false;
+      };
+    }
+    function resetProfileEditFields(data) {
+      fields.forEach(f => {
+        const input = document.getElementById(`profile-${f}-input`);
+        const value = document.getElementById(`profile-${f}`);
+        if (input && value) {
+          input.value = data[f] || '';
+          value.textContent = data[f] || '';
+        }
+      });
+    }
+
+    // Инициализация с проверками
+    const emailInput = document.getElementById('profile-email-input');
+    const countrySelect = document.getElementById('profile-country-select');
+    const fullnameInput = document.getElementById('profile-fullname-input');
+
+    window.lastProfileData = {
+      email: emailInput ? emailInput.value : '',
+      country: countrySelect ? countrySelect.value : '',
+      fullname: fullnameInput ? fullnameInput.value : ''
+    };
+    setProfileEditMode(false);
   </script>
 </body>
 
