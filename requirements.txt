@@ -1,5 +1,0 @@
-flask
-psycopg2-binary
-werkzeug
-flask-socketio
-eventlet
