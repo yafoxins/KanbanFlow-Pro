@@ -75,15 +75,15 @@
 
 ```mermaid
 flowchart LR
-    FE[Frontend (HTML/CSS/JS)]
-    BE[Backend (Flask)]
-    DB[Database (PostgreSQL)]
-    WS[WebSocket (Socket.IO)]
-    FE <--> BE
-    BE <--> DB
-    FE --> WS
-    BE --> WS
-    DB --> WS
+FE[Frontend (HTML/CSS/JS)]
+BE[Backend (Flask)]
+DB[Database (PostgreSQL)]
+WS[WebSocket (Socket.IO)]
+FE <--> BE
+BE <--> DB
+FE --> WS
+BE --> WS
+DB --> WS
 ```
 </details>
 
