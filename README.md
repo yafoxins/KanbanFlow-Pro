@@ -1,42 +1,8 @@
 <div align="center">
 
-# <span style="background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradient 3s ease infinite; font-size: 2.5em; font-weight: bold;">🚀 KanbanFlow Pro</span>
+# 🚀 KanbanFlow Pro
 
-<style>
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.animated-text {
-  animation: fadeInUp 1s ease-out;
-}
-
-.pulse-emoji {
-  animation: pulse 2s infinite;
-  display: inline-block;
-}
-</style>
-
-**<span class="animated-text">Современная канбан-доска и система управления задачами</span>**
+**Современная канбан-доска и система управления задачами**
 
 [![Flask](https://img.shields.io/badge/Flask-2.3.3+-blue.svg)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-green.svg)](https://www.postgresql.org/)
@@ -44,7 +10,20 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-5.3.2-orange.svg)](https://github.com/yafoxins/kanban-flask)
 
-> **<span class="pulse-emoji">🎯</span> Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**
+> **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**
+
+---
+
+## 🌐 **Живые демо**
+
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+
+[![Live Demo RU](https://img.shields.io/badge/🇷🇺_Работающие_демо-kanban.yafoxin.ru-00ff88?style=for-the-badge&logo=globe)](https://kanban.yafoxin.ru)
+[![Live Demo EN](https://img.shields.io/badge/🇺🇸_Live_Demo-kanban.yafoxin.tech-00ff88?style=for-the-badge&logo=globe)](https://kanban.yafoxin.tech)
+
+</div>
+
+**🎮 Попробуйте прямо сейчас!** Создайте аккаунт и испытайте все возможности системы.
 
 ---
 
@@ -64,6 +43,8 @@
 ### 🎯 О проекте
 
 **KanbanFlow Pro** — это современное веб-приложение для управления задачами и проектами, построенное на Flask и PostgreSQL. Приложение объединяет в себе канбан-доску, ToDo-листы и систему командной работы в едином интуитивном интерфейсе.
+
+**🌐 Работающие демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru)
 
 ### ✨ Ключевые особенности
 
@@ -90,30 +71,9 @@
                         └─────────────────┘
 ```
 
----
+### 🚀 Быстрый старт
 
-## 🇬🇧 English
-
-### 🎯 About Project
-
-**KanbanFlow Pro** is a modern web application for task and project management, built on Flask and PostgreSQL. The application combines kanban boards, todo lists, and team collaboration in a single intuitive interface.
-
-### ✨ Key Features
-
-- 🎨 **Modern UI/UX** — Responsive design with dark/light theme support
-- 📋 **Kanban Board** — Drag & Drop interface with customizable statuses
-- ✅ **Todo Lists** — Personal tasks with dates and priorities
-- 👥 **Team Collaboration** — Create teams, assign tasks, work together
-- 🔐 **Security** — CSRF protection, password hashing, sessions
-- 📱 **Responsive** — Full mobile device support
-- ⚡ **Real-time** — WebSocket for instant updates
-- 🖼️ **Media** — Image uploads in tasks and avatars
-
----
-
-## 🚀 Быстрый старт
-
-### 🐳 Docker Compose (Рекомендуется)
+#### 🐳 Docker Compose (Рекомендуется)
 
 ```bash
 # Клонирование репозитория
@@ -127,7 +87,7 @@ docker-compose up --build -d
 open http://localhost
 ```
 
-### 🛠️ Ручная установка
+#### 🛠️ Ручная установка
 
 ```bash
 # Клонирование и настройка
@@ -154,31 +114,29 @@ GRANT ALL PRIVILEGES ON DATABASE kanban_db TO kanban_user;
 python app.py
 ```
 
----
+### 🌟 Возможности
 
-## 🌟 Возможности
-
-### 📋 Канбан-доска
+#### 📋 Канбан-доска
 - **Drag & Drop** — Перетаскивание задач между статусами
 - **Настраиваемые статусы** — Создание и удаление колонок
 - **Детальные задачи** — Описания, теги, даты, изображения
 - **Редактирование** — Полное управление задачами
 - **Поиск и фильтрация** — Быстрый поиск по задачам
 
-### ✅ ToDo-листы
+#### ✅ ToDo-листы
 - **Персональные задачи** — Приватные списки дел
 - **Даты выполнения** — Планирование по времени
 - **Статусы** — Отметка выполненных задач
 - **Быстрое добавление** — Мгновенное создание задач
 
-### 👥 Командная работа
+#### 👥 Командная работа
 - **Создание команд** — Объединение пользователей
 - **Назначение задач** — Распределение работы
 - **Командные доски** — Общие канбан-доски
 - **Роли** — Лидеры команд и участники
 - **Real-time обновления** — Мгновенная синхронизация
 
-### 👤 Профиль пользователя
+#### 👤 Профиль пользователя
 - **Редактирование данных** — Имя, email, страна
 - **Смена пароля** — Безопасное обновление
 - **Аватары** — Загрузка профильных фото
@@ -186,7 +144,99 @@ python app.py
 
 ---
 
-## 📱 Скриншоты
+## 🇬🇧 English
+
+### 🎯 About Project
+
+**KanbanFlow Pro** is a modern web application for task and project management, built on Flask and PostgreSQL. The application combines kanban boards, todo lists, and team collaboration in a single intuitive interface.
+
+**🌐 Demo for Americans:** [kanban.yafoxin.tech](https://kanban.yafoxin.tech)
+
+### ✨ Key Features
+
+- 🎨 **Modern UI/UX** — Responsive design with dark/light theme support
+- 📋 **Kanban Board** — Drag & Drop interface with customizable statuses
+- ✅ **Todo Lists** — Personal tasks with dates and priorities
+- 👥 **Team Collaboration** — Create teams, assign tasks, work together
+- 🔐 **Security** — CSRF protection, password hashing, sessions
+- 📱 **Responsive** — Full mobile device support
+- ⚡ **Real-time** — WebSocket for instant updates
+- 🖼️ **Media** — Image uploads in tasks and avatars
+
+### 🚀 Quick Start
+
+#### 🐳 Docker Compose (Recommended)
+
+```bash
+# Clone repository
+git clone https://github.com/yafoxins/kanban-flask.git
+cd kanban-flask
+
+# Run with Docker Compose
+docker-compose up --build -d
+
+# Open in browser
+open http://localhost
+```
+
+#### 🛠️ Manual Installation
+
+```bash
+# Clone and setup
+git clone https://github.com/yafoxins/kanban-flask.git
+cd kanban-flask
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Setup PostgreSQL
+sudo -u postgres psql
+CREATE DATABASE kanban_db;
+CREATE USER kanban_user WITH PASSWORD 'kanban_pass';
+GRANT ALL PRIVILEGES ON DATABASE kanban_db TO kanban_user;
+\q
+
+# Run application
+python app.py
+```
+
+### 🌟 Features
+
+#### 📋 Kanban Board
+- **Drag & Drop** — Drag tasks between statuses
+- **Customizable Statuses** — Create and delete columns
+- **Detailed Tasks** — Descriptions, tags, dates, images
+- **Editing** — Full task management
+- **Search & Filter** — Quick task search
+
+#### ✅ Todo Lists
+- **Personal Tasks** — Private to-do lists
+- **Due Dates** — Time planning
+- **Statuses** — Mark completed tasks
+- **Quick Add** — Instant task creation
+
+#### 👥 Team Collaboration
+- **Create Teams** — Unite users
+- **Assign Tasks** — Distribute work
+- **Team Boards** — Shared kanban boards
+- **Roles** — Team leaders and members
+- **Real-time Updates** — Instant synchronization
+
+#### 👤 User Profile
+- **Edit Data** — Name, email, country
+- **Change Password** — Secure update
+- **Avatars** — Upload profile photos
+- **Themes** — Switch between dark/light theme
+
+---
+
+## 📱 Скриншоты / Screenshots
 
 <!-- Здесь можно добавить скриншоты интерфейса -->
 <!-- ![Канбан-доска](screenshots/kanban.png) -->
@@ -195,143 +245,145 @@ python app.py
 
 ---
 
-## 🛠️ Технологии
+## 🛠️ Технологии / Technologies
 
 ### Backend
-- **Flask 2.3.3+** — Веб-фреймворк
-- **PostgreSQL 16+** — База данных
-- **Flask-SocketIO** — WebSocket поддержка
-- **Werkzeug** — Утилиты безопасности
-- **Eventlet** — Асинхронный сервер
+- **Flask 2.3.3+** — Веб-фреймворк / Web framework
+- **PostgreSQL 16+** — База данных / Database
+- **Flask-SocketIO** — WebSocket поддержка / WebSocket support
+- **Werkzeug** — Утилиты безопасности / Security utilities
+- **Eventlet** — Асинхронный сервер / Async server
 
 ### Frontend
-- **HTML5/CSS3** — Современная разметка и стили
-- **JavaScript (ES6+)** — Интерактивность
-- **Socket.IO** — Real-time обновления
-- **Sortable.js** — Drag & Drop функциональность
-- **Quill.js** — Rich text редактор
+- **HTML5/CSS3** — Современная разметка и стили / Modern markup and styles
+- **JavaScript (ES6+)** — Интерактивность / Interactivity
+- **Socket.IO** — Real-time обновления / Real-time updates
+- **Sortable.js** — Drag & Drop функциональность / Drag & Drop functionality
+- **Quill.js** — Rich text редактор / Rich text editor
 
 ### DevOps
-- **Docker** — Контейнеризация
-- **Docker Compose** — Оркестрация
-- **Nginx** — Обратный прокси
-- **PostgreSQL** — Производственная БД
+- **Docker** — Контейнеризация / Containerization
+- **Docker Compose** — Оркестрация / Orchestration
+- **Nginx** — Обратный прокси / Reverse proxy
+- **PostgreSQL** — Производственная БД / Production DB
 
 ---
 
-## 📁 Структура проекта
+## 📁 Структура проекта / Project Structure
 
 ```
 kanban-flask/
-├── 📄 app.py                 # Основное Flask приложение
-├── 🐳 docker-compose.yml     # Docker Compose конфигурация
-├── 🐳 Dockerfile             # Docker образ
-├── 🌐 nginx.conf             # Nginx конфигурация
-├── 📋 requirements.txt       # Python зависимости
-├── 📁 static/                # Статические файлы
-│   ├── 🎨 css/               # Стили
+├── 📄 app.py                 # Основное Flask приложение / Main Flask app
+├── 🐳 docker-compose.yml     # Docker Compose конфигурация / Docker Compose config
+├── 🐳 Dockerfile             # Docker образ / Docker image
+├── 🌐 nginx.conf             # Nginx конфигурация / Nginx config
+├── 📋 requirements.txt       # Python зависимости / Python dependencies
+├── 📁 static/                # Статические файлы / Static files
+│   ├── 🎨 css/               # Стили / Styles
 │   ├── ⚡ js/                 # JavaScript
-│   ├── 👤 avatars/           # Аватары пользователей
-│   ├── 📸 uploads/           # Загруженные изображения
-│   └── 🌍 countries.js       # Список стран
-├── 📁 templates/             # HTML шаблоны
-│   ├── 🏠 home.html          # Главная страница
-│   ├── 📋 kanban.html        # Канбан-доска
-│   ├── ✅ todo.html          # ToDo-лист
-│   ├── 👥 team_board.html    # Командная доска
-│   └── ✏️ task_*.html        # Редактирование задач
-└── 📖 README.md              # Документация
+│   ├── 👤 avatars/           # Аватары пользователей / User avatars
+│   ├── 📸 uploads/           # Загруженные изображения / Uploaded images
+│   └── 🌍 countries.js       # Список стран / Countries list
+├── 📁 templates/             # HTML шаблоны / HTML templates
+│   ├── 🏠 home.html          # Главная страница / Home page
+│   ├── 📋 kanban.html        # Канбан-доска / Kanban board
+│   ├── ✅ todo.html          # ToDo-лист / Todo list
+│   ├── 👥 team_board.html    # Командная доска / Team board
+│   └── ✏️ task_*.html        # Редактирование задач / Task editing
+└── 📖 README.md              # Документация / Documentation
 ```
 
 ---
 
 ## 🔧 API Endpoints
 
-### Аутентификация
-- `POST /api/register` — Регистрация
-- `POST /api/login` — Вход
-- `GET /<username>/logout` — Выход
+### Аутентификация / Authentication
+- `POST /api/register` — Регистрация / Registration
+- `POST /api/login` — Вход / Login
+- `GET /<username>/logout` — Выход / Logout
 
-### Канбан
-- `GET /<username>/api/statuses` — Получение статусов
-- `POST /<username>/api/statuses` — Создание статуса
-- `GET /<username>/api/tasks` — Получение задач
-- `POST /<username>/api/tasks` — Создание задачи
-- `PATCH /<username>/api/tasks/<id>` — Обновление задачи
+### Канбан / Kanban
+- `GET /<username>/api/statuses` — Получение статусов / Get statuses
+- `POST /<username>/api/statuses` — Создание статуса / Create status
+- `GET /<username>/api/tasks` — Получение задач / Get tasks
+- `POST /<username>/api/tasks` — Создание задачи / Create task
+- `PATCH /<username>/api/tasks/<id>` — Обновление задачи / Update task
 
 ### ToDo
-- `GET /<username>/api/todos` — Получение ToDo
-- `POST /<username>/api/todos` — Создание ToDo
-- `PATCH /<username>/api/todos/<id>` — Обновление ToDo
+- `GET /<username>/api/todos` — Получение ToDo / Get todos
+- `POST /<username>/api/todos` — Создание ToDo / Create todo
+- `PATCH /<username>/api/todos/<id>` — Обновление ToDo / Update todo
 
-### Команды
-- `POST /<username>/api/teams` — Создание команды
-- `GET /<username>/api/teams/list` — Список команд
-- `POST /<username>/api/teams/<id>/members` — Добавление участника
+### Команды / Teams
+- `POST /<username>/api/teams` — Создание команды / Create team
+- `GET /<username>/api/teams/list` — Список команд / List teams
+- `POST /<username>/api/teams/<id>/members` — Добавление участника / Add member
 
 ---
 
-## 🚀 Развертывание
+## 🚀 Развертывание / Deployment
 
-### Production с Docker
+### Production с Docker / Production with Docker
 
 ```bash
-# Клонирование
+# Клонирование / Clone
 git clone https://github.com/yafoxins/kanban-flask.git
 cd kanban-flask
 
-# Запуск
+# Запуск / Run
 docker-compose up -d
 ```
 
-### Production без Docker
+### Production без Docker / Production without Docker
 
 ```bash
-# Установка зависимостей
+# Установка зависимостей / Install dependencies
 pip install -r requirements.txt
 
-# Настройка PostgreSQL
+# Настройка PostgreSQL / Setup PostgreSQL
 sudo -u postgres createdb kanban_db
 sudo -u postgres createuser kanban_user
 
-# Настройка Nginx
+# Настройка Nginx / Setup Nginx
 sudo cp nginx.conf /etc/nginx/sites-available/kanban
 sudo ln -s /etc/nginx/sites-available/kanban /etc/nginx/sites-enabled/
 
-# Запуск с Gunicorn
+# Запуск с Gunicorn / Run with Gunicorn
 gunicorn -w 4 -k gevent --worker-connections 1000 app:app
 ```
 
 ---
 
-## 🔒 Безопасность
+## 🔒 Безопасность / Security
 
-- **CSRF Protection** — Защита от межсайтовых запросов
-- **Password Hashing** — Хеширование паролей с bcrypt
-- **Session Management** — Управление сессиями
-- **Input Validation** — Валидация входных данных
-- **SQL Injection Protection** — Защита от SQL-инъекций
-- **XSS Protection** — Защита от XSS-атак
-
----
-
-## 🤝 Вклад в проект
-
-1. **Fork** репозитория
-2. Создайте **feature branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit** изменения (`git commit -m 'Add AmazingFeature'`)
-4. **Push** в branch (`git push origin feature/AmazingFeature`)
-5. Откройте **Pull Request**
+- **CSRF Protection** — Защита от межсайтовых запросов / Cross-site request forgery protection
+- **Password Hashing** — Хеширование паролей с bcrypt / Password hashing with bcrypt
+- **Session Management** — Управление сессиями / Session management
+- **Input Validation** — Валидация входных данных / Input validation
+- **SQL Injection Protection** — Защита от SQL-инъекций / SQL injection protection
+- **XSS Protection** — Защита от XSS-атак / XSS attack protection
 
 ---
 
-## 📄 Лицензия
+## 🤝 Вклад в проект / Contributing
+
+1. **Fork** репозитория / Fork the repository
+2. Создайте **feature branch** (`git checkout -b feature/AmazingFeature`) / Create feature branch
+3. **Commit** изменения (`git commit -m 'Add AmazingFeature'`) / Commit changes
+4. **Push** в branch (`git push origin feature/AmazingFeature`) / Push to branch
+5. Откройте **Pull Request** / Open Pull Request
+
+---
+
+## 📄 Лицензия / License
 
 Этот проект распространяется под лицензией **GPL-3.0**. См. файл [LICENSE](LICENSE) для подробностей.
 
+This project is licensed under **GPL-3.0**. See the [LICENSE](LICENSE) file for details.
+
 ---
 
-## 👨‍💻 Автор
+## 👨‍💻 Автор / Author
 
 **Yafoxin** — [@yafoxin](https://t.me/yafoxin)
 
@@ -342,7 +394,7 @@ gunicorn -w 4 -k gevent --worker-connections 1000 app:app
 
 <div align="center">
 
-### ⭐ Если проект вам понравился, поставьте звездочку!
+### ⭐ Если проект вам понравился, поставьте звездочку! / If you like the project, give it a star!
 
 [![GitHub stars](https://img.shields.io/github/stars/yafoxins/kanban-flask?style=social)](https://github.com/yafoxins/kanban-flask/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/yafoxins/kanban-flask?style=social)](https://github.com/yafoxins/kanban-flask/network/members)
