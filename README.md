@@ -13,7 +13,7 @@
 
 <!-- Главный скриншот -->
 <p align="center">
-  <img src="screenshots/main.png" alt="Главная страница / Main page" width="800"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/main.png" alt="Главная страница / Main page" width="800"/>
   <br>
   <i>Главная страница / Main page</i>
 </p>
@@ -38,6 +38,8 @@
 
 ---
 
+<div align="center">
+
 ## 🌐 Живые демо / Live Demo
 
 <table>
@@ -57,10 +59,10 @@
   </tr>
 </table>
 
----
-
 **🎮 Попробуйте прямо сейчас!**  
 Создайте аккаунт и испытайте все возможности системы.
+
+</div>
 
 ---
 
@@ -308,35 +310,35 @@ python app.py
 ## 📱 Скриншоты / Screenshots
 
 <p align="center">
-  <img src="screenshots/board.png" alt="Канбан-доска / Kanban board" width="800"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/board.png" alt="Канбан-доска / Kanban board" width="800"/>
   <br>
   <i>Канбан-доска / Kanban board</i>
 </p>
 <p align="center">
-  <img src="screenshots/todo.png" alt="ToDo-лист / ToDo list" width="800"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/todo.png" alt="ToDo-лист / ToDo list" width="800"/>
   <br>
   <i>ToDo-лист / ToDo list</i>
 </p>
 <p align="center">
-  <img src="screenshots/task.png" alt="Создание задачи / New task" width="500"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/task.png" alt="Создание задачи / New task" width="500"/>
   <br>
   <i>Создание задачи / New task</i>
 </p>
 <p align="center">
-  <img src="screenshots/taskview.png" alt="Просмотр задачи / Task view" width="600"/>
-  <img src="screenshots/taskfullview.png" alt="Полный просмотр задачи / Full task view" width="600"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskview.png" alt="Просмотр задачи / Task view" width="600"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/taskfullview.png" alt="Полный просмотр задачи / Full task view" width="600"/>
   <br>
   <i>Просмотр задачи / Task view</i>
 </p>
 <p align="center">
-  <img src="screenshots/teamboard.png" alt="Командная доска / Team board" width="800"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/teamboard.png" alt="Командная доска / Team board" width="800"/>
   <br>
   <i>Командная доска / Team board</i>
 </p>
 <p align="center">
-  <img src="screenshots/profile.png" alt="Профиль пользователя / User profile" width="400"/>
-  <img src="screenshots/about.png" alt="О проекте / About project" width="400"/>
-  <img src="screenshots/password.png" alt="Смена пароля / Change password" width="400"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/profile.png" alt="Профиль пользователя / User profile" width="400"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/about.png" alt="О проекте / About project" width="400"/>
+  <img src="https://raw.githubusercontent.com/yafoxins/kanban-flask/media/screenshots/password.png" alt="Смена пароля / Change password" width="400"/>
   <br>
   <i>Профиль, О проекте, Смена пароля / Profile, About, Change password</i>
 </p>
@@ -494,6 +496,9 @@ This project is licensed under **GPL-3.0**. See the [LICENSE](LICENSE) file for 
 
 ### ⭐ Если проект вам понравился, поставьте звездочку! / If you like the project, give it a star!
 
+Если проект тебе по душе — ставь ⭐, делай форк 🍴, делись с друзьями и присоединяйся к развитию!  
+If you like the project — star ⭐ it, fork 🍴 it, share with friends and join the development!
+
 [![GitHub stars](https://img.shields.io/github/stars/yafoxins/kanban-flask?style=social)](https://github.com/yafoxins/kanban-flask/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/yafoxins/kanban-flask?style=social)](https://github.com/yafoxins/kanban-flask/network/members)
 [![GitHub issues](https://img.shields.io/github/issues/yafoxins/kanban-flask)](https://github.com/yafoxins/kanban-flask/issues)
@@ -503,3 +508,8 @@ This project is licensed under **GPL-3.0**. See the [LICENSE](LICENSE) file for 
 **Made with ❤️ by Yafoxin**
 
 </div>
+
+## 🙏 Благодарности / Thanks
+
+Спасибо всем, кто поддерживал, тестировал и вдохновлял на новые фичи.  
+Thank you to everyone who supported, tested, and inspired new features.
