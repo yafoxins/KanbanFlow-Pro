@@ -2,7 +2,8 @@
 
 # 🚀 KanbanFlow Pro
 
-**Современная канбан-доска и система управления задачами**
+**Современная канбан-доска и система управления задачами**  
+**A modern Kanban board and task management system**
 
 [![Flask](https://img.shields.io/badge/Flask-2.3.3+-blue.svg)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-green.svg)](https://www.postgresql.org/)
@@ -10,11 +11,25 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-5.3.2-orange.svg)](https://github.com/yafoxins/kanban-flask)
 
-> **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**
+> **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**  
+> **🎯 Full-featured project management system with Kanban board, ToDo lists, and team collaboration**
 
 ---
 
-## 🌐 Живые демо
+<table align="center">
+  <tr>
+    <td align="center"><a href="#-русский">🇷🇺<br>Русский</a></td>
+    <td align="center"><a href="#-english">🇬🇧<br>English</a></td>
+    <td align="center"><a href="#-быстрый-старт">🚀<br>Быстрый старт</a></td>
+    <td align="center"><a href="#-возможности">🌟<br>Возможности</a></td>
+    <td align="center"><a href="#-скриншоты--screenshots">📱<br>Скриншоты</a></td>
+    <td align="center"><a href="#️-технологии--technologies">🛠️<br>Технологии</a></td>
+  </tr>
+</table>
+
+---
+
+## 🌐 Живые демо / Live Demo
 
 <table>
   <tr>
@@ -22,15 +37,13 @@
       <b>🇷🇺 Работающее демо</b><br>
       <a href="https://kanban.yafoxin.ru">
         <img src="https://img.shields.io/badge/kanban.yafoxin.ru-1976d2?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="RU Demo">
-      </a><br>
-      <a href="https://kanban.yafoxin.ru">kanban.yafoxin.ru</a>
+      </a>
     </td>
     <td align="center" width="50%">
       <b>🇺🇸 Live Demo</b><br>
       <a href="https://kanban.yafoxin.tech">
         <img src="https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="EN Demo">
-      </a><br>
-      <a href="https://kanban.yafoxin.tech">kanban.yafoxin.tech</a>
+      </a>
     </td>
   </tr>
 </table>
@@ -44,12 +57,6 @@
 
 <!-- Здесь можно вставить GIF/видео демонстрации -->
 <!-- ![KanbanFlow Demo](demo.gif) -->
-
----
-
-[🇷🇺 Русский](#-русский) • [🇬🇧 English](#-english) • [🚀 Быстрый старт](#-быстрый-старт) • [🌟 Возможности](#-возможности) • [📱 Скриншоты](#-скриншоты) • [🛠️ Технологии](#️-технологии)
-
-</div>
 
 ---
 
@@ -74,17 +81,26 @@
 
 ### 🏗️ Архитектура
 
+<details>
+<summary>Показать схему / Show diagram</summary>
+
+```mermaid
+flowchart LR
+    FE[Frontend<br/>(HTML/CSS/JS)]
+    BE[Backend<br/>(Flask)]
+    DB[Database<br/>(PostgreSQL)]
+    WS[WebSocket<br/>(Socket.IO)]
+
+    FE <--> BE
+    BE <--> DB
+    FE --> WS
+    BE --> WS
+    DB --> WS
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Database      │
-│   (HTML/CSS/JS) │◄──►│   (Flask)       │◄──►│   (PostgreSQL)  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │              ┌─────────────────┐              │
-         └──────────────►│   WebSocket     │◄─────────────┘
-                        │   (Socket.IO)   │
-                        └─────────────────┘
-```
+</details>
+
+**🇷🇺 Архитектура проекта** — Вся система построена по принципу клиент-сервер с поддержкой real-time через WebSocket.  
+**🇬🇧 Project architecture** — The whole system is built on a client-server principle with real-time support via WebSocket.
 
 ### 🚀 Быстрый старт
 
