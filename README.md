@@ -11,6 +11,8 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-5.3.2-orange.svg)](https://github.com/yafoxins/kanban-flask)
 
+</div>
+
 > **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**  
 > **🎯 Full-featured project management system with Kanban board, ToDo lists, and team collaboration**
 
@@ -70,6 +72,21 @@
 
 ### 🏗️ Архитектура / Architecture
 
+<details>
+<summary>Показать схему / Show diagram</summary>
+```mermaid
+flowchart LR
+    FE[Frontend<br/>HTML/CSS/JS]
+    BE[Backend<br/>Flask]
+    DB[Database<br/>PostgreSQL]
+    WS[WebSocket<br/>Socket.IO]
+    
+    FE <--> BE
+    BE <--> DB
+    FE <--> WS
+    BE <--> WS
+```
+</details>
 
 **🇷🇺 Архитектура проекта** — Вся система построена по принципу клиент-сервер с поддержкой real-time через WebSocket.  
 **🇬🇧 Project architecture** — The whole system is built on a client-server principle with real-time support via WebSocket.
@@ -132,31 +149,46 @@ python app.py
 
 ### 🌟 Возможности
 
-#### 📋 Канбан-доска
-- **Drag & Drop** — Перетаскивание задач между статусами
-- **Настраиваемые статусы** — Создание и удаление колонок
-- **Детальные задачи** — Описания, теги, даты, изображения
-- **Редактирование** — Полное управление задачами
-- **Поиск и фильтрация** — Быстрый поиск по задачам
-
-#### ✅ ToDo-листы
-- **Персональные задачи** — Приватные списки дел
-- **Даты выполнения** — Планирование по времени
-- **Статусы** — Отметка выполненных задач
-- **Быстрое добавление** — Мгновенное создание задач
-
-#### 👥 Командная работа
-- **Создание команд** — Объединение пользователей
-- **Назначение задач** — Распределение работы
-- **Командные доски** — Общие канбан-доски
-- **Роли** — Лидеры команд и участники
-- **Real-time обновления** — Мгновенная синхронизация
-
-#### 👤 Профиль пользователя
-- **Редактирование данных** — Имя, email, страна
-- **Смена пароля** — Безопасное обновление
-- **Аватары** — Загрузка профильных фото
-- **Темы** — Переключение между темной/светлой темой
+<table>
+  <tr>
+    <td>📋 <b>Канбан-доска</b></td>
+    <td>
+      Drag & Drop — Перетаскивание задач между статусами<br>
+      Настраиваемые статусы — Создание и удаление колонок<br>
+      Детальные задачи — Описания, теги, даты, изображения<br>
+      Редактирование — Полное управление задачами<br>
+      Поиск и фильтрация — Быстрый поиск по задачам
+    </td>
+  </tr>
+  <tr>
+    <td>✅ <b>ToDo-листы</b></td>
+    <td>
+      Персональные задачи — Приватные списки дел<br>
+      Даты выполнения — Планирование по времени<br>
+      Статусы — Отметка выполненных задач<br>
+      Быстрое добавление — Мгновенное создание задач
+    </td>
+  </tr>
+  <tr>
+    <td>👥 <b>Командная работа</b></td>
+    <td>
+      Создание команд — Объединение пользователей<br>
+      Назначение задач — Распределение работы<br>
+      Командные доски — Общие канбан-доски<br>
+      Роли — Лидеры команд и участники<br>
+      Real-time обновления — Мгновенная синхронизация
+    </td>
+  </tr>
+  <tr>
+    <td>👤 <b>Профиль пользователя</b></td>
+    <td>
+      Редактирование данных — Имя, email, страна<br>
+      Смена пароля — Безопасное обновление<br>
+      Аватары — Загрузка профильных фото<br>
+      Темы — Переключение между темной/светлой темой
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -224,31 +256,46 @@ python app.py
 
 ### 🌟 Features
 
-#### 📋 Kanban Board
-- **Drag & Drop** — Drag tasks between statuses
-- **Customizable Statuses** — Create and delete columns
-- **Detailed Tasks** — Descriptions, tags, dates, images
-- **Editing** — Full task management
-- **Search & Filter** — Quick task search
-
-#### ✅ Todo Lists
-- **Personal Tasks** — Private to-do lists
-- **Due Dates** — Time planning
-- **Statuses** — Mark completed tasks
-- **Quick Add** — Instant task creation
-
-#### 👥 Team Collaboration
-- **Create Teams** — Unite users
-- **Assign Tasks** — Distribute work
-- **Team Boards** — Shared kanban boards
-- **Roles** — Team leaders and members
-- **Real-time Updates** — Instant synchronization
-
-#### 👤 User Profile
-- **Edit Data** — Name, email, country
-- **Change Password** — Secure update
-- **Avatars** — Upload profile photos
-- **Themes** — Switch between dark/light theme
+<table>
+  <tr>
+    <td>📋 <b>Kanban Board</b></td>
+    <td>
+      Drag & Drop — Drag tasks between statuses<br>
+      Customizable Statuses — Create and delete columns<br>
+      Detailed Tasks — Descriptions, tags, dates, images<br>
+      Editing — Full task management<br>
+      Search & Filter — Quick task search
+    </td>
+  </tr>
+  <tr>
+    <td>✅ <b>Todo Lists</b></td>
+    <td>
+      Personal Tasks — Private to-do lists<br>
+      Due Dates — Time planning<br>
+      Statuses — Mark completed tasks<br>
+      Quick Add — Instant task creation
+    </td>
+  </tr>
+  <tr>
+    <td>👥 <b>Team Collaboration</b></td>
+    <td>
+      Create Teams — Unite users<br>
+      Assign Tasks — Distribute work<br>
+      Team Boards — Shared kanban boards<br>
+      Roles — Team leaders and members<br>
+      Real-time Updates — Instant synchronization
+    </td>
+  </tr>
+  <tr>
+    <td>👤 <b>User Profile</b></td>
+    <td>
+      Edit Data — Name, email, country<br>
+      Change Password — Secure update<br>
+      Avatars — Upload profile photos<br>
+      Themes — Switch between dark/light theme
+    </td>
+  </tr>
+</table>
 
 ---
 
