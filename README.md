@@ -79,7 +79,6 @@ flowchart LR
     BE[Backend (Flask)]
     DB[Database (PostgreSQL)]
     WS[WebSocket (Socket.IO)]
-
     FE <--> BE
     BE <--> DB
     FE --> WS
