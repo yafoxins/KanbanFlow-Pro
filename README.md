@@ -70,22 +70,6 @@
 
 ### 🏗️ Архитектура / Architecture
 
-<details>
-<summary>Показать схему / Show diagram</summary>
-
-```mermaid
-flowchart LR
-FE[Frontend (HTML/CSS/JS)]
-BE[Backend (Flask)]
-DB[Database (PostgreSQL)]
-WS[WebSocket (Socket.IO)]
-FE <--> BE
-BE <--> DB
-FE --> WS
-BE --> WS
-DB --> WS
-```
-</details>
 
 **🇷🇺 Архитектура проекта** — Вся система построена по принципу клиент-сервер с поддержкой real-time через WebSocket.  
 **🇬🇧 Project architecture** — The whole system is built on a client-server principle with real-time support via WebSocket.
