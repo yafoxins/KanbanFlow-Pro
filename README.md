@@ -11,6 +11,13 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-5.3.2-orange.svg)](https://github.com/yafoxins/kanban-flask)
 
+<!-- Главный скриншот -->
+<p align="center">
+  <img src="screenshots/main.png" alt="Главная страница / Main page" width="800"/>
+  <br>
+  <i>Главная страница / Main page</i>
+</p>
+
 </div>
 
 > **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**  
@@ -300,10 +307,39 @@ python app.py
 
 ## 📱 Скриншоты / Screenshots
 
-<!-- Здесь можно добавить скриншоты интерфейса -->
-<!-- ![Канбан-доска](screenshots/kanban.png) -->
-<!-- ![ToDo-лист](screenshots/todo.png) -->
-<!-- ![Командная работа](screenshots/team.png) -->
+<p align="center">
+  <img src="screenshots/board.png" alt="Канбан-доска / Kanban board" width="800"/>
+  <br>
+  <i>Канбан-доска / Kanban board</i>
+</p>
+<p align="center">
+  <img src="screenshots/todo.png" alt="ToDo-лист / ToDo list" width="800"/>
+  <br>
+  <i>ToDo-лист / ToDo list</i>
+</p>
+<p align="center">
+  <img src="screenshots/task.png" alt="Создание задачи / New task" width="500"/>
+  <br>
+  <i>Создание задачи / New task</i>
+</p>
+<p align="center">
+  <img src="screenshots/taskview.png" alt="Просмотр задачи / Task view" width="600"/>
+  <img src="screenshots/taskfullview.png" alt="Полный просмотр задачи / Full task view" width="600"/>
+  <br>
+  <i>Просмотр задачи / Task view</i>
+</p>
+<p align="center">
+  <img src="screenshots/teamboard.png" alt="Командная доска / Team board" width="800"/>
+  <br>
+  <i>Командная доска / Team board</i>
+</p>
+<p align="center">
+  <img src="screenshots/profile.png" alt="Профиль пользователя / User profile" width="400"/>
+  <img src="screenshots/about.png" alt="О проекте / About project" width="400"/>
+  <img src="screenshots/password.png" alt="Смена пароля / Change password" width="400"/>
+  <br>
+  <i>Профиль, О проекте, Смена пароля / Profile, About, Change password</i>
+</p>
 
 ---
 
