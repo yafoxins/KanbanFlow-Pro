@@ -1,0 +1,232 @@
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ ОШИБОК ===== */
+.error-hero {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    z-index: 1;
+    position: relative;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.1s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.error-illustration {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.7s cubic-bezier(.4, 2, .6, 1) 0.2s both;
+    animation-name: popIn, robotSwing;
+    animation-duration: 0.7s, 3.5s;
+    animation-delay: 0.2s, 0.9s;
+    animation-timing-function: cubic-bezier(.4, 2, .6, 1), ease-in-out;
+    animation-iteration-count: 1, infinite;
+    animation-direction: normal, alternate;
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.7) rotate(-10deg);
+    }
+
+    80% {
+        opacity: 1;
+        transform: scale(1.05) rotate(2deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+    }
+}
+
+@keyframes robotSwing {
+    0% {
+        transform: rotate(-3deg);
+    }
+
+    100% {
+        transform: rotate(3deg);
+    }
+}
+
+.error-code {
+    font-size: 4.5em;
+    font-weight: 900;
+    color: #729aff;
+    letter-spacing: 0.05em;
+    text-shadow: 0 4px 32px #729aff40;
+    margin-bottom: 0.1em;
+    line-height: 1;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.3s both;
+}
+
+.error-title {
+    font-size: 2.2em;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.4s both;
+}
+
+.error-message {
+    font-size: 1.25em;
+    color: #a0a0a0;
+    text-align: center;
+    margin-bottom: 18px;
+    max-width: 420px;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.5s both;
+}
+
+.error-support-phrase {
+    font-size: 1.1em;
+    color: #729aff;
+    font-weight: 600;
+    margin-top: 10px;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.7s both;
+}
+
+.error-btn {
+    background: linear-gradient(45deg, #729aff, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.15em;
+    font-weight: 700;
+    padding: 18px 44px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(.4, 2, .6, 1);
+    margin-top: 10px;
+    text-decoration: none;
+    box-shadow: 0 8px 32px #729aff40;
+    animation: fadeInUp 0.7s cubic-bezier(.4, 2, .6, 1) 0.6s both;
+}
+
+.error-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 16px 40px #729aff40;
+    color: #fff;
+}
+
+.floating-heart {
+    position: absolute;
+    left: 60%;
+    top: 18%;
+    width: 38px;
+    height: 38px;
+    z-index: 2;
+    pointer-events: none;
+    animation: heartFloat 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes heartFloat {
+    0% {
+        transform: translateY(0) scale(1) rotate(-10deg);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: translateY(-18px) scale(1.1) rotate(8deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-32px) scale(1.05) rotate(-8deg);
+        opacity: 0.8;
+    }
+}
+
+.robot-eye {
+    transform-origin: center;
+    animation: eyeMove 3.5s cubic-bezier(.4, 2, .6, 1) infinite alternate;
+}
+
+@keyframes eyeMove {
+    0% {
+        transform: translateX(0) scaleY(1);
+    }
+
+    10% {
+        transform: translateX(2px) scaleY(1);
+    }
+
+    20% {
+        transform: translateX(-2px) scaleY(1);
+    }
+
+    30% {
+        transform: translateX(1px) scaleY(1);
+    }
+
+    40% {
+        transform: translateX(-1px) scaleY(1);
+    }
+
+    50% {
+        transform: translateX(0) scaleY(0.7);
+    }
+
+    52% {
+        transform: translateX(0) scaleY(1);
+    }
+
+    100% {
+        transform: translateX(0) scaleY(1);
+    }
+}
+
+@media (max-width: 600px) {
+    .error-hero {
+        min-height: 70vh;
+    }
+
+    .error-illustration {
+        width: 120px;
+        height: 120px;
+    }
+
+    .error-code {
+        font-size: 2.5em;
+    }
+
+    .error-title {
+        font-size: 1.3em;
+    }
+
+    .error-message {
+        font-size: 1em;
+    }
+
+    .error-btn {
+        font-size: 1em;
+        padding: 14px 24px;
+    }
+
+    .floating-heart {
+        width: 24px;
+        height: 24px;
+        left: 70%;
+        top: 10%;
+    }
+}

@@ -1,616 +1,530 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Задача — {{ username }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='style.css') }}"
-      rel="stylesheet"
-    />
-    <!-- Quill.js -->
-    <link
-      href="https://cdn.quilljs.com/1.3.6/quill.snow.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-  </head>
-  <body>
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="topbar-left">
-          <span class="material-icons">grid_view</span>
-          <b>Kanban Board</b>
-        </div>
-        <button class="theme-toggle-btn" id="theme-toggle-btn" type="button">
-          <span class="material-icons" id="theme-icon">dark_mode</span>
-        </button>
-      </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="task-view-main">
-      <div class="task-view-container">
+<head>
+  <meta charset="UTF-8" />
+  <title>Задача — {{ username }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+  <!-- Quill.js -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
+  <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
+
+  <!-- CSRF Token -->
+  <script>
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // Функция для добавления CSRF-токена в заголовки
+    function getHeaders(contentType = 'application/json') {
+      const headers = {
+        'X-CSRF-Token': CSRF_TOKEN
+      };
+      if (contentType) {
+        headers['Content-Type'] = contentType;
+      }
+      return headers;
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span class="material-icons logo-icon">grid_view</span>
+        <span class="logo-text">Kanban Board</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="task-view-main">
+    <div class="task-view-bg-gradient"></div>
+    <div class="task-view-center">
+      <div class="task-view-card animated-fade-in">
         <div class="task-view-header">
-          <button class="back-btn" onclick="goBack()">
+          <button class="btn btn-secondary back-btn" onclick="goBack()">
             <span class="material-icons">arrow_back</span>
             Назад к доске
           </button>
           <div class="task-actions">
-            <button class="edit-task-btn" id="edit-task-btn">
+            <button class="btn edit-task-btn" id="edit-task-btn">
               <span class="material-icons">edit</span>
               Редактировать
             </button>
-            <button class="delete-task-btn" id="delete-task-btn">
+            <button class="btn btn-danger delete-task-btn" id="delete-task-btn">
               <span class="material-icons">delete</span>
               Удалить
             </button>
           </div>
         </div>
-
-        <div class="task-view-content" id="task-view-content">
-          <!-- Контент будет загружен через JavaScript -->
+        <div class="task-inner-card">
+          <div class="task-inner-header">
+            <div class="task-view-title" id="task-title"></div>
+            <div class="task-view-meta" id="task-meta"></div>
+            <div class="task-view-tags" id="task-tags"></div>
+          </div>
+          <div class="task-view-description">
+            <div class="task-view-desc-title">Описание</div>
+            <div class="task-description-content" id="task-desc"></div>
+          </div>
+          <div class="task-view-info" id="task-info"></div>
         </div>
       </div>
-    </main>
-
-    <!-- Модалка редактирования -->
-    <div class="modal-backdrop" id="edit-modal" style="display: none">
-      <div class="modal modal-task">
-        <button
-          class="modal-close"
-          onclick="closeEditModal()"
-          type="button"
-          title="Закрыть"
-        >
-          <span class="material-icons">close</span>
-        </button>
-        <div class="modal-title">Редактировать задачу</div>
-        <form class="modal-form" id="edit-form" autocomplete="off">
-          <input type="hidden" name="task_id" id="edit_task_id" />
-          <div class="modal-field">
-            <label for="edit_task_text"
-              ><span class="material-icons">title</span> Название задачи</label
-            >
-            <input
-              type="text"
-              name="task_text"
-              id="edit_task_text"
-              placeholder="Название задачи"
-              required
-              maxlength="80"
-            />
-          </div>
-          <div class="modal-field">
-            <label for="edit_task_status"
-              ><span class="material-icons">flag</span> Статус</label
-            >
-            <select name="task_status" id="edit_task_status" required></select>
-          </div>
-          <div class="modal-field">
-            <label class="date-label" for="edit_task_due"
-              ><span class="material-icons date-icon">event</span> Срок
-              выполнения</label
-            >
-            <input
-              type="date"
-              name="task_due"
-              id="edit_task_due"
-              class="date-input"
-              placeholder="Выберите дату"
-            />
-          </div>
-          <div class="modal-field">
-            <label><span class="material-icons">label</span> Теги</label>
-            <div
-              class="task-tags-select"
-              id="edit_tags_container"
-              style="margin-bottom: 8px"
-            ></div>
-          </div>
-          <div class="modal-field">
-            <label for="edit_task_description_editor"
-              ><span class="material-icons">description</span> Описание</label
-            >
-            <div id="edit_task_description_editor" style="height: 200px"></div>
-          </div>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="plus-btn cancel-btn"
-              onclick="closeEditModal()"
-            >
-              <span class="material-icons">close</span>Отмена
-            </button>
-            <button type="submit" class="plus-btn modal-save-btn">
-              <span class="material-icons">save</span>Сохранить
-            </button>
-          </div>
-          <div id="edit-error" class="modal-error"></div>
-        </form>
-      </div>
     </div>
+  </main>
 
-    <!-- Модалка профиля -->
-    <div class="modal-backdrop" id="profile-modal" style="display: none">
-      <div class="modal profile-modal">
-        <button class="modal-close" onclick="closeProfileModal()">
-          &times;
-        </button>
-        <div class="modal-title">Профиль пользователя</div>
-        <div class="profile-content">
-          <div class="profile-avatar">
-            <span class="profile-avatar-initial">
-              <span class="profile-avatar-initial-inner"
-                >{{ username[0]|upper }}</span
-              >
-            </span>
+  <!-- Модалка редактирования -->
+  <div class="modal-backdrop" id="edit-modal" style="display: none">
+    <div class="modal modal-task">
+      <button class="modal-close" onclick="closeEditModal()" type="button" title="Закрыть">
+        <span class="material-icons">close</span>
+      </button>
+      <div class="modal-title">Редактировать задачу</div>
+      <form class="modal-form" id="edit-form" autocomplete="off">
+        <input type="hidden" name="task_id" id="edit_task_id" />
+        <div class="modal-field">
+          <label for="edit_task_text"><span class="material-icons">title</span> Название задачи</label>
+          <input type="text" name="task_text" id="edit_task_text" placeholder="Название задачи" required
+            maxlength="80" />
+        </div>
+        <div class="modal-field">
+          <label for="edit_task_status"><span class="material-icons">flag</span> Статус</label>
+          <select name="task_status" id="edit_task_status" required></select>
+        </div>
+        <div class="modal-field">
+          <label class="date-label" for="edit_task_due"><span class="material-icons date-icon">event</span> Срок
+            выполнения</label>
+          <input type="date" name="task_due" id="edit_task_due" class="date-input" placeholder="Выберите дату" />
+        </div>
+        <div class="modal-field">
+          <label><span class="material-icons">label</span> Теги</label>
+          <div class="task-tags-select" id="edit_tags_container" style="margin-bottom: 8px"></div>
+        </div>
+        <div class="modal-field">
+          <label for="edit_task_description_editor"><span class="material-icons">description</span> Описание</label>
+          <div id="edit_task_description_editor" style="height: 200px"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="plus-btn cancel-btn" onclick="closeEditModal()">
+            <span class="material-icons">close</span>Отмена
+          </button>
+          <button type="submit" class="plus-btn modal-save-btn">
+            <span class="material-icons">save</span>Сохранить
+          </button>
+        </div>
+        <div id="edit-error" class="modal-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модалка профиля -->
+  <div class="modal-backdrop" id="profile-modal" style="display: none">
+    <div class="modal profile-modal">
+      <button class="modal-close" onclick="closeProfileModal()">
+        &times;
+      </button>
+      <div class="modal-title">Профиль пользователя</div>
+      <div class="profile-content">
+        <div class="profile-avatar">
+          <span class="profile-avatar-initial">{{ username[0]|upper }}</span>
+        </div>
+        <div class="profile-info">
+          <div class="profile-field">
+            <label>Имя пользователя:</label>
+            <span id="profile-username">{{ username }}</span>
           </div>
-          <div class="profile-info">
-            <div class="profile-field">
-              <label>Имя пользователя:</label>
-              <span id="profile-username">{{ username }}</span>
-            </div>
-            <div class="profile-field">
-              <label>Email:</label>
-              <span id="profile-email">-</span>
-            </div>
-            <div class="profile-field">
-              <label>Страна:</label>
-              <span id="profile-country">-</span>
-            </div>
-            <div class="profile-field">
-              <label>Полное имя:</label>
-              <span id="profile-fullname">-</span>
-            </div>
+          <div class="profile-field">
+            <label>Email:</label>
+            <span id="profile-email">-</span>
+          </div>
+          <div class="profile-field">
+            <label>Страна:</label>
+            <span id="profile-country">-</span>
+          </div>
+          <div class="profile-field">
+            <label>Полное имя:</label>
+            <span id="profile-fullname">-</span>
           </div>
         </div>
-        <button class="profile-close" onclick="closeProfileModal()">
-          Закрыть
-        </button>
       </div>
+      <button class="profile-close" onclick="closeProfileModal()">
+        Закрыть
+      </button>
     </div>
+  </div>
 
-    <!-- Модалка смены пароля -->
-    <div
-      class="modal-backdrop"
-      id="change-password-modal"
-      style="display: none"
-    >
-      <div class="modal">
-        <button class="modal-close" onclick="closeChangePasswordModal()">
-          &times;
-        </button>
-        <div class="modal-title">Сменить пароль</div>
-        <form class="modal-form" id="change-password-form" autocomplete="off">
-          <div class="modal-field">
-            <label for="old_password">
-              <span class="material-icons">lock</span> Текущий пароль
-            </label>
-            <input
-              type="password"
-              name="old_password"
-              id="old_password"
-              placeholder="Введите текущий пароль"
-              required
-            />
-          </div>
-          <div class="modal-field">
-            <label for="new_password">
-              <span class="material-icons">lock_outline</span> Новый пароль
-            </label>
-            <input
-              type="password"
-              name="new_password"
-              id="new_password"
-              placeholder="Введите новый пароль"
-              required
-            />
-          </div>
-          <div class="modal-field">
-            <label for="new_password2">
-              <span class="material-icons">lock_outline</span> Подтвердите
-              пароль
-            </label>
-            <input
-              type="password"
-              name="new_password2"
-              id="new_password2"
-              placeholder="Повторите новый пароль"
-              required
-            />
-          </div>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="cancel-btn"
-              onclick="closeChangePasswordModal()"
-            >
-              Отмена
-            </button>
-            <button type="submit" class="save-btn">
-              <span class="material-icons">save</span>
-              Сменить пароль
-            </button>
-          </div>
-          <div id="change-password-error" class="modal-error"></div>
-        </form>
-      </div>
+  <!-- Модалка смены пароля -->
+  <div class="modal-backdrop" id="change-password-modal" style="display: none">
+    <div class="modal">
+      <button class="modal-close" onclick="closeChangePasswordModal()">
+        &times;
+      </button>
+      <div class="modal-title">Сменить пароль</div>
+      <form class="modal-form" id="change-password-form" autocomplete="off">
+        <div class="modal-field">
+          <label for="old_password">
+            <span class="material-icons">lock</span> Текущий пароль
+          </label>
+          <input type="password" name="old_password" id="old_password" placeholder="Введите текущий пароль" required />
+        </div>
+        <div class="modal-field">
+          <label for="new_password">
+            <span class="material-icons">lock_outline</span> Новый пароль
+          </label>
+          <input type="password" name="new_password" id="new_password" placeholder="Введите новый пароль" required />
+        </div>
+        <div class="modal-field">
+          <label for="new_password2">
+            <span class="material-icons">lock_outline</span> Подтвердите
+            пароль
+          </label>
+          <input type="password" name="new_password2" id="new_password2" placeholder="Повторите новый пароль"
+            required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick="closeChangePasswordModal()">
+            Отмена
+          </button>
+          <button type="submit" class="save-btn">
+            <span class="material-icons">save</span>
+            Сменить пароль
+          </button>
+        </div>
+        <div id="change-password-error" class="modal-error"></div>
+      </form>
     </div>
+  </div>
 
-    <script>
-      const USERNAME = "{{ username }}";
-      const TASK_ID = {{ task_id }};
-      let TASK_DATA = null;
-      let STATUSES = [];
-      let editQuill = null;
+  <script>
+    let USERNAME = {{ username| tojson }};
+    let TASK_ID = {{ task_id| tojson }};
+    let TASK_DATA = null;
+    let STATUSES = [];
+    let editQuill = null;
 
-      // ===================== Theme =====================
-      function setTheme(dark) {
-        if (dark) {
-          document.body.classList.add("dark");
-          localStorage.setItem("kanban-theme", "dark");
-          document.getElementById("theme-icon").innerText = "light_mode";
-        } else {
-          document.body.classList.remove("dark");
-          localStorage.setItem("kanban-theme", "light");
-          document.getElementById("theme-icon").innerText = "dark_mode";
-        }
-      }
-      document.getElementById("theme-toggle-btn").onclick = function () {
-        setTheme(!document.body.classList.contains("dark"));
-      };
-      (function () {
-        const theme = localStorage.getItem("kanban-theme");
-        setTheme(theme === "dark");
-      })();
+    // ===================== Загрузка данных =====================
+    async function loadTaskData() {
+      try {
+        const response = await fetch(`/${USERNAME}/api/tasks`, { headers: getHeaders() });
+        const tasks = await response.json();
+        TASK_DATA = tasks.find(task => task.id == TASK_ID);
 
-      // ===================== Загрузка данных =====================
-      async function loadTaskData() {
-        try {
-          const response = await fetch(`/${USERNAME}/api/tasks`);
-          const tasks = await response.json();
-          TASK_DATA = tasks.find(task => task.id == TASK_ID);
-
-          if (!TASK_DATA) {
-            document.getElementById('task-view-content').innerHTML =
-              '<div class="error-message">Задача не найдена</div>';
-            return;
-          }
-
-          renderTaskView();
-        } catch (error) {
-          console.error('Ошибка загрузки задачи:', error);
+        if (!TASK_DATA) {
           document.getElementById('task-view-content').innerHTML =
-            '<div class="error-message">Ошибка загрузки задачи</div>';
-        }
-      }
-
-      async function loadStatuses() {
-        try {
-          const response = await fetch(`/${USERNAME}/api/statuses`);
-          STATUSES = await response.json();
-        } catch (error) {
-          console.error('Ошибка загрузки статусов:', error);
-          STATUSES = [];
-        }
-      }
-
-      // ===================== Рендер задачи =====================
-      function renderTaskView() {
-        if (!TASK_DATA) return;
-
-        const content = document.getElementById('task-view-content');
-        content.innerHTML = `
-          <div class="task-view-card">
-            <div class="task-view-header-info">
-              <h1 class="task-view-title">${escapeHTML(TASK_DATA.text)}</h1>
-              <div class="task-view-meta">
-                <span class="task-status-badge">${getStatusTitle(TASK_DATA.status)}</span>
-                ${TASK_DATA.due_date ? `<span class="task-date-badge">${formatDate(TASK_DATA.due_date)}</span>` : ''}
-              </div>
-            </div>
-
-            ${renderTags(TASK_DATA.tags)}
-
-            <div class="task-view-description">
-              <h3>Описание</h3>
-              <div class="task-description-content">${TASK_DATA.description || '<em>Описание отсутствует</em>'}</div>
-            </div>
-
-            <div class="task-view-info">
-              <div class="task-info-item">
-                <span class="material-icons">person</span>
-                <span>Обновлено: ${TASK_DATA.updated_by_name || 'Неизвестно'}</span>
-              </div>
-              <div class="task-info-item">
-                <span class="material-icons">schedule</span>
-                <span>${formatDateTime(TASK_DATA.updated_at)}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      // ===================== Редактирование =====================
-      function openEditModal() {
-        if (!TASK_DATA) return;
-        document.getElementById('edit_task_id').value = TASK_DATA.id;
-        document.getElementById('edit_task_text').value = TASK_DATA.text;
-        document.getElementById('edit_task_status').innerHTML = STATUSES.map(status =>
-          `<option value="${status.code}" ${status.code === TASK_DATA.status ? 'selected' : ''}>${status.title}</option>`
-        ).join('');
-        document.getElementById('edit_task_due').value = TASK_DATA.due_date || '';
-        // Корректная инициализация Quill
-        if (window.editQuill) {
-          window.editQuill = null;
-          document.getElementById('edit_task_description_editor').innerHTML = '';
-        }
-        document.getElementById('edit_task_description_editor').innerHTML = '';
-        window.editQuill = new Quill('#edit_task_description_editor', {
-          theme: 'snow',
-          modules: {
-            toolbar: [
-              ['bold', 'italic', 'underline', 'strike'],
-              ['blockquote', 'code-block'],
-              [{ 'header': 1 }, { 'header': 2 }],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              [{ 'script': 'sub'}, { 'script': 'super' }],
-              [{ 'indent': '-1'}, { 'indent': '+1' }],
-              [{ 'direction': 'rtl' }],
-              [{ 'size': ['small', false, 'large', 'huge'] }],
-              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-              [{ 'color': [] }, { 'background': [] }],
-              [{ 'font': [] }],
-              [{ 'align': [] }],
-              ['clean'],
-              ['link', 'image']
-            ]
-          },
-          placeholder: 'Описание задачи...'
-        });
-        window.editQuill.root.innerHTML = TASK_DATA.description || '';
-        renderEditTags();
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('edit-error').innerText = '';
-      }
-
-      function closeEditModal() {
-        document.getElementById('edit-modal').style.display = 'none';
-        if (window.editQuill) {
-          window.editQuill = null;
-          document.getElementById('edit_task_description_editor').innerHTML = '';
-        }
-        // Сброс тегов
-        document.querySelectorAll('#edit_tags_container .tag-badge').forEach(b => b.classList.remove('selected'));
-        document.getElementById('edit-form').reset();
-        document.getElementById('edit-error').innerText = '';
-      }
-
-      function renderEditTags() {
-        const container = document.getElementById('edit_tags_container');
-        const availableTags = [
-          { tag: 'Срочно', class: 'tag-sos' },
-          { tag: 'Баг', class: 'tag-bug' },
-          { tag: 'Улучшение', class: 'tag-feature' },
-          { tag: 'Обсудить', class: 'tag-discuss' },
-          { tag: 'Документы', class: 'tag-docs' }
-        ];
-        const selected = TASK_DATA.tags || [];
-        container.innerHTML = availableTags.map(t =>
-          `<span class="tag-badge ${t.class}${selected.includes(t.tag) ? ' selected' : ''}" data-tag="${t.tag}">${t.tag}</span>`
-        ).join('');
-        container.querySelectorAll('.tag-badge').forEach(badge => {
-          badge.onclick = function () {
-            badge.classList.toggle('selected');
-          };
-        });
-      }
-
-      // ===================== Обработчики =====================
-      document.getElementById('edit-task-btn').onclick = function() {
-        window.location.href = `/${USERNAME}/task/${TASK_ID}/edit`;
-      };
-
-      document.getElementById('delete-task-btn').onclick = async function() {
-        if (!confirm('Удалить задачу?')) return;
-
-        try {
-          const response = await fetch(`/${USERNAME}/api/tasks/${TASK_ID}`, {
-            method: 'DELETE'
-          });
-
-          if (response.ok) {
-            goBack();
-          } else {
-            alert('Ошибка удаления задачи');
-          }
-        } catch (error) {
-          console.error('Ошибка удаления:', error);
-          alert('Ошибка удаления задачи');
-        }
-      };
-
-      document.getElementById('edit-form').onsubmit = async function(e) {
-        e.preventDefault();
-        const formData = {
-          text: document.getElementById('edit_task_text').value.trim(),
-          description: window.editQuill ? window.editQuill.root.innerHTML : '',
-          status: document.getElementById('edit_task_status').value,
-          due_date: document.getElementById('edit_task_due').value || null,
-          tags: Array.from(document.querySelectorAll('#edit_tags_container .tag-badge.selected')).map(b => b.dataset.tag)
-        };
-        try {
-          const response = await fetch(`/${USERNAME}/api/tasks/${TASK_ID}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-          });
-          if (response.ok) {
-            closeEditModal();
-            await loadTaskData();
-          } else {
-            const data = await response.json();
-            document.getElementById('edit-error').innerText = data.error || 'Ошибка сохранения';
-          }
-        } catch (error) {
-          document.getElementById('edit-error').innerText = 'Ошибка сохранения';
-        }
-      };
-
-      // ===================== Профиль =====================
-      // Удаляем обращение к несуществующему profile-btn
-      // document.getElementById('profile-btn').onclick = async function() {
-      //   userDropdown.classList.remove("show");
-      //   try {
-      //     const response = await fetch(`/api/profile/${USERNAME}`);
-      //     const data = await response.json();
-
-      //     document.getElementById('profile-username').innerHTML = `<span>${data.username}</span>`;
-      //     document.getElementById('profile-email').textContent = data.email || "-";
-      //     document.getElementById('profile-country').textContent = data.country || "-";
-      //     document.getElementById('profile-fullname').textContent = data.fullname || "-";
-
-      //     document.getElementById('profile-modal').style.display = 'flex';
-      //   } catch (error) {
-      //     console.error('Ошибка загрузки профиля:', error);
-      //   }
-      // };
-
-      // document.getElementById('change-password-btn').onclick = function() {
-      //   userDropdown.classList.remove("show");
-      //   document.getElementById('change-password-modal').style.display = 'flex';
-      //   document.getElementById('change-password-error').innerText = '';
-      // };
-
-      // ===================== Смена пароля =====================
-      document.getElementById('change-password-form').onsubmit = async function(e) {
-        e.preventDefault();
-
-        const oldPass = document.getElementById('old_password').value;
-        const newPass = document.getElementById('new_password').value;
-        const newPass2 = document.getElementById('new_password2').value;
-        const errorEl = document.getElementById('change-password-error');
-
-        if (newPass !== newPass2) {
-          errorEl.innerText = "Пароли не совпадают!";
+            '<div class="error-message">Задача не найдена</div>';
           return;
         }
 
-        try {
-          const response = await fetch(`/${USERNAME}/api/change_password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              old_password: oldPass,
-              new_password: newPass
-            })
-          });
-
-          if (response.ok) {
-            errorEl.style.color = "#32c964";
-            errorEl.innerText = "Пароль изменён!";
-            setTimeout(closeChangePasswordModal, 900);
-          } else {
-            const data = await response.json();
-            errorEl.style.color = "#d11a2a";
-            errorEl.innerText = data.error || "Ошибка смены пароля!";
-          }
-        } catch (error) {
-          errorEl.style.color = "#d11a2a";
-          errorEl.innerText = "Ошибка смены пароля!";
-        }
-      };
-
-      // ===================== Утилиты =====================
-      function escapeHTML(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        renderTaskView();
+      } catch (error) {
+        console.error('Ошибка загрузки задачи:', error);
+        document.getElementById('task-view-content').innerHTML =
+          '<div class="error-message">Ошибка загрузки задачи</div>';
       }
+    }
 
-      function formatDate(dateStr) {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('ru-RU');
+    async function loadStatuses() {
+      try {
+        const response = await fetch(`/${USERNAME}/api/statuses`, { headers: getHeaders() });
+        STATUSES = await response.json();
+      } catch (error) {
+        console.error('Ошибка загрузки статусов:', error);
+        STATUSES = [];
       }
+    }
 
-      function formatDateTime(dateStr) {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        return date.toLocaleString('ru-RU');
+    // ===================== Рендер задачи =====================
+    function renderTaskView() {
+      if (!TASK_DATA) return;
+      document.getElementById('task-title').innerHTML = escapeHTML(TASK_DATA.text);
+      document.getElementById('task-meta').innerHTML = `
+        <span class="task-status-badge">${getStatusTitle(TASK_DATA.status)}</span>
+        ${TASK_DATA.due_date ? `<span class="task-date-badge">${formatDate(TASK_DATA.due_date)}</span>` : ''}
+      `;
+      document.getElementById('task-tags').innerHTML = renderTags(TASK_DATA.tags);
+      document.getElementById('task-desc').innerHTML = `<div class='task-desc-block'>${TASK_DATA.description || '<em>Описание отсутствует</em>'}</div>`;
+      document.getElementById('task-info').innerHTML = `
+        <div class="task-info-item"><span class="material-icons">person</span>Обновлено: ${TASK_DATA.updated_by_name || 'Неизвестно'}</div>
+        <div class="task-info-item"><span class="material-icons">schedule</span>${formatDateTime(TASK_DATA.updated_at)}</div>
+      `;
+    }
+
+    // ===================== Редактирование =====================
+    function openEditModal() {
+      if (!TASK_DATA) return;
+      document.getElementById('edit_task_id').value = TASK_DATA.id;
+      document.getElementById('edit_task_text').value = TASK_DATA.text;
+      document.getElementById('edit_task_status').innerHTML = STATUSES.map(status =>
+        `<option value="${status.code}" ${status.code === TASK_DATA.status ? 'selected' : ''}>${status.title}</option>`
+      ).join('');
+      document.getElementById('edit_task_due').value = TASK_DATA.due_date || '';
+      // Корректная инициализация Quill
+      if (window.editQuill) {
+        window.editQuill = null;
+        document.getElementById('edit_task_description_editor').innerHTML = '';
       }
-
-      function getStatusTitle(statusCode) {
-        const status = STATUSES.find(s => s.code === statusCode);
-        return status ? status.title : statusCode;
-      }
-
-      function goBack() {
-        // Если есть referrer и он содержит '/edit', возвращаем на /USERNAME/kanban
-        if (document.referrer && document.referrer.includes('/edit')) {
-          window.location.href = `/${USERNAME}/kanban`;
-        } else {
-          window.history.back();
-        }
-      }
-
-      function closeProfileModal() {
-        document.getElementById('profile-modal').style.display = 'none';
-      }
-
-      function closeChangePasswordModal() {
-        document.getElementById('change-password-modal').style.display = 'none';
-        document.getElementById('change-password-form').reset();
-      }
-
-      // ===================== Инициализация =====================
-      document.addEventListener('DOMContentLoaded', async function() {
-        await loadStatuses();
-        await loadTaskData();
+      document.getElementById('edit_task_description_editor').innerHTML = '';
+      window.editQuill = new Quill('#edit_task_description_editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+            ['clean'],
+            ['link', 'image']
+          ]
+        },
+        placeholder: 'Описание задачи...'
       });
+      window.editQuill.root.innerHTML = TASK_DATA.description || '';
+      renderEditTags();
+      document.getElementById('edit-modal').style.display = 'flex';
+      document.getElementById('edit-error').innerText = '';
+    }
 
-      // Закрытие модалок по клику вне окна
-      document.getElementById('edit-modal').onclick = function(e) {
-        if (e.target === this) closeEditModal();
-      };
-      document.getElementById('profile-modal').onclick = function(e) {
-        if (e.target === this) closeProfileModal();
-      };
-      document.getElementById('change-password-modal').onclick = function(e) {
-        if (e.target === this) closeChangePasswordModal();
-      };
+    function closeEditModal() {
+      document.getElementById('edit-modal').style.display = 'none';
+      if (window.editQuill) {
+        window.editQuill = null;
+        document.getElementById('edit_task_description_editor').innerHTML = '';
+      }
+      // Сброс тегов
+      document.querySelectorAll('#edit_tags_container .tag-badge').forEach(b => b.classList.remove('selected'));
+      document.getElementById('edit-form').reset();
+      document.getElementById('edit-error').innerText = '';
+    }
 
-      // JS: красивые теги в просмотре задачи
-      function renderTags(tags) {
-        if (!tags || !tags.length) return "";
-        return `<div class='task-view-tags'>` + tags.map(tag => `<span class='task-tag tag-${tag.toLowerCase()}'>${escapeHTML(tag)}</span>`).join("") + `</div>`;
+    function renderEditTags() {
+      const container = document.getElementById('edit_tags_container');
+      const availableTags = [
+        { tag: 'Срочно', class: 'tag-sos' },
+        { tag: 'Баг', class: 'tag-bug' },
+        { tag: 'Улучшение', class: 'tag-feature' },
+        { tag: 'Обсудить', class: 'tag-discuss' },
+        { tag: 'Документы', class: 'tag-docs' }
+      ];
+      const selected = TASK_DATA.tags || [];
+      container.innerHTML = availableTags.map(t =>
+        `<span class="tag-badge ${t.class}${selected.includes(t.tag) ? ' selected' : ''}" data-tag="${t.tag}">${t.tag}</span>`
+      ).join('');
+      container.querySelectorAll('.tag-badge').forEach(badge => {
+        badge.onclick = function () {
+          badge.classList.toggle('selected');
+        };
+      });
+    }
+
+    // ===================== Обработчики =====================
+    document.getElementById('edit-task-btn').onclick = function () {
+      window.location.href = `/${USERNAME}/task/${TASK_ID}/edit`;
+    };
+
+    document.getElementById('delete-task-btn').onclick = async function () {
+      if (!confirm('Удалить задачу?')) return;
+
+      try {
+        const response = await fetch(`/${USERNAME}/api/tasks/${TASK_ID}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+
+        if (response.ok) {
+          goBack();
+        } else {
+          alert('Ошибка удаления задачи');
+        }
+      } catch (error) {
+        console.error('Ошибка удаления:', error);
+        alert('Ошибка удаления задачи');
+      }
+    };
+
+    document.getElementById('edit-form').onsubmit = async function (e) {
+      e.preventDefault();
+      const formData = {
+        text: document.getElementById('edit_task_text').value.trim(),
+        description: window.editQuill ? window.editQuill.root.innerHTML : '',
+        status: document.getElementById('edit_task_status').value,
+        due_date: document.getElementById('edit_task_due').value || null,
+        tags: Array.from(document.querySelectorAll('#edit_tags_container .tag-badge.selected')).map(b => b.dataset.tag)
+      };
+      try {
+        const response = await fetch(`/${USERNAME}/api/tasks/${TASK_ID}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify(formData)
+        });
+        if (response.ok) {
+          closeEditModal();
+          await loadTaskData();
+        } else {
+          const data = await response.json();
+          document.getElementById('edit-error').innerText = data.error || 'Ошибка сохранения';
+        }
+      } catch (error) {
+        document.getElementById('edit-error').innerText = 'Ошибка сохранения';
+      }
+    };
+
+    // ===================== Профиль =====================
+    // Удаляем обращение к несуществующему profile-btn
+    // document.getElementById('profile-btn').onclick = async function() {
+    //   userDropdown.classList.remove("show");
+    //   try {
+    //     const response = await fetch(`/api/profile/${USERNAME}`);
+    //     const data = await response.json();
+
+    //     document.getElementById('profile-username').innerHTML = `<span>${data.username}</span>`;
+    //     document.getElementById('profile-email').textContent = data.email || "-";
+    //     document.getElementById('profile-country').textContent = data.country || "-";
+    //     document.getElementById('profile-fullname').textContent = data.fullname || "-";
+
+    //     document.getElementById('profile-modal').style.display = 'flex';
+    //   } catch (error) {
+    //     console.error('Ошибка загрузки профиля:', error);
+    //   }
+    // };
+
+    // document.getElementById('change-password-btn').onclick = function() {
+    //   userDropdown.classList.remove("show");
+    //   document.getElementById('change-password-modal').style.display = 'flex';
+    //   document.getElementById('change-password-error').innerText = '';
+    // };
+
+    // ===================== Смена пароля =====================
+    document.getElementById('change-password-form').onsubmit = async function (e) {
+      e.preventDefault();
+
+      const oldPass = document.getElementById('old_password').value;
+      const newPass = document.getElementById('new_password').value;
+      const newPass2 = document.getElementById('new_password2').value;
+      const errorEl = document.getElementById('change-password-error');
+
+      if (newPass !== newPass2) {
+        errorEl.innerText = "Пароли не совпадают!";
+        return;
       }
 
-      // JS: закрытие модалки по крестику и клику вне окна
-      function bindModalCloseHandlers() {
-        document.querySelectorAll(".modal-close").forEach((btn) => {
-          btn.onclick = function (e) {
-            const modal = btn.closest(".modal-backdrop");
-            if (modal) modal.style.display = "none";
-          };
+      try {
+        const response = await fetch(`/${USERNAME}/api/change_password`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            old_password: oldPass,
+            new_password: newPass
+          })
         });
-        document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
-          backdrop.onclick = function (e) {
-            if (e.target === this) this.style.display = "none";
-          };
-        });
+
+        if (response.ok) {
+          errorEl.style.color = "#32c964";
+          errorEl.innerText = "Пароль изменён!";
+          setTimeout(closeChangePasswordModal, 900);
+        } else {
+          const data = await response.json();
+          errorEl.style.color = "#d11a2a";
+          errorEl.innerText = data.error || "Ошибка смены пароля!";
+        }
+      } catch (error) {
+        errorEl.style.color = "#d11a2a";
+        errorEl.innerText = "Ошибка смены пароля!";
       }
-      bindModalCloseHandlers();
-    </script>
-  </body>
+    };
+
+    // ===================== Утилиты =====================
+    function escapeHTML(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('ru-RU');
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleString('ru-RU');
+    }
+
+    function getStatusTitle(statusCode) {
+      const status = STATUSES.find(s => s.code === statusCode);
+      return status ? status.title : statusCode;
+    }
+
+    function goBack() {
+      // Если есть referrer и он содержит '/edit', возвращаем на /USERNAME/kanban
+      if (document.referrer && document.referrer.includes('/edit')) {
+        window.location.href = `/${USERNAME}/kanban`;
+      } else {
+        window.history.back();
+      }
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').style.display = 'none';
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('change-password-modal').style.display = 'none';
+      document.getElementById('change-password-form').reset();
+    }
+
+    // ===================== Инициализация =====================
+    document.addEventListener('DOMContentLoaded', async function () {
+      await loadStatuses();
+      await loadTaskData();
+    });
+
+    // Закрытие модалок по клику вне окна
+    document.getElementById('edit-modal').onclick = function (e) {
+      if (e.target === this) closeEditModal();
+    };
+    document.getElementById('profile-modal').onclick = function (e) {
+      if (e.target === this) closeProfileModal();
+    };
+    document.getElementById('change-password-modal').onclick = function (e) {
+      if (e.target === this) closeChangePasswordModal();
+    };
+
+    // JS: красивые теги в просмотре задачи
+    function renderTags(tags) {
+      if (!tags || !tags.length) return "";
+      return `<div class='task-view-tags'>` + tags.map(tag => `<span class='task-tag tag-${tag.toLowerCase()}'>${escapeHTML(tag)}</span>`).join("") + `</div>`;
+    }
+
+    // JS: закрытие модалки по крестику и клику вне окна
+    function bindModalCloseHandlers() {
+      document.querySelectorAll(".modal-close").forEach((btn) => {
+        btn.onclick = function (e) {
+          const modal = btn.closest(".modal-backdrop");
+          if (modal) modal.style.display = "none";
+        };
+      });
+      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
+        backdrop.onclick = function (e) {
+          if (e.target === this) this.style.display = "none";
+        };
+      });
+    }
+    bindModalCloseHandlers();
+  </script>
+</body>
+
 </html>
