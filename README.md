@@ -14,13 +14,11 @@
 
 ---
 
-## 🌐 **Живые демо**
+## 🌐 Живые демо
 
-**🇷🇺 [Работающие демо](https://kanban.yafoxin.ru)**  
-[![Kanban.yafoxin.ru](https://img.shields.io/badge/kanban.yafoxin.ru-222222?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.ru)
+**🇷🇺 Работающее демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru) [![RU Demo](https://img.shields.io/badge/kanban.yafoxin.ru-1976d2?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.ru)
 
-**🇺🇸 [Live Demo](https://kanban.yafoxin.tech)**  
-[![Kanban.yafoxin.tech](https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.tech)
+**🇺🇸 Live Demo:** [kanban.yafoxin.tech](https://kanban.yafoxin.tech) [![EN Demo](https://img.shields.io/badge/kanban.yafoxin.tech-0057b7?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://kanban.yafoxin.tech)
 
 ---
 
