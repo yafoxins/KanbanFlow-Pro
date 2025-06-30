@@ -1,8 +1,42 @@
 <div align="center">
 
-# 🚀 KanbanFlow Pro
+# <span style="background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradient 3s ease infinite; font-size: 2.5em; font-weight: bold;">🚀 KanbanFlow Pro</span>
 
-**Современная канбан-доска и система управления задачами**
+<style>
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animated-text {
+  animation: fadeInUp 1s ease-out;
+}
+
+.pulse-emoji {
+  animation: pulse 2s infinite;
+  display: inline-block;
+}
+</style>
+
+**<span class="animated-text">Современная канбан-доска и система управления задачами</span>**
 
 [![Flask](https://img.shields.io/badge/Flask-2.3.3+-blue.svg)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-green.svg)](https://www.postgresql.org/)
@@ -10,7 +44,7 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-5.3.2-orange.svg)](https://github.com/yafoxins/kanban-flask)
 
-> **🎯 Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**
+> **<span class="pulse-emoji">🎯</span> Полнофункциональная система управления проектами с канбан-доской, ToDo-листами и командной работой**
 
 ---
 
@@ -246,12 +280,8 @@ kanban-flask/
 git clone https://github.com/yafoxins/kanban-flask.git
 cd kanban-flask
 
-# Настройка переменных окружения
-cp .env.example .env
-# Отредактировать .env файл
-
 # Запуск
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose up -d
 ```
 
 ### Production без Docker
