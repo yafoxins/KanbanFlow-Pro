@@ -7,10 +7,13 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-COPY app.py .
-COPY static ./static
-COPY templates ./templates
+# Копируем все файлы проекта
+COPY . .
+
+# Создаем директорию для загружаемых файлов
+RUN mkdir -p uploads
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+# По умолчанию запускаем приложение с ботом
+CMD ["python", "start_with_bot.py"]

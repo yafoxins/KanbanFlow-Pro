@@ -7,15 +7,7 @@
     window.CSRF_TOKEN = document.body.dataset.csrfToken || '';
 
     // ========== Utility Functions ==========
-    function getHeaders(contentType = 'application/json') {
-        const headers = {
-            'X-CSRF-Token': window.CSRF_TOKEN || ''
-        };
-        if (contentType) {
-            headers['Content-Type'] = contentType;
-        }
-        return headers;
-    }
+    // Используем глобальную функцию getHeaders
 
     // ========== User Dropdown ==========
     function initUserDropdown() {
@@ -33,257 +25,104 @@
                 e.stopPropagation();
             };
         }
+
+        // Инициализация кнопок в dropdown меню
+        const profileBtn = document.getElementById("profile-btn");
+        const changePasswordBtn = document.getElementById("change-password-btn");
+        const aboutBtn = document.getElementById("about-btn");
+        const logoutBtn = document.getElementById("logout-btn");
+
+        if (profileBtn) {
+            profileBtn.onclick = () => {
+                const userDropdown = document.getElementById("user-dropdown");
+                if (userDropdown) userDropdown.classList.remove("open");
+                if (typeof window.showProfileModal === 'function') {
+                    window.showProfileModal();
+                }
+            };
+        }
+
+        if (changePasswordBtn) {
+            changePasswordBtn.onclick = () => {
+                const userDropdown = document.getElementById("user-dropdown");
+                if (userDropdown) userDropdown.classList.remove("open");
+                if (typeof window.showChangePasswordModal === 'function') {
+                    window.showChangePasswordModal();
+                }
+            };
+        }
+
+        if (aboutBtn) {
+            aboutBtn.onclick = () => {
+                const userDropdown = document.getElementById("user-dropdown");
+                if (userDropdown) userDropdown.classList.remove("open");
+                if (typeof window.showAboutModal === 'function') {
+                    window.showAboutModal();
+                }
+            };
+        }
+
+        if (logoutBtn) {
+            logoutBtn.onclick = () => {
+                const userDropdown = document.getElementById("user-dropdown");
+                if (userDropdown) userDropdown.classList.remove("open");
+
+                if (typeof smoothNavigate === 'function') {
+                    smoothNavigate(`/${USERNAME}/logout`);
+                } else {
+                    if (typeof disconnectAllSockets === 'function') {
+                        disconnectAllSockets();
+                    }
+                    window.location.href = `/${USERNAME}/logout`;
+                }
+            };
+        }
     }
 
     // ========== Profile Modal ==========
-    function initProfileModal() {
-        // === Централизованный режим редактирования профиля ===
-        let profileEditMode = false;
-        const profileForm = document.getElementById('profile-form');
-        const saveBtn = document.getElementById('save-profile-btn');
-        const cancelBtn = document.getElementById('cancel-profile-btn');
-        const errorDiv = document.getElementById('profile-error');
-        const fields = ['email', 'country', 'fullname'];
-
-        function setProfileEditMode(on) {
-            profileEditMode = on;
-            const profileForm = document.getElementById('profile-form');
-            const profileInfo = document.getElementById('profile-info-block');
-            if (profileInfo) profileInfo.style.display = on ? 'none' : 'flex';
-            if (profileForm) profileForm.style.display = on ? 'block' : 'none';
-            fields.forEach(f => {
-                const input = document.getElementById(`profile-${f}-input`);
-                const display = document.getElementById(`profile-${f}`);
-                const select = document.getElementById(`profile-country-select`);
-                if (f === 'country' && select) {
-                    if (on) fillCountryOptions(select, select.value || '');
-                    select.disabled = !on;
-                    select.style.display = on ? 'block' : 'none';
-                    if (display) display.style.display = on ? 'none' : 'block';
-                    select.classList.toggle('active', on);
-                } else if (input && display) {
-                    input.disabled = !on;
-                    input.style.display = on ? 'block' : 'none';
-                    display.style.display = on ? 'none' : 'block';
-                    input.classList.toggle('active', on);
-                }
-            });
-            if (saveBtn) {
-                saveBtn.style.display = on ? 'inline-flex' : 'none';
-                saveBtn.classList.toggle('active', on);
-            }
-            if (cancelBtn) {
-                cancelBtn.style.display = on ? 'inline-flex' : 'none';
-                cancelBtn.classList.toggle('active', on);
-            }
-            if (profileForm) {
-                profileForm.classList.toggle('active', on);
-            }
-        }
-
-        const editProfileBtn = document.getElementById('edit-profile-btn');
-        if (editProfileBtn) {
-            editProfileBtn.onclick = function () {
-                setProfileEditMode(true);
-            };
-        }
-
-        if (cancelBtn) {
-            cancelBtn.onclick = function () {
-                setProfileEditMode(false);
-                resetProfileEditFields(window.lastProfileData || {});
-                if (errorDiv) {
-                    errorDiv.textContent = '';
-                    errorDiv.className = 'profile-error';
-                }
-            };
-        }
-
-        if (saveBtn && profileForm) {
-            profileForm.onsubmit = async function (e) {
-                e.preventDefault();
-                saveBtn.disabled = true;
-                errorDiv.textContent = '';
-                errorDiv.className = 'profile-error';
-
-                // Скрываем предыдущее успешное сообщение
-                const successMessage = document.getElementById('profile-success-message');
-                if (successMessage) successMessage.style.display = 'none';
-
-                const email = document.getElementById('profile-email-input')?.value?.trim() || '';
-                const country = document.getElementById('profile-country-select')?.value?.trim() || '';
-                const fullname = document.getElementById('profile-fullname-input')?.value?.trim() || '';
-                // Валидация email
-                const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-                if (!emailPattern.test(email)) {
-                    errorDiv.textContent = 'Введите корректный e-mail';
-                    errorDiv.className = 'profile-error visible';
-                    saveBtn.disabled = false;
-                    return;
-                }
-                try {
-                    const resp = await fetch(`/${USERNAME}/api/update_profile`, {
-                        method: 'POST',
-                        headers: getHeaders(),
-                        body: JSON.stringify({ email, country, fullname })
-                    });
-                    const data = await resp.json();
-                    if (resp.ok && data.success) {
-                        // Обновляем отображаемые значения
-                        const emailEl = document.getElementById('profile-email');
-                        const countryEl = document.getElementById('profile-country');
-                        const fullnameEl = document.getElementById('profile-fullname');
-                        if (emailEl) emailEl.textContent = email;
-                        if (countryEl) countryEl.textContent = country;
-                        if (fullnameEl) fullnameEl.textContent = fullname;
-
-                        // Показываем успешное сообщение в блоке информации
-                        if (successMessage) {
-                            successMessage.textContent = 'Профиль успешно обновлён!';
-                            successMessage.style.display = 'flex';
-                        }
-
-                        window.lastProfileData = { email, country, fullname };
-                        setProfileEditMode(false);
-
-                        // Скрываем сообщение через 3 секунды
-                        setTimeout(() => {
-                            if (successMessage) successMessage.style.display = 'none';
-                        }, 3000);
-                    } else {
-                        errorDiv.textContent = data.error || 'Ошибка обновления профиля';
-                        errorDiv.className = 'profile-error visible';
-                    }
-                } catch (err) {
-                    errorDiv.textContent = 'Ошибка сети';
-                    errorDiv.className = 'profile-error visible';
-                }
-                saveBtn.disabled = false;
-            };
-        }
-
-        function resetProfileEditFields(data) {
-            fields.forEach(f => {
-                const input = document.getElementById(`profile-${f}-input`);
-                const display = document.getElementById(`profile-${f}`);
-                const select = document.getElementById(`profile-country-select`);
-                if (f === 'country' && select) {
-                    if (select) select.value = data[f] || '';
-                    if (display) display.textContent = data[f] || '';
-                } else {
-                    if (input) input.value = data[f] || '';
-                    if (display) display.textContent = data[f] || '';
-                }
-            });
-        }
-
-        // Инициализация данных профиля
-        window.lastProfileData = {
-            email: '',
-            country: '',
-            fullname: ''
-        };
-        setProfileEditMode(false);
-
-        // Обработчик кнопки закрытия профиля
-        const closeProfileBtn = document.getElementById('close-profile-modal-btn');
-        if (closeProfileBtn) {
-            closeProfileBtn.onclick = function () {
-                closeProfileModal();
-            };
-        }
-
-        // Обработчик кнопки профиля
-        const profileBtn = document.getElementById("profile-btn");
-        if (profileBtn) {
-            profileBtn.onclick = async function () {
-                const userDropdown = document.getElementById("user-dropdown");
-                if (userDropdown) userDropdown.classList.remove("show");
-                try {
-                    let r = await fetch(`/api/profile/${USERNAME}`, { headers: getHeaders() });
-                    let data = await r.json();
-
-                    // Заполняем username через innerHTML с <span>
-                    const usernameEl = document.getElementById("profile-username");
-                    if (usernameEl) usernameEl.innerHTML = `<span>${data.username || ""}</span>`;
-
-                    // Обновляем данные профиля
-                    window.lastProfileData = {
-                        email: data.email || '',
-                        country: data.country || '',
-                        fullname: data.fullname || ''
-                    };
-
-                    // Заполняем поля
-                    const emailEl = document.getElementById("profile-email");
-                    const emailInput = document.getElementById("profile-email-input");
-                    const countryEl = document.getElementById("profile-country");
-                    const countrySelect = document.getElementById("profile-country-select");
-                    const fullnameEl = document.getElementById("profile-fullname");
-                    const fullnameInput = document.getElementById("profile-fullname-input");
-
-                    if (emailEl) emailEl.textContent = data.email || '';
-                    if (emailInput) emailInput.value = data.email || '';
-                    if (countryEl) countryEl.textContent = data.country || '';
-                    if (countrySelect) countrySelect.value = data.country || '';
-                    if (fullnameEl) fullnameEl.textContent = data.fullname || '';
-                    if (fullnameInput) fullnameInput.value = data.fullname || '';
-
-                    // Проверяем, что функция updateProfileAvatar доступна
-                    if (typeof window.updateProfileAvatar === 'function') {
-                        window.updateProfileAvatar(data.avatar_url);
-                    }
-
-                    // Устанавливаем режим просмотра
-                    setProfileEditMode(false);
-
-                    showProfileModal();
-                } catch (error) {
-                    // Ошибка загрузки профиля
-                }
-            };
-        }
-
-        // Инициализация селектора стран
-        function initializeCountrySelect() {
-            const countrySelect = document.getElementById('profile-country-select');
-            if (countrySelect && window.COUNTRIES) {
-                fillCountryOptions(countrySelect, countrySelect.value || '');
-            }
-        }
-
-        // Инициализируем селектор стран при загрузке
-        setTimeout(initializeCountrySelect, 100);
-
-        // Также инициализируем после загрузки countries.js
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeCountrySelect);
-        } else {
-            initializeCountrySelect();
-        }
-
-        // Также инициализируем при открытии модалки профиля
-        const originalShowProfileModal = showProfileModal;
-        showProfileModal = function () {
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal) {
-                profileModal.classList.add('show');
-            }
-            setTimeout(initializeCountrySelect, 100); // Небольшая задержка для гарантии загрузки DOM
-        };
-    }
+    // Инициализация профиля происходит в profile.js
+    // Функция disconnectAllSockets теперь в profile.js
 
     // ========== Navigation ==========
     function initNavigation() {
         const kanbanBtn = document.getElementById("kanban-btn");
         const todoBtn = document.getElementById("todo-btn");
+        // Инициализация profileBtn происходит в profile.js
 
         if (kanbanBtn) {
-            kanbanBtn.onclick = () => (location.href = `/${USERNAME}/kanban`);
+            kanbanBtn.onclick = () => {
+                if (typeof smoothNavigate === 'function') {
+                    smoothNavigate(`/${USERNAME}/kanban`);
+                } else {
+                    disconnectAllSockets();
+                    location.href = `/${USERNAME}/kanban`;
+                }
+            };
         }
 
         if (todoBtn) {
-            todoBtn.onclick = () => (location.href = `/${USERNAME}/todo`);
+            todoBtn.onclick = () => {
+                if (typeof smoothNavigate === 'function') {
+                    smoothNavigate(`/${USERNAME}/todo`);
+                } else {
+                    disconnectAllSockets();
+                    location.href = `/${USERNAME}/todo`;
+                }
+            };
+        }
+
+        // Кнопка "Команды" отсутствует в todo.html
+
+        const aboutBtn = document.getElementById("about-btn");
+        if (aboutBtn) {
+            aboutBtn.onclick = () => {
+                const userDropdown = document.getElementById("user-dropdown");
+                if (userDropdown) userDropdown.classList.remove("open");
+                const aboutModal = document.getElementById("about-modal");
+                if (aboutModal) {
+                    aboutModal.classList.add("show");
+                }
+            };
         }
 
         if (window.location.pathname.includes("/kanban")) {
@@ -294,261 +133,16 @@
     }
 
     // ========== Logout ==========
-    function initLogout() {
-        const logoutBtn = document.getElementById("logout-btn");
-        if (logoutBtn) {
-            logoutBtn.onclick = function () {
-                const userDropdown = document.getElementById("user-dropdown");
-                if (userDropdown) userDropdown.classList.remove("show");
-                const logoutUrl = `/${USERNAME}/logout`;
-                window.location.href = logoutUrl;
-            };
-        }
-    }
+    // Функция initLogout теперь в profile.js
 
     // ========== Avatar Handling ==========
-    function initAvatarHandling() {
-        // === Функция обновления аватарки в профиле ===
-        function updateProfileAvatar(avatarUrl) {
-            const avatarImg = document.getElementById("profile-avatar-img");
-            const avatarInitial = document.getElementById("profile-avatar-initial");
-            const deleteBtn = document.getElementById("delete-avatar-btn");
-            if (!avatarImg || !avatarInitial || !deleteBtn) return;
-            if (avatarUrl) {
-                avatarImg.src = avatarUrl;
-                avatarImg.style.display = "block";
-                avatarInitial.style.display = "none";
-                deleteBtn.style.display = "inline-flex";
-            } else {
-                avatarImg.style.display = "none";
-                avatarInitial.style.display = "block";
-                deleteBtn.style.display = "none";
-            }
-        }
-
-        // Делаем функцию глобальной
-        window.updateProfileAvatar = updateProfileAvatar;
-
-        // === Функция обновления аватарки в topbar ===
-        function updateTopbarAvatar(avatarUrl) {
-            const userMenuBtn = document.getElementById("user-menu-btn");
-            if (userMenuBtn) {
-                const avatarSpan = userMenuBtn.querySelector(".material-icons");
-                if (avatarUrl) {
-                    avatarSpan.style.display = "none";
-                    let avatarImg = userMenuBtn.querySelector(".user-avatar-img");
-                    if (!avatarImg) {
-                        avatarImg = document.createElement("img");
-                        avatarImg.className = "user-avatar-img";
-                        avatarImg.style.cssText = "width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px;";
-                        userMenuBtn.insertBefore(avatarImg, avatarSpan);
-                    }
-                    avatarImg.src = avatarUrl;
-                    avatarImg.style.display = "block";
-                } else {
-                    avatarSpan.style.display = "inline-block";
-                    const avatarImg = userMenuBtn.querySelector(".user-avatar-img");
-                    if (avatarImg) {
-                        avatarImg.style.display = "none";
-                    }
-                }
-            }
-        }
-
-        // Обработчик загрузки аватарки
-        const avatarUpload = document.getElementById("avatar-upload");
-        if (avatarUpload) {
-            avatarUpload.onchange = async function (e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                // Проверяем размер файла (максимум 5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("Файл слишком большой. Максимальный размер: 5MB");
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append("avatar", file);
-
-                try {
-                    const response = await fetch(`/${USERNAME}/api/upload_avatar`, {
-                        method: "POST",
-                        headers: {
-                            'X-CSRF-Token': window.CSRF_TOKEN || ''
-                        },
-                        body: formData,
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        // Обновляем аватарку в профиле
-                        updateProfileAvatar(data.avatar_url);
-                        // Обновляем аватарку в topbar
-                        updateTopbarAvatar(data.avatar_url);
-                        alert("Аватарка успешно загружена!");
-                    } else {
-                        alert(data.error || "Ошибка загрузки аватарки");
-                    }
-                } catch (error) {
-                    // Ошибка загрузки аватарки
-                }
-            };
-        }
-
-        // Обработчик удаления аватарки
-        const deleteAvatarBtn = document.getElementById("delete-avatar-btn");
-        if (deleteAvatarBtn) {
-            deleteAvatarBtn.onclick = async function () {
-                if (!confirm("Удалить аватарку?")) return;
-
-                try {
-                    const response = await fetch(`/${USERNAME}/api/delete_avatar`, {
-                        method: "POST",
-                        headers: getHeaders(),
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        // Обновляем аватарку
-                        updateProfileAvatar(null);
-                        // Обновляем аватарку в topbar
-                        updateTopbarAvatar(null);
-                        alert("Аватарка удалена!");
-                    } else {
-                        alert(data.error || "Ошибка удаления аватарки");
-                    }
-                } catch (error) {
-                    alert("Ошибка удаления аватарки");
-                }
-            };
-        }
-
-        // Загружаем аватарку при загрузке страницы
-        async function loadUserAvatar() {
-            try {
-                const response = await fetch(`/api/avatar/${USERNAME}`, { headers: getHeaders() });
-                const data = await response.json();
-                if (data.avatar_url) {
-                    updateTopbarAvatar(data.avatar_url);
-                    // Также обновляем аватарку в профиле, если модалка открыта
-                    updateProfileAvatar(data.avatar_url);
-                }
-            } catch (error) {
-                // Ошибка загрузки аватарки
-            }
-        }
-
-        // Вызываем загрузку аватарки при инициализации
-        loadUserAvatar();
-
-        // Функция заполнения стран
-        function fillCountryOptions(select, currentValue) {
-            if (window.COUNTRIES) {
-                select.innerHTML = '<option value="">Выберите страну</option>';
-                window.COUNTRIES.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country;
-                    option.textContent = country;
-                    if (country === currentValue) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-            }
-        }
-
-        // Делаем функцию глобальной
-        window.fillCountryOptions = fillCountryOptions;
-
-        // Инициализация select для страны
-        const countrySelect = document.getElementById('profile-country-select');
-        if (countrySelect) {
-            fillCountryOptions(countrySelect, '');
-        }
-    }
+    // Все функции аватарки теперь в profile.js
 
     // ========== Change Password Modal ==========
-    function initChangePasswordModal() {
-        const changePasswordBtn = document.getElementById("change-password-btn");
-        if (changePasswordBtn) {
-            changePasswordBtn.onclick = function () {
-                const userDropdown = document.getElementById("user-dropdown");
-                if (userDropdown) userDropdown.classList.remove("show");
-                const changePasswordForm = document.getElementById("change-password-form");
-                const changePasswordError = document.getElementById("change-password-error");
-                if (changePasswordForm) changePasswordForm.reset();
-                if (changePasswordError) changePasswordError.innerText = "";
-                const changePasswordModal = document.getElementById("change-password-modal");
-                if (changePasswordModal) {
-                    changePasswordModal.classList.add("show");
-                }
-            };
-        }
-
-        const changePasswordForm = document.getElementById("change-password-form");
-        if (changePasswordForm) {
-            changePasswordForm.onsubmit = async function (e) {
-                e.preventDefault();
-                let oldPass = document.getElementById("old_password").value;
-                let newPass = document.getElementById("new_password").value;
-                let newPass2 = document.getElementById("new_password2").value;
-                let err = document.getElementById("change-password-error");
-                if (newPass !== newPass2) {
-                    if (err) err.innerText = "Пароли не совпадают!";
-                    return;
-                }
-                try {
-                    let resp = await fetch(`/${USERNAME}/api/change_password`, {
-                        method: "POST",
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                            old_password: oldPass,
-                            new_password: newPass,
-                        }),
-                    });
-                    if (resp.ok) {
-                        if (err) {
-                            err.style.color = "#32c964";
-                            err.innerText = "Пароль изменён!";
-                        }
-                        setTimeout(closeChangePasswordModal, 900);
-                    } else {
-                        if (err) {
-                            err.style.color = "#d11a2a";
-                            let data = await resp.json();
-                            err.innerText = data.error || "Ошибка смены пароля!";
-                        }
-                    }
-                } catch (error) {
-                    if (err) err.innerText = "Ошибка сети!";
-                }
-            };
-        }
-
-        // Специальный обработчик для кнопки отмены в модалке смены пароля
-        const cancelChangePasswordBtn = document.getElementById("cancel-change-password-btn");
-        if (cancelChangePasswordBtn) {
-            cancelChangePasswordBtn.onclick = function () {
-                closeChangePasswordModal();
-            };
-        }
-    }
+    // Функция initChangePasswordModal теперь в profile.js
 
     // ========== About Modal ==========
-    function initAboutModal() {
-        const aboutBtn = document.getElementById("about-btn");
-        if (aboutBtn) {
-            aboutBtn.onclick = function () {
-                const userDropdown = document.getElementById("user-dropdown");
-                if (userDropdown) userDropdown.classList.remove("show");
-                const aboutModal = document.getElementById("about-modal");
-                if (aboutModal) aboutModal.classList.add("show");
-            };
-        }
-    }
+    // Функция initAboutModal теперь в profile.js
 
     // ========== Todo List ==========
     function initTodoList() {
@@ -699,12 +293,30 @@
             todoList.addEventListener("click", function (e) {
                 if (e.target.matches("input[type='checkbox']")) {
                     let i = parseInt(e.target.dataset.i);
+                    const wasCompleted = todos[i].done;
                     todos[i].done = !todos[i].done;
+
+                    // Показываем toast уведомление
+                    if (window.toast) {
+                        if (todos[i].done) {
+                            window.toast.todoCompleted(todos[i].text);
+                        } else {
+                            window.toast.todoUncompleted(todos[i].text);
+                        }
+                    }
+
                     saveTodos();
                     renderTodos();
                 } else if (e.target.closest(".remove-btn")) {
                     let i = parseInt(e.target.closest(".remove-btn").dataset.i);
+                    const todoText = todos[i].text;
                     todos.splice(i, 1);
+
+                    // Показываем toast уведомление
+                    if (window.toast) {
+                        window.toast.todoDeleted(todoText);
+                    }
+
                     saveTodos();
                     renderTodos();
                 }
@@ -748,62 +360,314 @@
     }
 
     // ========== Modal Functions ==========
-    function closeProfileModal() {
-        const profileModal = document.getElementById('profile-modal');
-        if (profileModal) profileModal.classList.remove('show');
+    // Все функции модалок теперь в profile.js и universal-modals.js
+
+    // ===== СИСТЕМА УВЕДОМЛЕНИЙ =====
+    let notificationsData = [];
+    let unreadCount = 0;
+
+    // Инициализация Socket.IO для уведомлений
+    function initNotificationsSocket() {
+        if (typeof io !== 'undefined') {
+            const socket = io();
+
+            // Подключаемся к личной комнате пользователя
+            socket.emit('join_user', { username: USERNAME });
+
+            // Обработчик получения количества уведомлений
+            socket.on('notification_count', (data) => {
+                updateNotificationBadge(data.count);
+            });
+
+            // Обработчик обновления уведомлений
+            socket.on('notifications_updated', () => {
+                loadNotifications();
+            });
+
+            // 🔥 НОВЫЕ ОБРАБОТЧИКИ ДЛЯ TOAST УВЕДОМЛЕНИЙ 🔥
+
+            // Новая задача назначена пользователю
+            socket.on('task_assigned', (data) => {
+                if (window.toast) {
+                    window.toast.taskAssigned(data.taskTitle, data.assigneeName);
+                }
+                loadNotifications(); // Обновляем список уведомлений
+            });
+
+            // Пользователя упомянули в комментарии
+            socket.on('user_mentioned', (data) => {
+                if (window.toast) {
+                    window.toast.mentionReceived(data.authorName, data.taskTitle);
+                }
+                loadNotifications(); // Обновляем список уведомлений
+            });
+
+            // Новый комментарий к задаче
+            socket.on('new_comment', (data) => {
+                if (window.toast) {
+                    window.toast.newComment(data.authorName, data.taskTitle);
+                }
+            });
+        }
     }
 
-    function closeChangePasswordModal() {
-        const changePasswordModal = document.getElementById('change-password-modal');
-        if (changePasswordModal) changePasswordModal.classList.remove('show');
+    // Загрузка уведомлений
+    async function loadNotifications() {
+        try {
+            const response = await fetch(`/${USERNAME}/api/notifications`, {
+                headers: window.getHeaders()
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                notificationsData = data.notifications || [];
+                unreadCount = data.unread_count || 0;
+
+                updateNotificationBadge(unreadCount);
+                renderNotifications();
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки уведомлений:', error);
+        }
     }
 
-    function closeAboutModal() {
-        const aboutModal = document.getElementById('about-modal');
-        if (aboutModal) aboutModal.classList.remove('show');
+    // Обновление значка уведомлений
+    function updateNotificationBadge(count) {
+        const badge = document.querySelector('.notifications-badge');
+        const btn = document.getElementById('notifications-btn');
+
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+                if (btn) btn.classList.add('has-unread');
+            } else {
+                badge.style.display = 'none';
+                if (btn) btn.classList.remove('has-unread');
+            }
+        }
     }
 
-    function showProfileModal() {
-        const profileModal = document.getElementById('profile-modal');
-        if (profileModal) profileModal.classList.add('show');
-    }
+    // Отрисовка списка уведомлений
+    function renderNotifications() {
+        const list = document.getElementById('notifications-list');
+        if (!list) return;
 
-    // === Универсальные обработчики крестиков и кнопок отмены для всех модалок ===
-    function initUniversalModalHandlers() {
-        document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.onclick = function () {
-                const modal = btn.closest('.modal');
-                if (modal) modal.classList.remove('show');
+        if (notificationsData.length === 0) {
+            list.innerHTML = `
+                <div class="no-notifications">
+                    <span class="material-icons">notifications_none</span>
+                    <p>Нет новых уведомлений</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = notificationsData.map(notification => {
+            const iconClass = notification.type === 'mention' ? 'mention' : 'assigned';
+            const icon = notification.type === 'mention' ? 'alternate_email' : 'assignment_ind';
+            const timeAgo = formatTimeAgo(notification.created_at);
+            // Исправляем &quot; на обычные кавычки
+            let message = notification.message.replace(/&quot;/g, '"');
+            // Выделяем username жирным только для известных username
+            const usernames = [notification.from_username, notification.to_username, notification.mentioned_username].filter(Boolean);
+            usernames.forEach(u => {
+                if (u) message = message.replace(new RegExp(`\\b${u}\\b`, 'g'), `<span class='notif-username'><b>${u}</b></span>`);
+            });
+            // Также выделяем все @username
+            message = message.replace(/@([a-zA-Z0-9_\-]+)/g, '<span class="notif-username">@$1</span>');
+            return `
+                <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                     data-id="${notification.id}" 
+                     data-link="${notification.link || ''}">
+                    <div class="notification-avatar">
+                        ${notification.from_avatar
+                    ? `<img src="${notification.from_avatar}" alt="${notification.from_username}" />`
+                    : `<span>${getInitials(notification.from_username)}</span>`
+                }
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">
+                            <span class="material-icons notification-icon ${iconClass}">${icon}</span>
+                            ${escapeHTML(notification.title)}
+                        </div>
+                        <div class="notification-message">${message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                    ${!notification.is_read ? '<div class="notification-unread-dot"></div>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Добавляем обработчики кликов
+        list.querySelectorAll('.notification-item').forEach(item => {
+            item.onclick = async function () {
+                const id = parseInt(item.dataset.id);
+                const link = item.dataset.link;
+
+                // Отмечаем как прочитанное
+                if (item.classList.contains('unread')) {
+                    await markNotificationAsRead([id]);
+                    item.classList.remove('unread');
+                    item.querySelector('.notification-unread-dot')?.remove();
+                }
+
+                // Переходим по ссылке если есть
+                if (link) {
+                    window.location.href = link;
+                }
             };
         });
-
-        // Для кнопок отмены (id заканчивается на -cancel, -btn, -close и т.д.)
-        // Исключаем cancel-profile-btn и cancel-change-password-btn, так как у них есть специальные обработчики
-        ['cancel-task-modal-btn', 'close-task-modal-btn', 'close-status-modal-btn', 'close-view-task-modal-btn', 'close-about-modal-btn'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.onclick = function () {
-                const modal = btn.closest('.modal');
-                if (modal) modal.classList.remove('show');
-            };
-        });
     }
 
-    // Делаем функции глобальными
-    window.closeProfileModal = closeProfileModal;
-    window.closeChangePasswordModal = closeChangePasswordModal;
-    window.closeAboutModal = closeAboutModal;
-    window.showProfileModal = showProfileModal;
+    // Получение инициалов
+    function getInitials(name) {
+        if (!name) return "?";
+        return name[0].toUpperCase();
+    }
+
+    // Форматирование времени "назад"
+    function formatTimeAgo(dateString) {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+
+        if (seconds < 60) return 'только что';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} мин назад`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч назад`;
+        if (seconds < 604800) return `${Math.floor(seconds / 86400)} дн назад`;
+
+        return date.toLocaleDateString('ru-RU');
+    }
+
+    // Отметить уведомления как прочитанные
+    async function markNotificationAsRead(notificationIds) {
+        try {
+            const response = await fetch(`/${USERNAME}/api/notifications/mark_read`, {
+                method: 'POST',
+                headers: window.getHeaders(),
+                body: JSON.stringify({ notification_ids: notificationIds })
+            });
+
+            if (response.ok) {
+                // Обновляем счетчик
+                unreadCount = Math.max(0, unreadCount - notificationIds.length);
+                updateNotificationBadge(unreadCount);
+            }
+        } catch (error) {
+            console.error('Ошибка отметки уведомлений:', error);
+        }
+    }
+
+    // Отметить все как прочитанные
+    async function markAllNotificationsAsRead() {
+        try {
+            const response = await fetch(`/${USERNAME}/api/notifications/mark_read`, {
+                method: 'POST',
+                headers: window.getHeaders(),
+                body: JSON.stringify({ mark_all: true })
+            });
+
+            if (response.ok) {
+                // Обновляем UI
+                notificationsData.forEach(n => n.is_read = true);
+                unreadCount = 0;
+                updateNotificationBadge(0);
+                renderNotifications();
+            }
+        } catch (error) {
+            console.error('Ошибка отметки всех уведомлений:', error);
+        }
+    }
+
+    // Инициализация обработчиков уведомлений
+    function initNotifications() {
+        const notificationsBtn = document.getElementById('notifications-btn');
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        const markAllBtn = document.getElementById('mark-all-read-btn');
+
+        if (notificationsBtn && notificationsDropdown) {
+            // Клик по кнопке уведомлений
+            notificationsBtn.onclick = function (e) {
+                e.stopPropagation();
+                const isOpen = notificationsDropdown.classList.contains('open');
+
+                if (!isOpen) {
+                    loadNotifications();
+                    notificationsDropdown.classList.add('open');
+                } else {
+                    notificationsDropdown.classList.remove('open');
+                }
+            };
+
+            // Предотвращаем закрытие при клике внутри dropdown
+            notificationsDropdown.onclick = function (e) {
+                e.stopPropagation();
+            };
+
+            // Закрытие при клике вне dropdown
+            document.addEventListener('click', function () {
+                notificationsDropdown.classList.remove('open');
+            });
+        }
+
+        // Кнопка "Прочитать все"
+        if (markAllBtn) {
+            markAllBtn.onclick = function () {
+                if (unreadCount > 0) {
+                    markAllNotificationsAsRead();
+                }
+            };
+        }
+
+        // Инициализация Socket.IO
+        initNotificationsSocket();
+
+        // Загружаем уведомления при старте
+        loadNotifications();
+    }
 
     // ========== Инициализация ==========
     document.addEventListener('DOMContentLoaded', function () {
+        // Инициализация toast уведомлений
+        if (window.ToastNotifications) {
+            window.toast = new ToastNotifications();
+        }
+
         initUserDropdown();
-        initAvatarHandling(); // Сначала инициализируем аватарку
-        initProfileModal(); // Потом профиль
-        initChangePasswordModal();
-        initAboutModal();
+        // Инициализация профиля и аватарки происходит в profile.js
         initNavigation();
-        initLogout();
         initTodoList();
-        initUniversalModalHandlers();
+        if (typeof window.initUniversalModalHandlers === 'function') window.initUniversalModalHandlers();
+        initNotifications(); // Добавляем инициализацию уведомлений
+
+        // Дополнительная загрузка аватарки для гарантии
+        if (typeof loadInitialAvatar === 'function') {
+            setTimeout(loadInitialAvatar, 200);
+        }
+
+        // Инициализация обработчиков из profile.js и universal-modals.js
+        if (typeof window.initLogout === 'function') window.initLogout();
+        if (typeof window.initChangePasswordForm === 'function') window.initChangePasswordForm();
+        if (typeof window.initProfileHandlers === 'function') window.initProfileHandlers();
+        if (typeof window.initProfileUniversalHandlers === 'function') window.initProfileUniversalHandlers();
+
+        // Дополнительные обработчики для кнопок отмены в модалках
+        // Эти обработчики уже есть в universal-modals.js, поэтому убираем дублирование
+    });
+
+    // Обработчики событий страницы для отключения сокетов
+    window.addEventListener('beforeunload', function () {
+        disconnectAllSockets();
+    });
+
+    // Обработчик при скрытии страницы
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            // При скрытии страницы отключаем сокеты
+            disconnectAllSockets();
+        }
     });
 })();

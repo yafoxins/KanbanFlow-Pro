@@ -1,0 +1,1010 @@
+/* Поисковая панель */
+.search-panel {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+    border: 1px solid #e3e7f0;
+    overflow: visible;
+    /* ИСПРАВЛЕНО: позволяет выпадающим меню выходить за границы */
+    position: relative;
+    /* ДОБАВЛЕНО для правильного позиционирования */
+    min-height: auto;
+    /* ИСПРАВЛЕНИЕ: предотвращаем изменение размера */
+    /* УБРАЛИ transition - он ломал форму при фильтрации */
+}
+
+.search-panel:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.search-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.search-input-group {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 20px;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px 12px 48px;
+    border: 2px solid #e3e7f0;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #5271ff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(82, 113, 255, 0.1);
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.filter-toggle-btn.active {
+    background: #5271ff;
+    color: #fff;
+}
+
+/* Фильтры */
+.search-filters {
+    padding: 20px 24px;
+    background: #fafbfc;
+    border-top: 1px solid #f0f2f5;
+    overflow: visible;
+    position: relative;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+    overflow: visible;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: visible;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.filter-label .material-icons {
+    font-size: 16px;
+    color: #6b7280;
+}
+
+.filter-select {
+    padding: 12px 16px;
+    border: 2px solid #e3e7f0;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    /* СОКРАТИЛИ анимации */
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+    min-width: 160px;
+    box-sizing: border-box;
+    /* ДОБАВЛЕНО: предотвращаем изменение размера */
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #5271ff;
+    box-shadow: 0 0 0 3px rgba(82, 113, 255, 0.1);
+    background-color: #fafbfc;
+}
+
+.filter-select:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+}
+
+.filter-select option {
+    padding: 8px 12px;
+    background: #fff;
+    color: #374151;
+}
+
+/* Индикатор активных фильтров */
+.filter-select:not([value=""]) {
+    border-color: #5271ff;
+    background-color: #f0f4ff;
+    color: #5271ff;
+    font-weight: 500;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+}
+
+.btn-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 18px;
+    height: 40px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #7b88a1;
+    background: #f7f8fa;
+    border: 1.5px solid #dbe2ff;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.18s, border 0.18s, color 0.18s;
+    box-shadow: 0 1px 4px #5271ff0a;
+    outline: none;
+    user-select: none;
+    min-width: 110px;
+}
+
+.btn-reset .material-icons {
+    font-size: 20px;
+    color: #7b88a1;
+    line-height: 1;
+    vertical-align: middle;
+    transition: color 0.18s;
+}
+
+.btn-reset:hover,
+.btn-reset:focus {
+    background: #e3e8ff;
+    border-color: #5271ff;
+    color: #3246a8;
+}
+
+.btn-reset:hover .material-icons,
+.btn-reset:focus .material-icons {
+    color: #5271ff;
+}
+
+.search-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.search-stats .material-icons {
+    font-size: 16px;
+    color: #5271ff;
+}
+
+/* Индикатор активного поиска - стили отключены для стабильности размера */
+.search-panel.has-active-filters {
+    /* НЕ ПРИМЕНЯЕМ стили при активных фильтрах чтобы избежать изменения размеров */
+}
+
+.search-panel.has-active-filters .search-main {
+    /* НЕ МЕНЯЕМ цвет search-main при активных фильтрах */
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .search-main {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .search-input-group {
+        max-width: none;
+    }
+
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .tag-selector-dropdown,
+    .assignee-autocomplete {
+        position: fixed;
+        top: auto;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-height: 40vh;
+        z-index: 999999;
+    }
+}
+
+/* Убрали slideDown анимацию - работает мгновенно */
+
+/* Стили для скрытых задач */
+.kanban-task.filtered-out {
+    display: none !important;
+}
+
+/* Убрали анимации подсветки - они выглядели убого */
+
+/* Старые стили для совместимости (теперь не используются) */
+.no-search-results {
+    display: none !important;
+}
+
+/* Индикатор загрузки поиска */
+.search-panel.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #5271ff, #7b5cff);
+    animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Кастомный селектор тегов с галочками */
+.custom-tag-selector {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+    /* ДОБАВЛЕНО: позволяем выпадающим элементам выходить за границы */
+    z-index: 1;
+    /* ДОБАВЛЕНО: базовый z-index */
+}
+
+.tag-selector-button {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e3e7f0;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    /* СОКРАТИЛИ анимации */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    max-height: 48px;
+    /* ДОБАВЛЕНО: фиксируем высоту */
+    position: relative;
+    box-sizing: border-box;
+    /* ДОБАВЛЕНО: предотвращаем изменение размера */
+}
+
+.tag-selector-button:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+}
+
+.tag-selector-button:focus {
+    outline: none;
+    border-color: #5271ff;
+    box-shadow: 0 0 0 3px rgba(82, 113, 255, 0.1);
+    background-color: #fafbfc;
+}
+
+.tag-selector-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+.tag-selector-arrow {
+    color: #6b7280;
+    font-size: 16px;
+    transition: transform 0.2s ease, color 0.2s ease;
+    /* СОКРАТИЛИ анимации */
+    flex-shrink: 0;
+    /* ДОБАВЛЕНО: не сжимаем стрелку */
+}
+
+.tag-selector-button.open .tag-selector-arrow {
+    transform: rotate(180deg);
+    color: #5271ff;
+}
+
+.tag-selector-button.open {
+    border-color: #5271ff;
+    box-shadow: 0 0 0 3px rgba(82, 113, 255, 0.1);
+}
+
+.tag-selector-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #5271ff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(82, 113, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 99999;
+    max-height: 350px;
+    min-height: 180px;
+    overflow-y: auto;
+    display: none;
+    min-width: 200px;
+    width: 100%;
+    overflow: hidden;
+    /* ИСПРАВЛЕНИЕ: скругления краев */
+}
+
+.tag-selector-dropdown.show {
+    display: block;
+    /* УБРАЛИ анимацию - она была некрасивой */
+}
+
+/* УБРАЛИ анимацию dropdownShow - она была некрасивой */
+
+.tag-option {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    /* СОКРАТИЛИ время анимации */
+    border-bottom: 1px solid #f0f2f5;
+    font-weight: 500;
+    position: relative;
+}
+
+.tag-option:first-child {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    overflow: hidden;
+    /* ИСПРАВЛЕНИЕ: обрезаем цветную полоску внутри скруглений */
+}
+
+.tag-option:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    overflow: hidden;
+    /* ИСПРАВЛЕНИЕ: обрезаем цветную полоску внутри скруглений */
+}
+
+/* ДОПОЛНИТЕЛЬНОЕ ИСПРАВЛЕНИЕ: правильные скругления для цветных полосок */
+.tag-option:first-child[data-tag] {
+    border-top-left-radius: 10px;
+}
+
+.tag-option:last-child[data-tag] {
+    border-bottom-left-radius: 10px;
+}
+
+.tag-option:hover {
+    background-color: #f8faff;
+    transform: none;
+    /* УБРАЛИ ненужную анимацию */
+}
+
+.tag-option.selected {
+    background-color: #f0f4ff;
+    color: #5271ff;
+    font-weight: 600;
+    transform: none;
+    /* УБРАЛИ ненужную анимацию */
+}
+
+/* ЦВЕТОВЫЕ СТИЛИ ДЛЯ РАЗНЫХ ТЕГОВ */
+.tag-option[data-tag="Баг"],
+.tag-option[data-tag="Bug"] {
+    border-left: 4px solid #ef4444;
+    position: relative;
+    /* ДОБАВЛЕНО: для правильного позиционирования цветной полоски */
+}
+
+.tag-option[data-tag="Баг"]:hover,
+.tag-option[data-tag="Bug"]:hover {
+    background-color: #fef2f2;
+    border-left-color: #dc2626;
+}
+
+.tag-option[data-tag="Баг"].selected,
+.tag-option[data-tag="Bug"].selected {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-left-color: #dc2626;
+}
+
+.tag-option[data-tag="Документы"],
+.tag-option[data-tag="Docs"] {
+    border-left: 4px solid #3b82f6;
+    position: relative;
+}
+
+.tag-option[data-tag="Документы"]:hover,
+.tag-option[data-tag="Docs"]:hover {
+    background-color: #eff6ff;
+    border-left-color: #2563eb;
+}
+
+.tag-option[data-tag="Документы"].selected,
+.tag-option[data-tag="Docs"].selected {
+    background-color: #dbeafe;
+    color: #2563eb;
+    border-left-color: #2563eb;
+}
+
+.tag-option[data-tag="Обсудить"],
+.tag-option[data-tag="Discuss"] {
+    border-left: 4px solid #f59e0b;
+    position: relative;
+}
+
+.tag-option[data-tag="Обсудить"]:hover,
+.tag-option[data-tag="Discuss"]:hover {
+    background-color: #fffbeb;
+    border-left-color: #d97706;
+}
+
+.tag-option[data-tag="Обсудить"].selected,
+.tag-option[data-tag="Discuss"].selected {
+    background-color: #fef3c7;
+    color: #d97706;
+    border-left-color: #d97706;
+}
+
+.tag-option[data-tag="Срочно"],
+.tag-option[data-tag="Urgent"] {
+    border-left: 4px solid #dc2626;
+    position: relative;
+}
+
+.tag-option[data-tag="Срочно"]:hover,
+.tag-option[data-tag="Urgent"]:hover {
+    background-color: #fef2f2;
+    border-left-color: #b91c1c;
+}
+
+.tag-option[data-tag="Срочно"].selected,
+.tag-option[data-tag="Urgent"].selected {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-left-color: #b91c1c;
+}
+
+.tag-option[data-tag="Улучшение"],
+.tag-option[data-tag="Enhancement"] {
+    border-left: 4px solid #10b981;
+    position: relative;
+}
+
+.tag-option[data-tag="Улучшение"]:hover,
+.tag-option[data-tag="Enhancement"]:hover {
+    background-color: #ecfdf5;
+    border-left-color: #059669;
+}
+
+.tag-option[data-tag="Улучшение"].selected,
+.tag-option[data-tag="Enhancement"].selected {
+    background-color: #d1fae5;
+    color: #059669;
+    border-left-color: #059669;
+}
+
+.tag-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tag-option.selected .tag-checkbox {
+    background: #5271ff;
+    border-color: #5271ff;
+    color: #fff;
+}
+
+.tag-checkbox .material-icons {
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.tag-option.selected .tag-checkbox .material-icons {
+    opacity: 1;
+}
+
+.tag-label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Стили для выбранных тегов в кнопке */
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: calc(100% - 24px);
+}
+
+.selected-tag-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: #e3e8ff;
+    color: #5271ff;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+/* ЦВЕТОВЫЕ СТИЛИ ДЛЯ ВЫБРАННЫХ ТЕГОВ */
+.selected-tag-badge[data-tag="Баг"],
+.selected-tag-badge[data-tag="Bug"] {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.selected-tag-badge[data-tag="Документы"],
+.selected-tag-badge[data-tag="Docs"] {
+    background: #dbeafe;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.selected-tag-badge[data-tag="Обсудить"],
+.selected-tag-badge[data-tag="Discuss"] {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #fde68a;
+}
+
+.selected-tag-badge[data-tag="Срочно"],
+.selected-tag-badge[data-tag="Urgent"] {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.selected-tag-badge[data-tag="Улучшение"],
+.selected-tag-badge[data-tag="Enhancement"] {
+    background: #d1fae5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+/* Notification стили */
+.search-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #fff;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    max-width: 350px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.search-notification.show {
+    transform: translateX(0);
+}
+
+.search-notification .notification-icon {
+    color: #f59e0b;
+    font-size: 24px;
+}
+
+.search-notification .notification-content {
+    flex: 1;
+}
+
+.search-notification .notification-title {
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 4px 0;
+    font-size: 14px;
+}
+
+.search-notification .notification-message {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 0;
+}
+
+.search-notification .notification-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.search-notification .notification-close:hover {
+    color: #6b7280;
+}
+
+/* Индикатор активных фильтров в селекторе */
+.tag-selector-button.has-selections {
+    border-color: #5271ff;
+    background-color: #f0f4ff;
+    color: #5271ff;
+    font-weight: 500;
+}
+
+/* Стили для активного автодополнения исполнителя */
+.assignee-input-wrapper input.has-value,
+.filter-group.assignee-active .assignee-input-wrapper input {
+    border-color: #5271ff !important;
+    background-color: #f0f4ff !important;
+    color: #5271ff !important;
+    font-weight: 500;
+}
+
+/* Скрываем оригинальный multiple select */
+select[multiple].filter-select {
+    display: none;
+}
+
+/* Стили для автодополнения исполнителя */
+.assignee-input-wrapper {
+    position: relative !important;
+    width: 100%;
+    z-index: 1;
+    /* Базовый z-index для wrapper */
+}
+
+.assignee-autocomplete {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #fff !important;
+    border: 2px solid #5271ff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(82, 113, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    z-index: 100001 !important;
+    /* УВЕЛИЧИЛИ z-index */
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    overflow: hidden !important;
+    /* ИСПРАВЛЕНИЕ: скругления краев */
+    display: none !important;
+    width: 100% !important;
+    min-width: 200px !important;
+    /* Минимальная ширина */
+}
+
+.assignee-autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    /* СОКРАТИЛИ время анимации */
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.assignee-autocomplete-item:first-child {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.assignee-autocomplete-item:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.assignee-autocomplete-item:hover,
+.assignee-autocomplete-item.highlighted {
+    background-color: #f8faff;
+    transform: none;
+    /* УБРАЛИ ненужную анимацию */
+}
+
+.assignee-autocomplete-item.clear-option:hover {
+    background-color: #f9fafb;
+    transform: none;
+    /* УБРАЛИ ненужную анимацию */
+}
+
+.assignee-autocomplete-item.no-results {
+    cursor: default;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.assignee-autocomplete-item.no-results:hover {
+    background-color: transparent;
+    transform: none;
+}
+
+/* Стили для простых элементов автодополнения (как в модалках) */
+.autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f2f5;
+    font-weight: 500;
+    color: #374151;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8faff;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.autocomplete-item:first-child {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.assignee-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.assignee-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.15);
+}
+
+.assignee-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e3e8ff;
+    color: #5271ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.15);
+}
+
+.assignee-username {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* НОВЫЕ СТИЛИ: Специальные исправления для team_board */
+.input-group {
+    position: relative;
+}
+
+#assignee-autocomplete {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dbe2ff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.22);
+    z-index: 100000;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+/* Дополнительные исправления для контейнеров */
+.kanban-container {
+    overflow: visible;
+}
+
+.container {
+    overflow: visible;
+}
+
+/* ===== СТИЛИ ДЛЯ KANBAN ЗАДАЧ И ПОИСКА ===== */
+
+.kanban-task.search-hidden {
+    display: none !important;
+}
+
+.kanban-task.search-visible {
+    display: block;
+}
+
+.kanban-task.highlighted {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(82, 113, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.kanban-board.single-column {
+    justify-content: center;
+}
+
+.kanban-board.single-column .kanban-column {
+    max-width: 400px;
+}
+
+/* ===== СТИЛИ ДЛЯ АВТОДОПОЛНЕНИЯ В МОДАЛКАХ ===== */
+
+.modal-content .input-group {
+    position: relative !important;
+}
+
+.modal-content #assignee-autocomplete {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #fff !important;
+    border: 1px solid #dbe2ff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.22) !important;
+    z-index: 100000 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    display: none !important;
+}
+
+.modal-content #assignee-autocomplete .autocomplete-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+    border-bottom: 1px solid #f0f2f5 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.modal-content #assignee-autocomplete .autocomplete-item:hover {
+    background-color: #f8faff !important;
+}
+
+/* ===== СТИЛИ ДЛЯ АВТОДОПОЛНЕНИЯ В ПОИСКОВОЙ ПАНЕЛИ ===== */
+
+.search-filters .filter-group {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.search-filters .assignee-autocomplete {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #fff !important;
+    border: 2px solid #5271ff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(82, 113, 255, 0.25) !important;
+    z-index: 99999 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    display: none !important;
+}
+
+.search-filters .assignee-autocomplete-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+    border-bottom: 1px solid #f0f2f5 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.search-filters .assignee-autocomplete-item:hover {
+    background-color: #f8faff !important;
+}
+
+/* Исправление: автокомплит исполнителя в модалке задачи всегда видим при .show */
+.modal-content #assignee-autocomplete.show {
+    display: block !important;
+}

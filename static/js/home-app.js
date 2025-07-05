@@ -91,7 +91,6 @@ userForm.onsubmit = async function (e) {
             openRegisterModal(username);
         }
     } catch (error) {
-        console.error('Error checking user:', error);
         // В случае ошибки показываем форму регистрации
         openRegisterModal(username);
     }
@@ -128,13 +127,11 @@ loginPassword.addEventListener("keydown", function (e) {
 });
 
 function openRegisterModal(username) {
-    console.log('Opening register modal for:', username);
     const modal = document.getElementById("register-modal");
     const title = document.getElementById("register-title");
     const form = document.getElementById("register-form");
 
     if (!modal || !title || !form) {
-        console.error('Modal elements not found:', { modal, title, form });
         return;
     }
 
@@ -144,8 +141,6 @@ function openRegisterModal(username) {
     document.getElementById("register-error").innerText = "";
     fillCountryOptions(document.querySelector("#register-form select"));
     document.querySelector("#register-form [name=fullname]").value = username;
-
-    console.log('Modal opened successfully');
 }
 
 function closeRegisterModal() {

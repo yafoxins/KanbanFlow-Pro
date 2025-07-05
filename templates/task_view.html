@@ -7,29 +7,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
   <!-- Quill.js -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
   <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
 
   <!-- CSRF Token -->
   <script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
+    // CSRF токен доступен через data-csrf-token в body
 
-    // Функция для добавления CSRF-токена в заголовки
-    function getHeaders(contentType = 'application/json') {
+    // Глобальная функция для получения заголовков CSRF
+    window.getHeaders = function (contentType = 'application/json') {
       const headers = {
-        'X-CSRF-Token': CSRF_TOKEN
+        'X-CSRF-Token': document.body.getAttribute('data-csrf-token') || ''
       };
-      if (contentType) {
-        headers['Content-Type'] = contentType;
-      }
+      if (contentType) headers['Content-Type'] = contentType;
       return headers;
-    }
+    };
   </script>
 </head>
 
-<body>
+<body data-csrf-token="{{ csrf_token }}">
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-inner">
@@ -345,11 +343,19 @@
         if (response.ok) {
           goBack();
         } else {
-          alert('Ошибка удаления задачи');
+          if (window.toast) {
+            window.toast.serverError();
+          } else {
+            alert('Ошибка удаления задачи');
+          }
         }
       } catch (error) {
         console.error('Ошибка удаления:', error);
-        alert('Ошибка удаления задачи');
+        if (window.toast) {
+          window.toast.networkError();
+        } else {
+          alert('Ошибка удаления задачи');
+        }
       }
     };
 

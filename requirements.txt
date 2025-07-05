@@ -3,3 +3,6 @@ psycopg2-binary
 werkzeug
 flask-socketio
 eventlet
+python-telegram-bot==20.7
+schedule==1.2.0
+requests

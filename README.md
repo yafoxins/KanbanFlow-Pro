@@ -36,6 +36,34 @@
   </tr>
 </table>
 
+### 🆕 New Features / Новые возможности
+- **🖼️ Avatar System / Система аватаров** - profile image uploads / загрузка профильных изображений
+- **🖼️ Media in Tasks / Медиа в задачах** - image support in descriptions / поддержка изображений в описаниях
+- **🔍 Enhanced Search / Расширенный поиск** - improved task filtering / улучшенная фильтрация задач
+- **📊 Team Statistics / Статистика команд** - team collaboration analytics / аналитика по командной работе
+
+### 🤖 Telegram Bot Integration / Интеграция с Telegram ботом
+- **🔗 Account Linking / Привязка аккаунта** - link your Telegram account to your website profile / свяжите ваш Telegram с профилем на сайте
+- **📨 Smart Notifications / Умные уведомления** - get notifications about task assignments and mentions / получайте уведомления о назначении задач и упоминаниях
+- **⏰ Automatic Reminders / Автоматические напоминания** - deadline reminders 1-3 days in advance / уведомления о дедлайнах за 1-3 дня
+- **🚨 Stuck Task Monitoring / Мониторинг зависших задач** - notifications about tasks not updated for over 7 days / уведомления о задачах, которые не обновлялись более 7 дней
+- **📊 Weekly Reports / Еженедельные отчёты** - automatic reports for team owners / автоматические отчёты владельцам команд
+- **💬 Comment Mentions / Упоминания в комментариях** - notifications when mentioned with @username in comments / уведомления при упоминании @username в комментариях
+
+### 🎨 Enhanced Interface / Улучшенный интерфейс
+- **📝 Rich Text Editor / Rich Text Editor** - full-featured editor with formatting for task descriptions / полноценный редактор с форматированием для описаний задач
+- **🏷️ Tag System / Система тегов** - predefined tags: Urgent, Bug, Enhancement, Discuss, Documents / предустановленные теги: Срочно, Баг, Улучшение, Обсудить, Документы
+- **📅 Enhanced Dates / Улучшенные даты** - task planning with deadlines / планирование задач с дедлайнами
+- **💬 Enhanced Comments / Улучшенные комментарии** - auto-scroll, new comment indicators, mentions / автопрокрутка, индикаторы новых комментариев, упоминания
+- **🎯 Drag & Drop / Drag & Drop** - drag and drop task movement between statuses with animations / перетаскивание задач между статусами с анимациями
+- **📱 Responsive Design / Адаптивный дизайн** - full mobile device support / полная поддержка мобильных устройств
+
+### ⚡ Performance / Производительность
+- **🔄 Real-time Updates / Real-time обновления** - instant synchronization via WebSocket / мгновенная синхронизация через WebSocket
+- **📦 Docker Ready / Docker готовность** - full containerization with nginx / полная контейнеризация с nginx
+- **🗄️ Optimized Database / Оптимизированная БД** - improved queries and indexes / улучшенные запросы и индексы
+- **🎨 Caching / Кэширование** - caching for static files and images / кэширование статических файлов и изображений
+
 ---
 
 <div align="center">
@@ -100,7 +128,7 @@ flowchart LR
 ### ✨ Ключевые особенности
 
 <table>
-  <tr><td>🎨 Современный UI/UX</td><td>Адаптивный дизайн с поддержкой темной/светлой темы</td></tr>
+  <tr><td>🎨 Современный UI/UX</td><td>Адаптивный дизайн с красивыми анимациями</td></tr>
   <tr><td>📋 Канбан-доска</td><td>Drag & Drop интерфейс с настраиваемыми статусами</td></tr>
   <tr><td>✅ ToDo-листы</td><td>Персональные задачи с датами и приоритетами</td></tr>
   <tr><td>👥 Командная работа</td><td>Создание команд, назначение задач, совместная работа</td></tr>
@@ -124,6 +152,47 @@ docker-compose up --build -d
 
 # Открыть в браузере
 open http://localhost
+```
+
+#### 🔧 Настройка переменных окружения / Environment Variables Setup
+```bash
+# 1. Скопируйте пример файла
+cp env.example .env
+
+# 2. Отредактируйте .env файл с вашими настройками:
+# === Настройки базы данных ===
+DATABASE_URL=postgres://kanban_user:kanban_pass@db:5432/kanban_db
+
+# === Telegram Bot Token ===
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# === Настройки Flask ===
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+FLASK_DEBUG=false
+SECRET_KEY=your_secret_key_here
+SESSION_LIFETIME=1800
+
+# === Настройки загрузки файлов ===
+UPLOAD_FOLDER=static/uploads
+MAX_CONTENT_LENGTH=16777216
+
+# === Настройки PostgreSQL ===
+POSTGRES_USER=kanban_user
+POSTGRES_PASSWORD=kanban_pass
+POSTGRES_DB=kanban_db
+BASE_URL=https://your-domain.com
+```
+
+#### 🤖 Настройка Telegram бота / Telegram Bot Setup
+```bash
+# 1. Создайте бота через @BotFather в Telegram
+# 2. Получите токен бота
+# 3. Добавьте токен в .env файл:
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# 4. Перезапустите приложение
+docker-compose restart
 ```
 
 #### 🛠️ Ручная установка
@@ -191,7 +260,7 @@ python app.py
       Редактирование данных — Имя, email, страна<br>
       Смена пароля — Безопасное обновление<br>
       Аватары — Загрузка профильных фото<br>
-      Темы — Переключение между темной/светлой темой
+      Современный дизайн — Красивые анимации и интерфейс
     </td>
   </tr>
 </table>
@@ -209,7 +278,7 @@ python app.py
 ### ✨ Key Features
 
 <table>
-  <tr><td>🎨 Modern UI/UX</td><td>Responsive design with dark/light theme support</td></tr>
+  <tr><td>🎨 Modern UI/UX</td><td>Responsive design with beautiful animations</td></tr>
   <tr><td>📋 Kanban Board</td><td>Drag & Drop interface with customizable statuses</td></tr>
   <tr><td>✅ Todo Lists</td><td>Personal tasks with dates and priorities</td></tr>
   <tr><td>👥 Team Collaboration</td><td>Create teams, assign tasks, work together</td></tr>
@@ -233,6 +302,47 @@ docker-compose up --build -d
 
 # Open in browser
 open http://localhost
+```
+
+#### 🔧 Environment Variables Setup / Настройка переменных окружения
+```bash
+# 1. Copy the example file
+cp env.example .env
+
+# 2. Edit .env file with your settings:
+# === Database Settings ===
+DATABASE_URL=postgres://kanban_user:kanban_pass@db:5432/kanban_db
+
+# === Telegram Bot Token ===
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# === Flask Settings ===
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+FLASK_DEBUG=false
+SECRET_KEY=your_secret_key_here
+SESSION_LIFETIME=1800
+
+# === File Upload Settings ===
+UPLOAD_FOLDER=static/uploads
+MAX_CONTENT_LENGTH=16777216
+
+# === PostgreSQL Settings ===
+POSTGRES_USER=kanban_user
+POSTGRES_PASSWORD=kanban_pass
+POSTGRES_DB=kanban_db
+BASE_URL=https://your-domain.com
+```
+
+#### 🤖 Telegram Bot Setup / Настройка Telegram бота
+```bash
+# 1. Create a bot via @BotFather in Telegram
+# 2. Get the bot token
+# 3. Add the token to .env file:
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# 4. Restart the application
+docker-compose restart
 ```
 
 #### 🛠️ Manual Installation
@@ -300,7 +410,7 @@ python app.py
       Edit Data — Name, email, country<br>
       Change Password — Secure update<br>
       Avatars — Upload profile photos<br>
-      Themes — Switch between dark/light theme
+      Modern Design — Beautiful animations and interface
     </td>
   </tr>
 </table>
@@ -357,6 +467,7 @@ python app.py
 - **Flask-SocketIO** — WebSocket поддержка / WebSocket support
 - **Werkzeug** — Утилиты безопасности / Security utilities
 - **Eventlet** — Асинхронный сервер / Async server
+- **python-telegram-bot** — Telegram Bot API / Telegram Bot API
 
 ### Frontend
 - **HTML5/CSS3** — Современная разметка и стили / Modern markup and styles
@@ -378,22 +489,31 @@ python app.py
 ```
 kanban-flask/
 ├── 📄 app.py                 # Основное Flask приложение / Main Flask app
+├── 🤖 telegram_bot.py        # Telegram бот для уведомлений / Telegram bot for notifications
+├── 🚀 start_with_bot.py      # Запуск приложения с ботом / Application launcher with bot
 ├── 🐳 docker-compose.yml     # Docker Compose конфигурация / Docker Compose config
 ├── 🐳 Dockerfile             # Docker образ / Docker image
 ├── 🌐 nginx.conf             # Nginx конфигурация / Nginx config
 ├── 📋 requirements.txt       # Python зависимости / Python dependencies
+├── 📄 env.example            # Пример переменных окружения / Environment variables example
 ├── 📁 static/                # Статические файлы / Static files
 │   ├── 🎨 css/               # Стили / Styles
 │   ├── ⚡ js/                 # JavaScript
 │   ├── 👤 avatars/           # Аватары пользователей / User avatars
 │   ├── 📸 uploads/           # Загруженные изображения / Uploaded images
-│   └── 🌍 countries.js       # Список стран / Countries list
+│   └── 🖼️ profile.jpg        # Изображения профиля / Profile images
 ├── 📁 templates/             # HTML шаблоны / HTML templates
 │   ├── 🏠 home.html          # Главная страница / Home page
 │   ├── 📋 kanban.html        # Канбан-доска / Kanban board
 │   ├── ✅ todo.html          # ToDo-лист / Todo list
 │   ├── 👥 team_board.html    # Командная доска / Team board
-│   └── ✏️ task_*.html        # Редактирование задач / Task editing
+│   ├── ✏️ task_edit.html     # Редактирование задач / Task editing
+│   ├── 👁️ task_view.html    # Просмотр задач / Task viewing
+│   ├── 👥 team_task_edit.html # Редактирование командных задач / Team task editing
+│   ├── 👁️ team_task_view.html # Просмотр командных задач / Team task viewing
+│   ├── 🎭 universal_modals.html # Универсальные модальные окна / Universal modals
+│   └── ❌ error.html         # Страница ошибок / Error page
+├── 📁 uploads/               # Загруженные файлы / Uploaded files
 └── 📖 README.md              # Документация / Documentation
 ```
 
@@ -434,6 +554,10 @@ kanban-flask/
 git clone https://github.com/yafoxins/kanban-flask.git
 cd kanban-flask
 
+# Настройка переменных окружения / Setup environment variables
+cp env.example .env
+# Отредактируйте .env файл с вашими настройками / Edit .env file with your settings
+
 # Запуск / Run
 docker-compose up -d
 ```
@@ -443,6 +567,10 @@ docker-compose up -d
 ```bash
 # Установка зависимостей / Install dependencies
 pip install -r requirements.txt
+
+# Настройка переменных окружения / Setup environment variables
+cp env.example .env
+# Отредактируйте .env файл с вашими настройками / Edit .env file with your settings
 
 # Настройка PostgreSQL / Setup PostgreSQL
 sudo -u postgres createdb kanban_db
@@ -458,6 +586,33 @@ gunicorn -w 4 -k gevent --worker-connections 1000 app:app
 
 ---
 
+## 🔧 Переменные окружения / Environment Variables
+
+### Основные настройки / Core Settings
+- **DATABASE_URL** — URL подключения к PostgreSQL / PostgreSQL connection URL
+- **SECRET_KEY** — Секретный ключ для сессий Flask / Flask session secret key
+- **BASE_URL** — Базовый URL приложения / Application base URL
+
+### Telegram Bot / Telegram Bot
+- **TELEGRAM_BOT_TOKEN** — Токен бота от @BotFather / Bot token from @BotFather
+
+### Flask настройки / Flask Settings
+- **FLASK_HOST** — Хост для запуска Flask (по умолчанию: 0.0.0.0) / Flask host (default: 0.0.0.0)
+- **FLASK_PORT** — Порт для запуска Flask (по умолчанию: 5000) / Flask port (default: 5000)
+- **FLASK_DEBUG** — Режим отладки (true/false) / Debug mode (true/false)
+- **SESSION_LIFETIME** — Время жизни сессии в секундах / Session lifetime in seconds
+
+### Загрузка файлов / File Upload
+- **UPLOAD_FOLDER** — Папка для загрузки файлов / Upload folder path
+- **MAX_CONTENT_LENGTH** — Максимальный размер файла в байтах / Maximum file size in bytes
+
+### PostgreSQL настройки / PostgreSQL Settings
+- **POSTGRES_USER** — Пользователь PostgreSQL / PostgreSQL user
+- **POSTGRES_PASSWORD** — Пароль PostgreSQL / PostgreSQL password
+- **POSTGRES_DB** — База данных PostgreSQL / PostgreSQL database
+
+---
+
 ## 🔒 Безопасность / Security
 
 - **CSRF Protection** — Защита от межсайтовых запросов / Cross-site request forgery protection
@@ -466,6 +621,36 @@ gunicorn -w 4 -k gevent --worker-connections 1000 app:app
 - **Input Validation** — Валидация входных данных / Input validation
 - **SQL Injection Protection** — Защита от SQL-инъекций / SQL injection protection
 - **XSS Protection** — Защита от XSS-атак / XSS attack protection
+
+---
+
+## 💰 Поддержка проекта / Support the Project
+
+<div align="center">
+
+### 🇷🇺 Поддержать разработку
+
+Если вам нравится проект, вы можете поддержать его развитие:
+
+| 💎 Криптовалюта | 🏦 Адрес |
+|-----------------|----------|
+| **USDT (TRC20)** | `TPyfMGvU482U9i4mqVzvBbFmWniHDpQhhN` |
+| **USDT (TON)** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+| **Bitcoin (BTC)** | `1HFpMPEdxdNQBagkzBkJQpWDvf5dLDNmy4` |
+| **TON** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+
+### 🇺🇸 Support the project
+
+If you like the project, you can support its development:
+
+| 💎 Cryptocurrency | 🏦 Address |
+|-------------------|------------|
+| **USDT (TRC20)** | `TPyfMGvU482U9i4mqVzvBbFmWniHDpQhhN` |
+| **USDT (TON)** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+| **Bitcoin (BTC)** | `1HFpMPEdxdNQBagkzBkJQpWDvf5dLDNmy4` |
+| **TON** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+
+</div>
 
 ---
 

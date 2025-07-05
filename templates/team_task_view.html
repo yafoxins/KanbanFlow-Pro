@@ -8,29 +8,230 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
   <!-- Quill.js -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
   <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
 
   <!-- CSRF Token -->
   <script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
+    // CSRF токен доступен через data-csrf-token в body
 
-    // Функция для добавления CSRF-токена в заголовки
-    function getHeaders(contentType = 'application/json') {
+    // Глобальная функция для получения заголовков CSRF
+    window.getHeaders = function (contentType = 'application/json') {
       const headers = {
-        'X-CSRF-Token': CSRF_TOKEN
+        'X-CSRF-Token': document.body.getAttribute('data-csrf-token') || ''
       };
-      if (contentType) {
-        headers['Content-Type'] = contentType;
-      }
+      if (contentType) headers['Content-Type'] = contentType;
       return headers;
-    }
+    };
   </script>
+
+  <style>
+    /* === Комментарии === */
+    .task-comments-section {
+      margin-top: 32px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #5271ff0a;
+      padding: 18px 18px 10px 18px;
+    }
+
+    .comments-title {
+      font-size: 1.18em;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #comments-list {
+      margin-bottom: 18px;
+    }
+
+    .comment-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+      background: #f8faff;
+      border-radius: 10px;
+      box-shadow: 0 1px 8px #5271ff0a;
+      padding: 10px 14px 10px 10px;
+    }
+
+    .comment-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #e3e8ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2em;
+      overflow: hidden;
+      box-shadow: 0 2px 8px #5271ff22;
+    }
+
+    .comment-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-initial {
+      color: #5271ff;
+    }
+
+    .comment-body {
+      flex: 1;
+    }
+
+    .comment-meta {
+      font-size: 0.98em;
+      color: #5271ff;
+      font-weight: 600;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .comment-author {
+      color: #222;
+      font-weight: 700;
+    }
+
+    .comment-date {
+      color: #b9bccc;
+      font-size: 0.93em;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .comment-text {
+      margin-top: 2px;
+      font-size: 1.08em;
+      color: #222;
+      word-break: break-word;
+    }
+
+    .comment-delete-btn {
+      background: none;
+      border: none;
+      color: #d11a2a;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      margin-left: 8px;
+      margin-right: 0;
+    }
+
+    .comment-delete-btn:hover {
+      background: #ffeaea;
+    }
+
+    .no-comments {
+      color: #b9bccc;
+      text-align: center;
+      margin: 10px 0 16px 0;
+    }
+
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 18px;
+      background: #f7f8fa;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #5271ff0a, 0 1px 4px #0001;
+      padding: 18px 16px 14px 16px;
+    }
+
+    .comment-input-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #comment-input {
+      min-height: 70px;
+      font-size: 1.15em;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1.5px solid #e3e7f0;
+      background: #fff;
+      box-shadow: 0 1px 4px #5271ff0a;
+      resize: vertical;
+      margin-bottom: 0;
+    }
+
+    .comment-form .btn-primary {
+      width: 100%;
+      margin: 0;
+      font-size: 1.08em;
+      padding: 12px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #5271ff0a;
+      background: linear-gradient(90deg, #7b5cff, #5271ff 80%);
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .comment-form .btn-primary:hover {
+      background: linear-gradient(90deg, #5271ff, #7b5cff 80%);
+    }
+
+    .mention {
+      color: #5271ff;
+      background: #e3e8ff;
+      border-radius: 6px;
+      padding: 0 4px;
+      font-weight: 700;
+    }
+
+    .mention-autocomplete {
+      position: absolute;
+      left: 0;
+      top: 100%;
+      z-index: 10;
+      background: #fff;
+      border: 1px solid #dbe2ff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #5271ff22;
+      min-width: 120px;
+      max-width: 220px;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .mention-item {
+      padding: 7px 12px;
+      cursor: pointer;
+      color: #5271ff;
+      font-weight: 600;
+    }
+
+    .mention-item:hover {
+      background: #f3f6ff;
+    }
+  </style>
 </head>
 
-<body>
+<body data-csrf-token="{{ csrf_token }}">
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-inner">
@@ -79,6 +280,19 @@
           <div class="task-view-description">
             <div class="task-view-desc-title">Описание</div>
             <div class="task-description-content" id="task-desc"></div>
+          </div>
+          <!-- Блок комментариев -->
+          <div class="task-comments-section">
+            <h3 class="comments-title"><span class="material-icons">forum</span> Комментарии</h3>
+            <div id="comments-list"></div>
+            <form id="comment-form" class="comment-form">
+              <div class="comment-input-wrap">
+                <textarea id="comment-input"
+                  placeholder="Напишите комментарий... Используйте @ для упоминания"></textarea>
+                <div id="mention-autocomplete" class="mention-autocomplete"></div>
+              </div>
+              <button type="submit" class="btn btn-primary"><span class="material-icons">send</span>Отправить</button>
+            </form>
           </div>
           <div class="task-view-info" id="task-info"></div>
         </div>
@@ -269,7 +483,6 @@
         await loadTeamData();
         renderTaskView();
       } catch (error) {
-        console.error('Ошибка загрузки задачи:', error);
         document.getElementById('task-view-content').innerHTML =
           '<div class="error-message">Ошибка загрузки задачи</div>';
       }
@@ -287,7 +500,6 @@
         // Используем структуру с id и username из API
         MEMBERS = membersData.members || [];
       } catch (error) {
-        console.error('Ошибка загрузки данных команды:', error);
         STATUSES = [];
         MEMBERS = [];
       }
@@ -370,7 +582,6 @@
           }
         }
       } catch (error) {
-        console.error("Error loading avatar for task:", error);
       }
     }
 
@@ -532,11 +743,18 @@
         if (response.ok) {
           goBack();
         } else {
-          alert('Ошибка удаления задачи');
+          if (window.toast) {
+            window.toast.serverError();
+          } else {
+            alert('Ошибка удаления задачи');
+          }
         }
       } catch (error) {
-        console.error('Ошибка удаления:', error);
-        alert('Ошибка удаления задачи');
+        if (window.toast) {
+          window.toast.networkError();
+        } else {
+          alert('Ошибка удаления задачи');
+        }
       }
     };
 
@@ -567,6 +785,125 @@
         document.getElementById('edit-error').innerText = 'Ошибка сохранения';
       }
     };
+
+    // ===================== Комментарии =====================
+    async function loadComments() {
+      if (!TEAM_ID || !TASK_ID) return;
+      const resp = await fetch(`/${USERNAME}/api/teams/${TEAM_ID}/tasks/${TASK_ID}/comments`, { headers: getHeaders() });
+      const comments = await resp.json();
+      renderComments(comments);
+    }
+
+    function renderComments(comments) {
+      const list = document.getElementById('comments-list');
+      if (!list) return;
+      if (!comments || comments.length === 0) {
+        list.innerHTML = '<div class="no-comments">Комментариев пока нет</div>';
+        return;
+      }
+      list.innerHTML = comments.map(c => `
+        <div class="comment-item">
+          <div class="comment-avatar">
+            ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.author}" />` : `<span class="avatar-initial">${(c.author || '?')[0].toUpperCase()}</span>`}
+          </div>
+          <div class="comment-body">
+            <div class="comment-meta">
+              <span class="comment-author">${escapeHTML(c.author)}</span>
+              <span class="comment-date">${formatDateTime(c.created_at)}</span>
+              ${c.author === USERNAME ? `<button class="comment-delete-btn" data-comment-id="${c.id}" title="Удалить"><span class="material-icons">delete</span></button>` : ''}
+            </div>
+            <div class="comment-text">${highlightMentions(escapeHTML(c.text), c.mentions)}</div>
+          </div>
+        </div>
+      `).join('');
+      // Обработчик удаления
+      list.querySelectorAll('.comment-delete-btn').forEach(btn => {
+        btn.onclick = async function () {
+          if (!confirm('Удалить комментарий?')) return;
+          const commentId = btn.getAttribute('data-comment-id');
+          await fetch(`/${USERNAME}/api/teams/${TEAM_ID}/tasks/${TASK_ID}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          await loadComments();
+        };
+      });
+    }
+
+    function highlightMentions(text, mentions) {
+      if (!mentions || !Array.isArray(mentions) || mentions.length === 0) return text;
+      let res = text;
+      mentions.forEach(m => {
+        res = res.replace(new RegExp(`@${m}`, 'g'), `<span class='mention'>@${m}</span>`);
+      });
+      return res;
+    }
+
+    // ======= Автодополнение по @ =======
+    const commentInput = document.getElementById('comment-input');
+    const mentionBox = document.getElementById('mention-autocomplete');
+    let mentionActive = false;
+    let mentionStart = -1;
+    if (commentInput) {
+      commentInput.addEventListener('input', function (e) {
+        const val = commentInput.value;
+        const pos = commentInput.selectionStart;
+        const atIdx = val.lastIndexOf('@', pos - 1);
+        if (atIdx !== -1 && (atIdx === 0 || /[\s.,;:!?()\[\]{}]/.test(val[atIdx - 1] || ''))) {
+          const query = val.slice(atIdx + 1, pos).toLowerCase();
+          const filtered = MEMBERS.filter(m => m.username.toLowerCase().startsWith(query));
+          if (filtered.length > 0 && query.length >= 0) {
+            mentionBox.innerHTML = filtered.map(m => `<div class='mention-item' data-username='${m.username}'>@${m.username}</div>`).join('');
+            mentionBox.style.display = 'block';
+            mentionActive = true;
+            mentionStart = atIdx;
+            Array.from(mentionBox.children).forEach(item => {
+              item.onclick = function () {
+                const before = val.slice(0, mentionStart);
+                const after = val.slice(pos);
+                commentInput.value = before + '@' + item.dataset.username + ' ' + after;
+                mentionBox.style.display = 'none';
+                commentInput.focus();
+                mentionActive = false;
+              };
+            });
+            return;
+          }
+        }
+        mentionBox.style.display = 'none';
+        mentionActive = false;
+      });
+      commentInput.addEventListener('blur', function () {
+        setTimeout(() => mentionBox.style.display = 'none', 120);
+      });
+    }
+
+    // ======= Отправка комментария =======
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+      commentForm.onsubmit = async function (e) {
+        e.preventDefault();
+        const text = commentInput.value.trim();
+        if (!text) return;
+        // Собираем упоминания
+        const mentionMatches = Array.from(text.matchAll(/@([a-zA-Z0-9_]+)/g)).map(m => m[1]);
+        const mentions = MEMBERS.filter(m => mentionMatches.includes(m.username)).map(m => m.username);
+        const resp = await fetch(`/${USERNAME}/api/teams/${TEAM_ID}/tasks/${TASK_ID}/comments`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ text, mentions })
+        });
+        if (resp.ok) {
+          commentInput.value = '';
+          await loadComments();
+        }
+      };
+    }
+
+    // ======= Инициализация загрузки комментариев =======
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(loadComments, 400); // после загрузки задачи
+    });
 
     // ===================== Профиль =====================
     // Удаляем обращение к несуществующему profile-btn
@@ -747,7 +1084,11 @@
 
         // Проверяем размер файла (максимум 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          alert("Файл слишком большой. Максимальный размер: 5MB");
+          if (window.toast) {
+            window.toast.avatarSizeError();
+          } else {
+            alert("Файл слишком большой. Максимальный размер: 5MB");
+          }
           return;
         }
 
@@ -766,13 +1107,24 @@
           if (response.ok && data.success) {
             // Обновляем аватарку
             updateProfileAvatar(data.avatar_url);
-            alert("Аватарка успешно загружена!");
+            if (window.toast) {
+              window.toast.avatarUploaded();
+            } else {
+              alert("Аватарка успешно загружена!");
+            }
           } else {
-            alert(data.error || "Ошибка загрузки аватарки");
+            if (window.toast) {
+              window.toast.avatarUploadError(data.error);
+            } else {
+              alert(data.error || "Ошибка загрузки аватарки");
+            }
           }
         } catch (error) {
-          console.error("Error uploading avatar:", error);
-          alert("Ошибка загрузки аватарки");
+          if (window.toast) {
+            window.toast.avatarUploadError("Ошибка загрузки аватарки");
+          } else {
+            alert("Ошибка загрузки аватарки");
+          }
         }
       };
     }
@@ -794,13 +1146,24 @@
           if (response.ok && data.success) {
             // Обновляем аватарку
             updateProfileAvatar(null);
-            alert("Аватарка удалена!");
+            if (window.toast) {
+              window.toast.avatarDeleted();
+            } else {
+              alert("Аватарка удалена!");
+            }
           } else {
-            alert(data.error || "Ошибка удаления аватарки");
+            if (window.toast) {
+              window.toast.avatarDeleteError(data.error);
+            } else {
+              alert(data.error || "Ошибка удаления аватарки");
+            }
           }
         } catch (error) {
-          console.error("Error deleting avatar:", error);
-          alert("Ошибка удаления аватарки");
+          if (window.toast) {
+            window.toast.avatarDeleteError("Ошибка удаления аватарки");
+          } else {
+            alert("Ошибка удаления аватарки");
+          }
         }
       };
     }
@@ -820,7 +1183,6 @@
         // Обновляем аватарку
         updateProfileAvatar(data.avatar_url);
       } catch (error) {
-        console.error('Ошибка загрузки профиля:', error);
       }
     }
 

@@ -10,26 +10,24 @@
   <!-- Quill.js -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
   <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
 
   <!-- CSRF Token -->
   <script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
+    // CSRF токен доступен через data-csrf-token в body
 
-    // Функция для добавления CSRF-токена в заголовки
-    function getHeaders(contentType = 'application/json') {
+    // Глобальная функция для получения заголовков CSRF
+    window.getHeaders = function (contentType = 'application/json') {
       const headers = {
-        'X-CSRF-Token': CSRF_TOKEN
+        'X-CSRF-Token': document.body.getAttribute('data-csrf-token') || ''
       };
-      if (contentType) {
-        headers['Content-Type'] = contentType;
-      }
+      if (contentType) headers['Content-Type'] = contentType;
       return headers;
-    }
+    };
   </script>
 </head>
 
-<body>
+<body data-csrf-token="{{ csrf_token }}">
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-inner">
@@ -160,7 +158,11 @@
         }
 
         if (!TEAM_ID) {
-          alert('Задача не найдена');
+          if (window.toast) {
+            window.toast.taskNotFound();
+          } else {
+            alert('Задача не найдена');
+          }
           goBack();
           return;
         }
@@ -168,7 +170,11 @@
         // Теперь загружаем данные задачи
         const taskResponse = await fetch(`/${USERNAME}/api/teams/${TEAM_ID}/tasks/${TASK_ID}/data`, { headers: getHeaders() });
         if (!taskResponse.ok) {
-          alert('Задача не найдена');
+          if (window.toast) {
+            window.toast.taskNotFound();
+          } else {
+            alert('Задача не найдена');
+          }
           goBack();
           return;
         }
@@ -186,7 +192,11 @@
         populateForm();
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
-        alert('Ошибка загрузки данных');
+        if (window.toast) {
+          window.toast.serverError();
+        } else {
+          alert('Ошибка загрузки данных');
+        }
       }
     }
 
