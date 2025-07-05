@@ -75,7 +75,7 @@
 
 ### 🎯 О проекте
 
-**KanbanFlow Pro** — это современное веб-приложение для управления задачами и проектами, построенное на Flask и PostgreSQL. Приложение объединяет в себе канбан-доску, ToDo-листы и систему командной работы в едином интуитивном интерфейсе.
+**KanbanFlow Pro** — это современное веб-приложение для управления задачами и проектами, построенное на Flask и PostgreSQL. Приложение объединяет в себе канбан-доску, ToDo-листы и систему командной работы в едином интуитивно-понятном интерфейсе.
 
 **🌐 Работающее демо:** [kanban.yafoxin.ru](https://kanban.yafoxin.ru)
 
@@ -100,7 +100,7 @@ flowchart LR
 ### ✨ Ключевые особенности
 
 <table>
-  <tr><td>🎨 Современный UI/UX</td><td>Адаптивный дизайн с поддержкой темной/светлой темы</td></tr>
+  <tr><td>🎨 Современный UI/UX</td><td>Адаптивный дизайн с красивыми анимациями</td></tr>
   <tr><td>📋 Канбан-доска</td><td>Drag & Drop интерфейс с настраиваемыми статусами</td></tr>
   <tr><td>✅ ToDo-листы</td><td>Персональные задачи с датами и приоритетами</td></tr>
   <tr><td>👥 Командная работа</td><td>Создание команд, назначение задач, совместная работа</td></tr>
@@ -191,7 +191,7 @@ python app.py
       Редактирование данных — Имя, email, страна<br>
       Смена пароля — Безопасное обновление<br>
       Аватары — Загрузка профильных фото<br>
-      Темы — Переключение между темной/светлой темой
+      Современный дизайн — Красивые анимации и интерфейс
     </td>
   </tr>
 </table>
@@ -209,7 +209,7 @@ python app.py
 ### ✨ Key Features
 
 <table>
-  <tr><td>🎨 Modern UI/UX</td><td>Responsive design with dark/light theme support</td></tr>
+  <tr><td>🎨 Modern UI/UX</td><td>Responsive design with beautiful animations</td></tr>
   <tr><td>📋 Kanban Board</td><td>Drag & Drop interface with customizable statuses</td></tr>
   <tr><td>✅ Todo Lists</td><td>Personal tasks with dates and priorities</td></tr>
   <tr><td>👥 Team Collaboration</td><td>Create teams, assign tasks, work together</td></tr>
@@ -300,7 +300,7 @@ python app.py
       Edit Data — Name, email, country<br>
       Change Password — Secure update<br>
       Avatars — Upload profile photos<br>
-      Themes — Switch between dark/light theme
+      Modern Design — Beautiful animations and interface
     </td>
   </tr>
 </table>
@@ -466,6 +466,36 @@ gunicorn -w 4 -k gevent --worker-connections 1000 app:app
 - **Input Validation** — Валидация входных данных / Input validation
 - **SQL Injection Protection** — Защита от SQL-инъекций / SQL injection protection
 - **XSS Protection** — Защита от XSS-атак / XSS attack protection
+
+---
+
+## 💰 Поддержка проекта / Support the Project
+
+<div align="center">
+
+### 🇷🇺 Поддержать разработку
+
+Если вам нравится проект, вы можете поддержать его развитие:
+
+| 💎 Криптовалюта | 🏦 Адрес |
+|-----------------|----------|
+| **USDT (TRC20)** | `TPyfMGvU482U9i4mqVzvBbFmWniHDpQhhN` |
+| **USDT (TON)** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+| **Bitcoin (BTC)** | `1HFpMPEdxdNQBagkzBkJQpWDvf5dLDNmy4` |
+| **TON** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+
+### 🇺🇸 Support the project
+
+If you like the project, you can support its development:
+
+| 💎 Cryptocurrency | 🏦 Address |
+|-------------------|------------|
+| **USDT (TRC20)** | `TPyfMGvU482U9i4mqVzvBbFmWniHDpQhhN` |
+| **USDT (TON)** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+| **Bitcoin (BTC)** | `1HFpMPEdxdNQBagkzBkJQpWDvf5dLDNmy4` |
+| **TON** | `UQDwQyau0M1dPOAM1BB8_VgMMc--O2gO0ixSlWSG2PN_lKTx` |
+
+</div>
 
 ---
 

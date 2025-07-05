@@ -1,0 +1,387 @@
+<!-- ===================== УНИВЕРСАЛЬНЫЕ МОДАЛКИ ===================== -->
+
+<!-- Модалка: профиль пользователя -->
+<div class="modal" id="universal-profile-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Профиль пользователя</h2>
+            <button class="modal-close" id="close-universal-profile-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="profile-card">
+            <div class="profile-avatar" id="universal-profile-avatar-container">
+                <img id="universal-profile-avatar-img" class="profile-avatar-img" src="{{ user_avatar_url or '' }}" />
+                <span class="profile-avatar-initial" id="universal-profile-avatar-initial">{{ username[0]|upper
+                    }}</span>
+            </div>
+            <div class="profile-username" id="universal-profile-username"></div>
+            <button class="btn btn-secondary profile-edit-btn center-btn" id="universal-edit-profile-btn">
+                <span class="material-icons">edit</span>Редактировать профиль
+            </button>
+            <div class="profile-avatar-actions">
+                <label for="avatar-upload" class="btn btn-primary">
+                    <span class="material-icons">photo_camera</span>
+                    Загрузить аватарку
+                </label>
+                <input type="file" id="avatar-upload" accept="image/*" />
+                <button class="btn btn-danger" id="universal-delete-avatar-btn">
+                    <span class="material-icons">delete</span>
+                    Удалить
+                </button>
+            </div>
+            <!-- Блок красивого просмотра -->
+            <div class="profile-info" id="universal-profile-info-block">
+                <div class="profile-info-row"><span class="material-icons profile-info-icon">mail</span><span
+                        class="profile-info-label">E-mail:</span><span class="profile-info-value"
+                        id="universal-profile-email"></span></div>
+                <div class="profile-info-row"><span class="material-icons profile-info-icon">public</span><span
+                        class="profile-info-label">Страна:</span><span class="profile-info-value"
+                        id="universal-profile-country"></span>
+                </div>
+                <div class="profile-info-row"><span class="material-icons profile-info-icon">person</span><span
+                        class="profile-info-label">Имя:</span><span class="profile-info-value"
+                        id="universal-profile-fullname"></span></div>
+                <div class="profile-info-row" id="telegram-status-row">
+                    <span class="material-icons profile-info-icon">telegram</span>
+                    <span class="profile-info-label">Telegram:</span>
+                    <span class="profile-info-value" id="universal-profile-telegram"
+                        style="display:flex;align-items:center;gap:10px;min-height:24px;">
+                        <span id="universal-profile-telegram-status">-</span>
+                    </span>
+                    <div class="telegram-controls" id="universal-telegram-controls" style="display:none;"></div>
+                </div>
+            </div>
+            <!-- Элемент успешного сообщения -->
+            <div id="universal-profile-success-message" class="profile-success-message" style="display: none;"></div>
+            <!-- Форма редактирования -->
+            <form class="profile-form" id="universal-profile-form" autocomplete="off">
+                <div class="profile-fields">
+                    <div class="profile-field">
+                        <span class="profile-label">E-mail:</span>
+                        <input type="email" id="universal-profile-email-input" class="profile-input" disabled
+                            placeholder="Введите email" />
+                    </div>
+                    <div class="profile-field">
+                        <span class="profile-label">Страна:</span>
+                        <select id="universal-profile-country-select" class="profile-input custom-select" disabled>
+                            <option value="">Выберите страну</option>
+                        </select>
+                    </div>
+                    <div class="profile-field">
+                        <span class="profile-label">Имя:</span>
+                        <input type="text" id="universal-profile-fullname-input" class="profile-input" disabled
+                            placeholder="Введите полное имя" />
+                    </div>
+                    <div class="profile-field" id="telegram-edit-field">
+                        <span class="profile-label">Telegram:</span>
+                        <input type="text" id="universal-profile-telegram-input" class="profile-input" disabled
+                            placeholder="Введите Telegram ID" />
+                        <div class="telegram-controls" id="universal-telegram-controls-edit" style="margin-top: 0;">
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button type="button" class="btn btn-secondary" id="universal-cancel-profile-btn">
+                        <span class="material-icons">close</span>Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="universal-save-profile-btn">
+                        <span class="material-icons">save</span>Сохранить
+                    </button>
+                </div>
+                <div id="universal-profile-error" class="profile-error"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка: смена пароля -->
+<div class="modal" id="universal-change-password-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span class="material-icons">lock_reset</span>
+                Смена пароля
+            </h2>
+            <button class="modal-close" id="close-universal-change-password-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="password-change-content">
+            <div class="password-change-icon">
+                <span class="material-icons">security</span>
+            </div>
+            <p class="password-change-description">
+                Введите текущий пароль и новый пароль для обновления безопасности вашего аккаунта
+            </p>
+            <form class="modal-form" id="universal-change-password-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="old_password" class="form-label">
+                        <span class="material-icons">lock</span>
+                        Текущий пароль
+                    </label>
+                    <input type="password" id="old_password" class="form-control" placeholder="Введите текущий пароль"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label for="new_password" class="form-label">
+                        <span class="material-icons">lock_open</span>
+                        Новый пароль
+                    </label>
+                    <input type="password" id="new_password" class="form-control" placeholder="Введите новый пароль"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label for="new_password2" class="form-label">
+                        <span class="material-icons">verified</span>
+                        Подтвердите новый пароль
+                    </label>
+                    <input type="password" id="new_password2" class="form-control" placeholder="Повторите новый пароль"
+                        required />
+                </div>
+                <div class="d-flex gap-3">
+                    <button type="button" class="btn btn-secondary" id="universal-cancel-change-password-btn">
+                        <span class="material-icons">close</span>Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="universal-change-password-submit">
+                        <span class="material-icons">sync_lock</span>Обновить пароль
+                    </button>
+                </div>
+                <div id="universal-change-password-error" class="modal-error"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка: О проекте -->
+<div class="modal" id="universal-about-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span class="material-icons">info</span>
+                О проекте
+            </h2>
+            <button class="modal-close" id="close-universal-about-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="about-content">
+            <div class="about-project">
+                <h3 class="about-subtitle">Kanban Board</h3>
+                <p class="about-description">
+                    Kanban Board — современная система управления задачами и командами с акцентом на
+                    <b>безопасность</b>, гибкость и удобство.<br>
+                    Проект поддерживает индивидуальные и командные доски, централизованное управление профилем,
+                    аватарками, командами и уведомлениями.<br>
+                    Вся логика модалок и профиля унифицирована для простоты поддержки и масштабирования.<br><br>
+                    <b>Ключевые возможности:</b><br>
+                    — Управление задачами по Kanban-методологии и ToDo-списками<br>
+                    — Командная работа: создание, редактирование, управление участниками и ролями<br>
+                    — Централизованный профиль пользователя с аватаркой и Telegram-статусом<br>
+                    — Уведомления в реальном времени через WebSocket<br>
+                    — Безопасная смена пароля и авторизация<br>
+                    — Современный адаптивный интерфейс с плавными анимациями и красивыми модалками<br>
+                    — Интеграция с Telegram и быстрые ссылки на профиль разработчика<br>
+                    — Поддержка Docker для быстрой развертки и изоляции<br>
+                    — Гибкая архитектура: вся логика вынесена в отдельные JS-модули для простоты поддержки<br>
+                </p>
+                <div class="tech-stack">
+                    <h4>Технологии:</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Flask</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">CSS3</span>
+                        <span class="tech-tag">WebSocket</span>
+                        <span class="tech-tag">Docker</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-author">
+                <h3 class="about-subtitle">Разработчик</h3>
+                <div class="author-card">
+                    <div class="author-avatar">
+                        <img src="{{ url_for('static', filename='profile.jpg') }}" alt="Александр Тимков"
+                            class="author-avatar-img">
+                    </div>
+                    <div class="author-info">
+                        <h4 class="author-name">Александр Тимков</h4>
+                        <p class="author-title">DevOps Engineer</p>
+                        <p class="author-age">24 года, Россия, Санкт-Петербург</p>
+                    </div>
+                </div>
+
+                <div class="author-links">
+                    <a href="https://yafoxin.ru" class="author-link" target="_blank">
+                        <span class="material-icons">language</span>
+                        <span>Личный сайт</span>
+                    </a>
+                    <a href="https://t.me/yafoxin" class="author-link" target="_blank">
+                        <span class="material-icons">telegram</span>
+                        <span>Telegram</span>
+                    </a>
+                    <a href="https://github.com/yafoxins" class="author-link" target="_blank">
+                        <span class="material-icons">code</span>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="about-footer">
+                <p class="about-version">Версия <b>5.5.7</b><span class="dev-badge">dev</span></p>
+                <p class="about-copyright">© 2025 Александр Тимков. Все права защищены.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== МОДАЛКИ КОМАНД ===================== -->
+
+<!-- Модалка: список команд -->
+<div class="modal" id="universal-teams-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span class="material-icons">groups</span>
+                Мои команды
+            </h2>
+            <button class="modal-close" id="close-universal-teams-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <button id="open-create-team-modal" class="btn btn-primary mb-4">
+            <span class="material-icons">add</span>Создать команду
+        </button>
+        <div id="universal-teams-list" class="teams-list"></div>
+    </div>
+</div>
+
+<!-- Модалка: создать команду -->
+<div class="modal" id="universal-create-team-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Создать команду</h2>
+            <button class="modal-close" id="close-universal-create-team-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form class="modal-form" id="universal-create-team-form" autocomplete="off">
+            <div class="form-group">
+                <label for="team-name-input" class="form-label">Название команды</label>
+                <input type="text" id="team-name-input" class="form-control" placeholder="Название команды"
+                    maxlength="40" required />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span class="material-icons">add</span>Создать
+            </button>
+            <div id="universal-create-team-error" class="modal-error"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Модалка: редактировать команду -->
+<div class="modal" id="universal-edit-team-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span class="material-icons">groups</span>
+                Редактировать команду
+            </h2>
+            <button class="modal-close" id="close-universal-edit-team-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form class="modal-form" id="universal-edit-team-form" autocomplete="off">
+            <div class="form-group">
+                <label for="edit-team-name" class="form-label">
+                    <span class="material-icons">edit</span>
+                    Название команды
+                </label>
+                <input type="text" id="edit-team-name" class="form-control" placeholder="Название команды"
+                    maxlength="40" required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <span class="material-icons">group</span>
+                    Участники команды
+                </label>
+                <div class="edit-team-members" id="edit-team-members"></div>
+            </div>
+            <div class="form-group">
+                <label for="add-member-input" class="form-label">Добавить участника</label>
+                <input type="text" id="add-member-input" class="form-control"
+                    placeholder="Добавить участника по username" maxlength="32" autocomplete="off" />
+            </div>
+            <button type="button" class="btn btn-secondary mb-3" id="add-member-btn">
+                <span class="material-icons">person_add</span>Добавить участника
+            </button>
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn">
+                    <span class="material-icons">save</span>Сохранить
+                </button>
+                <button type="button" class="btn btn-danger" id="delete-team-btn">
+                    <span class="material-icons">delete</span>Удалить
+                </button>
+            </div>
+            <div id="universal-edit-team-error" class="modal-error"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Модалка: подтверждение удаления команды -->
+<div class="modal" id="universal-confirm-delete-team-modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2 class="modal-title" style="color:#e53935;display:flex;align-items:center;gap:8px;">
+                <span class="material-icons" style="color:#e53935;">delete_forever</span>
+                Удалить команду
+            </h2>
+            <button class="modal-close" id="close-universal-confirm-delete-team-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 18px 0 10px 0; text-align:center;">
+            <div style="font-size:1.15em;margin-bottom:10px;">Вы действительно хотите удалить команду?</div>
+            <div id="confirm-delete-team-name"
+                style="font-weight:700;font-size:1.2em;color:#e53935;margin-bottom:18px;"></div>
+            <div class="d-flex gap-3 justify-center">
+                <button type="button" class="btn btn-secondary" id="cancel-delete-team-btn">
+                    <span class="material-icons">close</span>Отмена
+                </button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-team-btn">
+                    <span class="material-icons">delete</span>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка: подтверждение удаления аватарки -->
+<div class="modal" id="universal-confirm-delete-avatar-modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2 class="modal-title" style="color:#e53935;display:flex;align-items:center;gap:8px;">
+                <span class="material-icons" style="color:#e53935;">delete</span>
+                Удалить аватарку
+            </h2>
+            <button class="modal-close" id="close-universal-confirm-delete-avatar-modal-btn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 18px 0 10px 0; text-align:center;">
+            <img id="confirm-delete-avatar-img" src="{{ user_avatar_url or '' }}" alt="avatar"
+                style="width:72px;height:72px;border-radius:50%;box-shadow:0 2px 12px #0002;margin-bottom:14px;object-fit:cover;" />
+            <div style="font-size:1.15em;margin-bottom:10px;">Вы действительно хотите удалить аватарку?</div>
+            <div class="d-flex gap-3 justify-center">
+                <button type="button" class="btn btn-secondary" id="cancel-delete-avatar-btn">
+                    <span class="material-icons">close</span>Отмена
+                </button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-avatar-btn">
+                    <span class="material-icons">delete</span>Удалить
+                </button>
+            </div>
+            <div id="universal-delete-avatar-error" class="modal-error" style="margin-top:10px;"></div>
+        </div>
+    </div>
+</div>

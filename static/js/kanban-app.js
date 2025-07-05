@@ -2,13 +2,7 @@
 const body = document.body;
 const USERNAME = body.dataset.username;
 let CSRF_TOKEN = body.dataset.csrfToken;
-function getHeaders(contentType = 'application/json') {
-    const headers = {
-        'X-CSRF-Token': (typeof CSRF_TOKEN !== 'undefined' ? CSRF_TOKEN : (document.body.dataset.csrfToken || ''))
-    };
-    if (contentType) headers['Content-Type'] = contentType;
-    return headers;
-}
+// Используем глобальную функцию getHeaders
 const profileForm = document.getElementById('profile-form');
 
 // Обработчики навигации с проверками
@@ -16,10 +10,24 @@ const kanbanBtn = document.getElementById("kanban-btn");
 const todoBtn = document.getElementById("todo-btn");
 
 if (kanbanBtn) {
-    kanbanBtn.onclick = () => (location.href = `/${USERNAME}/kanban`);
+    kanbanBtn.onclick = () => {
+        if (typeof smoothNavigate === 'function') {
+            smoothNavigate(`/${USERNAME}/kanban`);
+        } else {
+            disconnectAllSockets();
+            location.href = `/${USERNAME}/kanban`;
+        }
+    };
 }
 if (todoBtn) {
-    todoBtn.onclick = () => (location.href = `/${USERNAME}/todo`);
+    todoBtn.onclick = () => {
+        if (typeof smoothNavigate === 'function') {
+            smoothNavigate(`/${USERNAME}/todo`);
+        } else {
+            disconnectAllSockets();
+            location.href = `/${USERNAME}/todo`;
+        }
+    };
 }
 
 // Установка активной кнопки
@@ -32,159 +40,16 @@ if (window.location.pathname.includes("/kanban")) {
 }
 
 // ========== User Dropdown ==========
-const userMenuBtn = document.getElementById("user-menu-btn");
-const userDropdown = document.getElementById("user-dropdown");
-
-if (userMenuBtn && userDropdown) {
-    userMenuBtn.onclick = function (e) {
-        e.stopPropagation();
-        userDropdown.classList.toggle("open");
-    };
-
-    document.body.addEventListener("click", function () {
-        userDropdown.classList.remove("open");
-    });
-
-    userDropdown.onclick = function (e) {
-        e.stopPropagation();
-    };
-}
+// Инициализация происходит в universal-modals.js
 
 // ====== Новый UX для профиля ======
 // Старая логика удалена - используется централизованный режим в конце файла
 
-// Функция обновления аватарки в профиле
-function updateProfileAvatar(avatarUrl) {
-    const avatarImg = document.getElementById("profile-avatar-img");
-    const avatarInitial = document.getElementById("profile-avatar-initial");
-    const deleteBtn = document.getElementById("delete-avatar-btn");
-    if (!avatarImg || !avatarInitial || !deleteBtn) return;
-    if (avatarUrl) {
-        avatarImg.src = avatarUrl;
-        avatarImg.style.display = "block";
-        avatarInitial.style.display = "none";
-        deleteBtn.style.display = "inline-flex";
-    } else {
-        avatarImg.style.display = "none";
-        avatarInitial.style.display = "block";
-        deleteBtn.style.display = "none";
-    }
-}
+// Функция updateProfileAvatar теперь универсальная в profile.js
 
-// Обработчик загрузки аватарки
-const avatarUpload = document.getElementById("avatar-upload");
-if (avatarUpload) {
-    avatarUpload.onchange = async function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
+// Функция updateTopbarAvatar теперь универсальная в profile.js
 
-        // Проверяем размер файла (максимум 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Файл слишком большой. Максимальный размер: 5MB");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("avatar", file);
-
-        try {
-            const response = await fetch(`/${USERNAME}/api/upload_avatar`, {
-                method: "POST",
-                headers: {
-                    'X-CSRF-Token': (typeof CSRF_TOKEN !== 'undefined' ? CSRF_TOKEN : (document.body.dataset.csrfToken || ''))
-                },
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Обновляем аватарку в профиле
-                updateProfileAvatar(data.avatar_url);
-                // Обновляем аватарку в topbar
-                updateTopbarAvatar(data.avatar_url);
-                alert("Аватарка успешно загружена!");
-            } else {
-                alert(data.error || "Ошибка загрузки аватарки");
-            }
-        } catch (error) {
-            alert("Ошибка загрузки аватарки");
-        }
-    };
-}
-
-// Обработчик удаления аватарки
-const deleteAvatarBtn = document.getElementById("delete-avatar-btn");
-if (deleteAvatarBtn) {
-    deleteAvatarBtn.onclick = async function () {
-        if (!confirm("Удалить аватарку?")) return;
-
-        try {
-            const response = await fetch(`/${USERNAME}/api/delete_avatar`, {
-                method: "POST",
-                headers: getHeaders(),
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Обновляем аватарку
-                updateProfileAvatar(null);
-                // Обновляем аватарку в topbar
-                updateTopbarAvatar(null);
-                alert("Аватарка удалена!");
-            } else {
-                alert(data.error || "Ошибка удаления аватарки");
-            }
-        } catch (error) {
-            alert("Ошибка удаления аватарки");
-        }
-    };
-}
-
-// Функция обновления аватарки в topbar
-function updateTopbarAvatar(avatarUrl) {
-    const userMenuBtn = document.getElementById("user-menu-btn");
-    if (userMenuBtn) {
-        const avatarSpan = userMenuBtn.querySelector(".material-icons");
-        if (avatarUrl) {
-            // Создаем изображение аватарки
-            avatarSpan.style.display = "none";
-            let avatarImg = userMenuBtn.querySelector(".user-avatar-img");
-            if (!avatarImg) {
-                avatarImg = document.createElement("img");
-                avatarImg.className = "user-avatar-img";
-                avatarImg.style.cssText = "width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px;";
-                userMenuBtn.insertBefore(avatarImg, avatarSpan);
-            }
-            avatarImg.src = avatarUrl;
-            avatarImg.style.display = "block";
-        } else {
-            // Показываем иконку по умолчанию
-            avatarSpan.style.display = "inline-block";
-            const avatarImg = userMenuBtn.querySelector(".user-avatar-img");
-            if (avatarImg) {
-                avatarImg.style.display = "none";
-            }
-        }
-    }
-}
-
-// Загружаем аватарку при загрузке страницы
-async function loadUserAvatar() {
-    try {
-        const response = await fetch(`/api/avatar/${USERNAME}`, { headers: getHeaders() });
-        const data = await response.json();
-        if (data.avatar_url) {
-            updateTopbarAvatar(data.avatar_url);
-        }
-    } catch (error) {
-        alert("Ошибка загрузки аватарки");
-    }
-}
-
-// Вызываем загрузку аватарки при инициализации
-loadUserAvatar();
+// Загрузка аватарки происходит в profile.js
 
 function getAvatarColor(id) {
     const colors = [
@@ -206,124 +71,37 @@ function getInitials(name) {
     return name[0].toUpperCase();
 }
 
-function closeProfileModal() {
-    const profileModal = document.getElementById("profile-modal");
-    if (profileModal) {
-        profileModal.classList.remove("show");
-    }
-}
+// closeProfileModal экспортируется из profile.js
 
 // ========== Кнопка Мои команды ==========
-const teamsBtn = document.getElementById("teams-btn");
-if (teamsBtn) {
-    teamsBtn.onclick = function () {
-        if (userDropdown) userDropdown.classList.remove("open");
-        const teamsModal = document.getElementById("teams-modal");
-        if (teamsModal) {
-            teamsModal.classList.add("show");
-            fetchTeams();
-        }
-    };
-}
+// Инициализация происходит в team-modal.js
 
 // ========== Кнопка О проекте ==========
-const aboutBtn = document.getElementById("about-btn");
-if (aboutBtn) {
-    aboutBtn.onclick = function () {
-        if (userDropdown) userDropdown.classList.remove("open");
-        const aboutModal = document.getElementById("about-modal");
-        if (aboutModal) {
-            aboutModal.classList.add("show");
-        }
-    };
-}
+// Инициализация происходит в universal-modals.js
 
-const aboutModal = document.getElementById("about-modal");
-
-const teamsModal = document.getElementById("teams-modal");
-
-function closeTeamsModal() {
-    const teamsModal = document.getElementById("teams-modal");
-    if (teamsModal) {
-        teamsModal.classList.remove("show");
-    }
-}
+// ========== Кнопка Профиль ==========
+// Инициализация происходит в profile.js
 
 // ========== Смена пароля ==========
-const changePasswordBtn = document.getElementById("change-password-btn");
-if (changePasswordBtn) {
-    changePasswordBtn.onclick = function () {
-        if (userDropdown) userDropdown.classList.remove("open");
-        const changePasswordForm = document.getElementById("change-password-form");
-        const changePasswordError = document.getElementById("change-password-error");
-        if (changePasswordForm) changePasswordForm.reset();
-        if (changePasswordError) changePasswordError.innerText = "";
-        const changePasswordModal = document.getElementById("change-password-modal");
-        if (changePasswordModal) {
-            changePasswordModal.classList.add("show");
-        }
-    };
-}
+// Инициализация происходит в universal-modals.js
 
-function closeChangePasswordModal() {
-    const changePasswordModal = document.getElementById("change-password-modal");
-    if (changePasswordModal) {
-        changePasswordModal.classList.remove("show");
-    }
-}
-
-const changePasswordModal = document.getElementById("change-password-modal");
-
-const changePasswordForm = document.getElementById("change-password-form");
-if (changePasswordForm) {
-    changePasswordForm.onsubmit = async function (e) {
-        e.preventDefault();
-        let oldPass = document.getElementById("old_password").value;
-        let newPass = document.getElementById("new_password").value;
-        let newPass2 = document.getElementById("new_password2").value;
-        let err = document.getElementById("change-password-error");
-        if (newPass !== newPass2) {
-            if (err) err.innerText = "Пароли не совпадают!";
-            return;
-        }
-        try {
-            let resp = await fetch(`/${USERNAME}/api/change_password`, {
-                method: "POST",
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    old_password: oldPass,
-                    new_password: newPass,
-                }),
-            });
-            if (resp.ok) {
-                if (err) {
-                    err.style.color = "#32c964";
-                    err.innerText = "Пароль изменён!";
-                }
-                setTimeout(closeChangePasswordModal, 900);
-            } else {
-                if (err) {
-                    err.style.color = "#d11a2a";
-                    let data = await resp.json();
-                    err.innerText = data.error || "Ошибка смены пароля!";
-                }
-            }
-        } catch (error) {
-            if (err) err.innerText = "Ошибка сети!";
-        }
-    };
-}
+// ========== Смена пароля ==========
+// Инициализация происходит в universal-modals.js
 
 // ===================== State =====================
 let STATUSES = [];
 let TASKS = [];
 
+// Делаем данные доступными глобально для поиска
+window.STATUSES = STATUSES;
+window.TASKS = TASKS;
+
 // ===================== SPA: Fetch Board =====================
 async function fetchBoard() {
     try {
         let [statuses, tasks] = await Promise.all([
-            fetch(`/${USERNAME}/api/statuses`, { headers: getHeaders() }).then((r) => r.json()),
-            fetch(`/${USERNAME}/api/tasks`, { headers: getHeaders() }).then((r) => r.json()),
+            fetch(`/${USERNAME}/api/statuses`, { headers: window.getHeaders() }).then((r) => r.json()),
+            fetch(`/${USERNAME}/api/tasks`, { headers: window.getHeaders() }).then((r) => r.json()),
         ]);
 
         // Проверяем, что получили валидные данные
@@ -345,10 +123,17 @@ async function fetchBoard() {
             STATUSES = [];
         }
 
+        // Обновляем глобальные переменные для поиска
+        window.STATUSES = STATUSES;
+        window.TASKS = TASKS;
+
         renderBoard();
     } catch (error) {
         TASKS = [];
         STATUSES = [];
+        // Обновляем глобальные переменные для поиска
+        window.STATUSES = STATUSES;
+        window.TASKS = TASKS;
         renderBoard();
     }
 }
@@ -403,6 +188,21 @@ function renderBoard() {
     bindAllHandlers();
     updateDnD();
     bindTaskViewHandlers();
+    // --- ИСПРАВЛЕНО: восстанавливаем состояние поиска после рендера ---
+    if (window.searchPanel && typeof window.searchPanel.restoreSearchState === 'function') {
+        window.searchPanel.restoreSearchState();
+    }
+    // Переинициализируем поиск после рендера
+    setTimeout(() => {
+        if (window.searchPanel) {
+            if (typeof window.searchPanel.populateFilters === 'function') {
+                window.searchPanel.populateFilters();
+            }
+            if (typeof window.searchPanel.updateInitialStats === 'function') {
+                window.searchPanel.updateInitialStats();
+            }
+        }
+    }, 100);
 }
 
 // Удаляет все HTML-теги и декодирует спецсимволы
@@ -416,6 +216,7 @@ function createTaskCard(task) {
     const div = document.createElement("div");
     div.className = "kanban-task";
     div.dataset.taskId = task.id;
+
     // --- аватар и ник ---
     let avatarHtml = "";
     if (task.assignee_id) {
@@ -429,6 +230,7 @@ function createTaskCard(task) {
     let dateHtml = task.due_date
         ? `<span class='task-date-badge'>${formatRuDate(task.due_date)}</span>`
         : "";
+
     // --- исправление: сохраняем переносы строк ---
     let descPreview = "";
     if (task.description) {
@@ -437,6 +239,7 @@ function createTaskCard(task) {
         descPreview = tmp.textContent || tmp.innerText || "";
         descPreview = truncate(descPreview, 120);
     }
+
     div.innerHTML = `
           <div class="task-header">
             <div class="task-title">${escapeHTML(truncate(task.text, 80))}</div>
@@ -444,14 +247,14 @@ function createTaskCard(task) {
           </div>
           ${tagsHtml}
           ${descPreview
-            ? `<div class="task-desc" style="white-space:pre-line;word-break:break-word;">${escapeHTML(descPreview)}</div>`
+            ? `<div class="task-desc">${escapeHTML(descPreview)}</div>`
             : ""
         }
           <div class="task-meta">
             ${avatarHtml}
             ${assigneeNameHtml}
           </div>
-          <div class="task-actions" style="margin-top: 6px; display: flex; flex-direction: row; gap: 6px; align-items: center;">
+          <div class="task-actions">
             <button class="icon-btn edit-btn" title="Редактировать" data-task-id="${task.id}"><span class="material-icons">edit</span></button>
             <button class="icon-btn delete-btn" title="Удалить" data-task-id="${task.id}"><span class="material-icons">delete</span></button>
           </div>
@@ -468,7 +271,7 @@ function createTaskCard(task) {
 // Функция загрузки аватарки пользователя для карточки задачи
 async function loadUserAvatarForTask(taskElement, username) {
     try {
-        const response = await fetch(`/api/avatar/${username}`, { headers: getHeaders() });
+        const response = await fetch(`/api/avatar/${username}`, { headers: window.getHeaders() });
         const data = await response.json();
         if (data.avatar_url) {
             const avatarElement = taskElement.querySelector('.task-avatar');
@@ -514,6 +317,13 @@ function updateDnD() {
             animation: 220,
             ghostClass: "drag-ghost",
             onEnd: async function (evt) {
+                // Проверяем, перемещалась ли задача между колонками
+                const movedTaskId = evt.item.dataset.taskId;
+                const newColumn = evt.to.closest(".kanban-column");
+                const newStatus = newColumn.dataset.statusCode || newColumn.getAttribute("data-status-code");
+                const oldColumn = evt.from.closest(".kanban-column");
+                const oldStatus = oldColumn.dataset.statusCode || oldColumn.getAttribute("data-status-code");
+
                 let orders = {};
                 document
                     .querySelectorAll(".kanban-tasks")
@@ -527,10 +337,20 @@ function updateDnD() {
                     });
                 let resp = await fetch(`/${USERNAME}/api/tasks/order`, {
                     method: "POST",
-                    headers: getHeaders(),
+                    headers: window.getHeaders(),
                     body: JSON.stringify({ orders }),
                 });
-                if (resp.ok) fetchBoard();
+                if (resp.ok) {
+                    fetchBoard();
+
+                    // Показываем toast уведомление если задача перемещалась между статусами
+                    if (newStatus !== oldStatus && window.toast) {
+                        const task = TASKS.find(t => t.id == movedTaskId);
+                        const taskTitle = task ? task.text : "Задача";
+                        const newStatusTitle = getStatusTitle(newStatus);
+                        window.toast.taskStatusChanged(taskTitle, newStatusTitle);
+                    }
+                }
             },
         });
     });
@@ -614,7 +434,7 @@ function imageHandler() {
         try {
             const res = await fetch("/api/upload_image", {
                 method: "POST",
-                headers: getHeaders(null), // Не добавляем Content-Type для FormData
+                headers: window.getHeaders(null), // Не добавляем Content-Type для FormData
                 body: formData,
             });
             const data = await res.json();
@@ -722,7 +542,7 @@ if (taskModalForm) {
         try {
             let resp = await fetch(url, {
                 method,
-                headers: getHeaders(),
+                headers: window.getHeaders(),
                 body: JSON.stringify(body),
             });
             let data = null;
@@ -733,7 +553,30 @@ if (taskModalForm) {
             }
             if (resp.ok && data && (data.id || data.success)) {
                 closeTaskModal();
-                fetchBoard();
+                // --- Локальное обновление ---
+                if (id) {
+                    // Редактирование: обновить карточку
+                    const idx = TASKS.findIndex(t => t.id == id);
+                    if (idx !== -1) {
+                        TASKS[idx] = { ...TASKS[idx], ...body, id };
+                        window.TASKS = TASKS; // Обновляем глобально
+                        updateTaskCard(TASKS[idx]);
+                    }
+                    // Показываем toast уведомление
+                    if (window.toast) {
+                        window.toast.taskUpdated(text);
+                    }
+                } else {
+                    // Добавление: добавить карточку
+                    const newTask = { ...body, id: data.id };
+                    TASKS.push(newTask);
+                    window.TASKS = TASKS; // Обновляем глобально
+                    addTaskCard(newTask);
+                    // Показываем toast уведомление
+                    if (window.toast) {
+                        window.toast.taskCreated(text);
+                    }
+                }
             } else {
                 let err = data && data.error ? data.error : "Ошибка сохранения!";
                 const taskModalError = document.getElementById("task-modal-error");
@@ -781,7 +624,7 @@ if (statusModalForm) {
         try {
             let resp = await fetch(`/${USERNAME}/api/statuses`, {
                 method: "POST",
-                headers: getHeaders(),
+                headers: window.getHeaders(),
                 body: JSON.stringify({ title, code }),
             });
             if (resp.ok) {
@@ -804,381 +647,7 @@ let TEAMS = [];
 let CURRENT_EDIT_TEAM = null;
 
 // ========== Команды: логика и рендер ==========
-async function fetchTeams() {
-    try {
-        let resp = await fetch(`/${USERNAME}/api/teams/list`, { headers: getHeaders() });
-        let data = await resp.json();
-        // Универсальная обработка: массив может быть либо сразу, либо по ключу
-        if (Array.isArray(data)) {
-            TEAMS = data;
-        } else if (Array.isArray(data.teams)) {
-            TEAMS = data.teams;
-        } else if (Array.isArray(data.results)) {
-            TEAMS = data.results;
-        } else {
-            TEAMS = [];
-        }
-        renderTeams();
-    } catch (e) {
-        TEAMS = [];
-        renderTeams();
-    }
-}
-function renderTeams() {
-    const list = document.getElementById("teams-list");
-    list.innerHTML = "";
-    if (!TEAMS || TEAMS.length === 0) {
-        list.innerHTML = `<div style="padding: 18px 0; text-align: center; color: var(--text-soft); font-size: 1.08em;">Нет команд</div>`;
-        return;
-    }
-    TEAMS.forEach((team) => {
-        const card = document.createElement("div");
-        card.className = "team-card";
-        card.dataset.teamId = team.id;
-        let isLeader =
-            team.leader_name === USERNAME ||
-            team.leader === USERNAME ||
-            team.is_leader;
-        card.innerHTML = `
-            <div class="team-header">
-              <span class="team-icon material-icons">groups</span>
-              <span class="team-title">${escapeHTML(
-            team.name || team.title || "Без названия"
-        )}</span>
-              ${isLeader
-                ? `<button class="icon-btn edit-team-btn" data-team-id="${team.id}" title="Редактировать"><span class="material-icons">edit</span></button>`
-                : ""
-            }
-            </div>
-            <div class="team-leader">
-              <span class="material-icons member-icon" title="Лидер">star</span>
-              <span>${escapeHTML(
-                team.leader_name || team.leader || "-"
-            )}</span>
-            </div>
-            <div class="team-members">
-              ${(team.members || [])
-                .map(
-                    (m) => `<span class="team-member">${escapeHTML(m)}</span>`
-                )
-                .join("")}
-            </div>
-            <div class="team-actions">
-              <button class="plus-btn team-enter-btn" data-team-id="${team.id
-            }"><span class="material-icons">login</span>Перейти</button>
-              ${!isLeader
-                ? `<button class="plus-btn danger-btn team-leave-btn" data-team-id="${team.id}"><span class="material-icons">logout</span>Выйти</button>`
-                : ""
-            }
-            </div>
-          `;
-        list.appendChild(card);
-    });
-    document.querySelectorAll(".edit-team-btn").forEach((btn) => {
-        btn.onclick = function (e) {
-            e.preventDefault();
-            const teamId = +btn.dataset.teamId;
-            const team = TEAMS.find((t) => t.id === teamId);
-            const isLeader =
-                team &&
-                (team.leader_name === USERNAME ||
-                    team.leader === USERNAME ||
-                    team.is_leader);
-            if (!isLeader) return;
-            openEditTeamModal(teamId);
-        };
-    });
-    document.querySelectorAll(".team-leave-btn").forEach((btn) => {
-        btn.onclick = async function (e) {
-            e.preventDefault();
-            if (!confirm("Выйти из команды?")) return;
-            let teamId = btn.dataset.teamId;
-            let resp = await fetch(`/${USERNAME}/api/teams/${teamId}/leave`, {
-                method: "POST",
-                headers: getHeaders(),
-            });
-            if (resp.ok) {
-                // Перенаправляем на личную Kanban-доску
-                window.location.href = `/${USERNAME}/kanban`;
-            } else {
-                alert("Ошибка выхода из команды");
-            }
-        };
-    });
-    document.querySelectorAll(".team-enter-btn").forEach((btn) => {
-        btn.onclick = function () {
-            const teamId = btn.dataset.teamId;
-            window.location = `/${USERNAME}/team?team_id=${teamId}`;
-        };
-    });
-}
-// === Создание команды ===
-const createTeamBtn = document.getElementById("create-team-btn");
-if (createTeamBtn) {
-    createTeamBtn.onclick = function () {
-        const createTeamModal = document.getElementById("create-team-modal");
-        const createTeamError = document.getElementById("create-team-error");
-        const teamNameInput = document.getElementById("team-name-input");
-
-        if (createTeamModal) createTeamModal.classList.add("show");
-        if (createTeamError) createTeamError.innerText = "";
-        if (teamNameInput) teamNameInput.value = "";
-    };
-}
-
-function closeCreateTeamModal() {
-    const createTeamModal = document.getElementById("create-team-modal");
-    if (createTeamModal) createTeamModal.classList.remove("show");
-}
-
-const createTeamModal = document.getElementById("create-team-modal");
-
-const createTeamForm = document.getElementById("create-team-form");
-if (createTeamForm) {
-    createTeamForm.onsubmit = async function (e) {
-        e.preventDefault();
-        const teamNameInput = document.getElementById("team-name-input");
-        const createTeamError = document.getElementById("create-team-error");
-
-        if (!teamNameInput) return;
-        let name = teamNameInput.value.trim();
-        try {
-            let resp = await fetch(`/${USERNAME}/api/teams`, {
-                method: "POST",
-                headers: getHeaders(),
-                body: JSON.stringify({ name }),
-            });
-            if (resp.ok) {
-                let data = await resp.json();
-                closeCreateTeamModal();
-                fetchTeams();
-                // Переход на командную доску этой команды:
-                window.location.href = `/${USERNAME}/team?team_id=${data.team_id}`;
-            } else {
-                let data = await resp.json();
-                if (createTeamError) {
-                    createTeamError.innerText = data.error || "Ошибка создания!";
-                }
-            }
-        } catch (error) {
-            if (createTeamError) {
-                createTeamError.innerText = "Ошибка сети!";
-            }
-        }
-    };
-}
-
-// === Модалка редактирования команды ===
-async function openEditTeamModal(teamId) {
-    CURRENT_EDIT_TEAM = teamId;
-    try {
-        const response = await fetch(`/${USERNAME}/api/teams/${teamId}/info`, { headers: getHeaders() });
-        const data = await response.json();
-
-        const editTeamName = document.getElementById("edit-team-name");
-        const editTeamMembers = document.getElementById("edit-team-members");
-        const editTeamModal = document.getElementById("edit-team-modal");
-
-        if (editTeamName) editTeamName.value = data.name;
-        if (editTeamMembers) {
-            editTeamMembers.innerHTML = "";
-            // Лидер всегда сверху, без кнопок
-            const leader = data.leader_name;
-            if (leader) {
-                editTeamMembers.innerHTML += `
-              <div class="member-item leader-member" style="display:flex;align-items:center;gap:10px;background:rgba(255,152,0,0.10);border:2px solid #ff9800;box-shadow:0 2px 8px #ff980033;">
-                <span class="material-icons member-icon" style="color: #ff9800; font-size:1.3em;">star</span>
-                <span class="member-info" style="font-weight:800;color:#ff9800;">${leader}</span>
-                <span class="member-admin" style="background:#ff9800;color:#fff;font-weight:900;margin-left:10px;padding:4px 10px;border-radius:8px;font-size:1em;">админ</span>
-              </div>
-          `;
-            }
-
-            // Остальные участники
-            (data.members || []).forEach((member) => {
-                if (member !== leader) {
-                    editTeamMembers.innerHTML += `
-              <div class="edit-team-member">
-                <span>${escapeHTML(member)}</span>
-                <button class="remove-member" onclick="removeMember('${member}')">
-                  <span class="material-icons">close</span>
-                </button>
-              </div>
-            `;
-                }
-            });
-        }
-
-        if (editTeamModal) editTeamModal.classList.add("show");
-    } catch (error) {
-        alert("Ошибка получения информации о команде");
-    }
-}
-
-function closeEditTeamModal() {
-    const editTeamModal = document.getElementById("edit-team-modal");
-    if (editTeamModal) editTeamModal.classList.remove("show");
-    CURRENT_EDIT_TEAM = null;
-}
-
-const editTeamModal = document.getElementById("edit-team-modal");
-
-// === Обработчики для команд ===
-const addMemberBtn = document.getElementById("add-member-btn");
-if (addMemberBtn) {
-    addMemberBtn.onclick = async function () {
-        const addMemberInput = document.getElementById("add-member-input");
-        const editTeamError = document.getElementById("edit-team-error");
-
-        if (!addMemberInput) return;
-        let username = addMemberInput.value.trim();
-        if (!username) return;
-
-        try {
-            let resp = await fetch(
-                `/${USERNAME}/api/teams/${CURRENT_EDIT_TEAM}/members`,
-                {
-                    method: "POST",
-                    headers: getHeaders(),
-                    body: JSON.stringify({ username }),
-                }
-            );
-            if (resp.ok) {
-                addMemberInput.value = "";
-                openEditTeamModal(CURRENT_EDIT_TEAM);
-                // Обновляем список участников команды для автодополнения исполнителей
-                // (если мы находимся на командной доске)
-                if (window.location.pathname.includes('/team')) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const teamId = urlParams.get('team_id');
-                    if (teamId && CURRENT_EDIT_TEAM == teamId) {
-                        const membersResponse = await fetch(`/${USERNAME}/api/teams/${teamId}/members`, { headers: getHeaders() });
-                        const membersData = await membersResponse.json();
-                        if (window.MEMBERS) {
-                            window.MEMBERS = membersData.members || [];
-                        }
-                    }
-                }
-            } else {
-                let data = await resp.json();
-                if (editTeamError) {
-                    editTeamError.innerText = data.error || "Ошибка добавления!";
-                }
-            }
-        } catch (error) {
-            if (editTeamError) {
-                editTeamError.innerText = "Ошибка сети!";
-            }
-        }
-    };
-}
-
-const editTeamForm = document.getElementById("edit-team-form");
-if (editTeamForm) {
-    editTeamForm.onsubmit = async function (e) {
-        e.preventDefault();
-        const editTeamName = document.getElementById("edit-team-name");
-        const editTeamError = document.getElementById("edit-team-error");
-
-        if (!editTeamName) return;
-        let name = editTeamName.value.trim();
-
-        try {
-            let resp = await fetch(
-                `/${USERNAME}/api/teams/${CURRENT_EDIT_TEAM}/edit`,
-                {
-                    method: "POST",
-                    headers: getHeaders(),
-                    body: JSON.stringify({ name }),
-                }
-            );
-            if (resp.ok) {
-                closeEditTeamModal();
-                fetchTeams();
-            } else {
-                let data = await resp.json();
-                if (editTeamError) {
-                    editTeamError.innerText = data.error || "Ошибка сохранения!";
-                }
-            }
-        } catch (error) {
-            if (editTeamError) {
-                editTeamError.innerText = "Ошибка сети!";
-            }
-        }
-    };
-}
-
-const deleteTeamBtn = document.getElementById("delete-team-btn");
-if (deleteTeamBtn) {
-    deleteTeamBtn.onclick = async function () {
-        if (!confirm("Удалить команду?")) return;
-        const editTeamError = document.getElementById("edit-team-error");
-
-        try {
-            let resp = await fetch(
-                `/${USERNAME}/api/teams/${CURRENT_EDIT_TEAM}/delete`,
-                {
-                    method: "POST",
-                    headers: getHeaders(),
-                }
-            );
-            if (resp.ok) {
-                closeEditTeamModal();
-                fetchTeams();
-            } else {
-                let data = await resp.json();
-                if (editTeamError) {
-                    editTeamError.innerText = data.error || "Ошибка удаления!";
-                }
-            }
-        } catch (error) {
-            if (editTeamError) {
-                editTeamError.innerText = "Ошибка сети!";
-            }
-        }
-    };
-}
-
-// Функция удаления участника
-function removeMember(username) {
-    if (!confirm(`Удалить участника ${username}?`)) return;
-
-    fetch(`/${USERNAME}/api/teams/${CURRENT_EDIT_TEAM}/members`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ username, remove: true }),
-    }).then(async (resp) => {
-        if (resp.ok) {
-            // Просто обновляем участников, не закрывая модалку
-            openEditTeamModal(CURRENT_EDIT_TEAM);
-            // Обновляем список участников команды для автодополнения исполнителей
-            // (если мы находимся на командной доске)
-            if (window.location.pathname.includes('/team')) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const teamId = urlParams.get('team_id');
-                if (teamId && CURRENT_EDIT_TEAM == teamId) {
-                    const membersResponse = await fetch(`/${USERNAME}/api/teams/${teamId}/members`, { headers: getHeaders() });
-                    const membersData = await membersResponse.json();
-                    if (window.MEMBERS) {
-                        window.MEMBERS = membersData.members || [];
-                    }
-                }
-            }
-        } else {
-            resp.json().then((data) => {
-                const editTeamError = document.getElementById("edit-team-error");
-                if (editTeamError) {
-                    editTeamError.innerText = data.error || "Ошибка удаления!";
-                }
-            });
-        }
-    }).catch((error) => {
-        if (editTeamError) {
-            editTeamError.innerText = "Ошибка сети!";
-        }
-    });
-}
+// Вся логика команд перенесена в team-modal.js
 
 // === Обработчики кнопок ===
 const openTaskModalBtn = document.getElementById("open-task-modal");
@@ -1196,7 +665,7 @@ if (openStatusModalBtn) {
 }
 
 // === Инициализация ===
-fetchTeams();
+// fetchTeams() теперь вызывается из team-modal.js
 fetchBoard();
 
 function bindAllHandlers() {
@@ -1215,7 +684,7 @@ function bindAllHandlers() {
                 let code = btn.getAttribute("data-status-code");
                 let resp = await fetch(`/${USERNAME}/api/statuses/${code}`, {
                     method: "DELETE",
-                    headers: getHeaders(),
+                    headers: window.getHeaders(),
                 });
                 if (resp.ok) fetchBoard();
             };
@@ -1231,21 +700,37 @@ function bindAllHandlers() {
         btn.onclick = async function () {
             if (!confirm("Удалить задачу?")) return;
             let id = btn.getAttribute("data-task-id");
+            let task = TASKS.find((t) => t.id == id);
+            let taskName = task ? task.text : "Задача";
             try {
                 let resp = await fetch(`/${USERNAME}/api/tasks/${id}`, {
                     method: "DELETE",
-                    headers: getHeaders(),
+                    headers: window.getHeaders(),
                 });
                 if (resp.ok) {
-                    fetchBoard();
+                    // Локальное удаление
+                    TASKS = TASKS.filter(t => t.id != id);
+                    window.TASKS = TASKS; // Обновляем глобально
+                    removeTaskCard(id);
+                    // Показываем toast уведомление
+                    if (window.toast) {
+                        window.toast.taskDeleted(taskName);
+                    }
                 } else {
                     let data = await resp.json();
-                    let errorMsg =
-                        data && data.error ? data.error : "Ошибка удаления задачи";
-                    alert(errorMsg);
+                    let errorMsg = data && data.error ? data.error : "Ошибка удаления задачи";
+                    if (window.toast) {
+                        window.toast.serverError();
+                    } else {
+                        alert(errorMsg);
+                    }
                 }
             } catch (error) {
-                alert("Ошибка при удалении задачи");
+                if (window.toast) {
+                    window.toast.networkError();
+                } else {
+                    alert("Ошибка при удалении задачи");
+                }
             }
         };
     });
@@ -1283,7 +768,7 @@ function bindTaskViewHandlers() {
 async function getUserNameById(userId) {
     if (!userId) return "-";
     try {
-        let resp = await fetch(`/api/check_user_id/${userId}`, { headers: getHeaders() });
+        let resp = await fetch(`/api/check_user_id/${userId}`, { headers: window.getHeaders() });
         if (resp.ok) {
             let data = await resp.json();
             if (data && data.username) return data.username;
@@ -1292,10 +777,63 @@ async function getUserNameById(userId) {
     return "-";
 }
 
+// Функция для рендера блока вложений из description (аналог team_board.js)
+function createAttachmentsBlockFromDescription(description) {
+    const images = [];
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = description;
+    const imgElements = tempDiv.querySelectorAll('img');
+    imgElements.forEach(img => {
+        if (img.src && img.src.length > 0) {
+            images.push({
+                src: img.src,
+                alt: img.alt || '',
+                title: img.title || ''
+            });
+        }
+    });
+    if (images.length === 0) return '';
+    const attachmentsId = 'attachments-' + Date.now();
+    let attachmentsHtml = `
+      <div class="attachments-block" id="${attachmentsId}">
+        <div class="attachments-header" onclick="toggleAttachments('${attachmentsId}')">
+          <div class="attachments-header-left">
+            <span class="material-icons">attachment</span>
+            <span>Вложения</span>
+            <span class="attachments-count">${images.length}</span>
+          </div>
+          <span class="material-icons attachments-toggle">expand_more</span>
+        </div>
+        <div class="attachments-content" id="${attachmentsId}-content">
+          <div class="attachments-grid">
+    `;
+    images.forEach((image, index) => {
+        const fileName = image.src.split('/').pop();
+        attachmentsHtml += `
+          <div class="attachment-item" onclick="openImageModal({src: '${image.src}', filename: '${fileName}', downloadUrl: '${image.src}'})">
+            <div class="attachment-preview">
+              <img src="${image.src}" alt="${image.alt || fileName}" loading="lazy">
+            </div>
+            <div class="attachment-info">
+              <div class="attachment-name">${fileName}</div>
+              <div class="attachment-size">Изображение</div>
+            </div>
+          </div>
+        `;
+    });
+    attachmentsHtml += `
+          </div>
+        </div>
+      </div>
+    `;
+    return attachmentsHtml;
+}
+
 async function openViewTaskModal(task) {
     const modal = document.getElementById("view-task-modal");
     const title = document.getElementById("view-task-title");
     const content = document.getElementById("view-task-content");
+    const attachmentsBlock = document.getElementById("view-task-attachments");
 
     if (title) title.textContent = task.text;
 
@@ -1308,68 +846,42 @@ async function openViewTaskModal(task) {
     let needShowFull = textPreview.length > 200 || /\n/.test(textPreview);
     if (textPreview.length > 200)
         textPreview = textPreview.substring(0, 200) + "...";
-    let imageNotice = hasImage
-        ? `<div class='view-task-has-image'><span class='material-icons' style='vertical-align:middle;color:#5271ff;'>image</span> <span style='color:#5271ff;font-weight:500;'>Есть вложения</span></div>`
-        : "";
+
+    // Блок вложений сразу после описания
+    let attachmentsHtml = createAttachmentsBlockFromDescription(task.description || "");
 
     if (content) {
         content.innerHTML = `
-          <div class="view-task-section">
-            <div class="view-task-field">
-              <span class="material-icons">flag</span>
-              <span><strong>Статус:</strong> ${getStatusTitle(
-            task.status
-        )}</span>
+            <div class="view-task-section">
+                <div class="view-task-field">
+                    <span class="material-icons">flag</span>
+                    <span><strong>Статус:</strong> ${getStatusTitle(task.status)}</span>
+                </div>
+                ${task.due_date ? `<div class="view-task-field"><span class="material-icons">event</span><span><strong>Срок:</strong> ${formatRuDate(task.due_date)}</span></div>` : ''}
+                ${task.tags && task.tags.length > 0 ? `<div class="view-task-field"><span class="material-icons">label</span><span><strong>Теги:</strong> ${task.tags.map(tag => `<span class="task-tag tag-${tag.toLowerCase()}">${escapeHTML(tag)}</span>`).join(' ')}</span></div>` : ''}
+                <div class="view-task-field">
+                    <span class="material-icons">description</span>
+                    <span><strong>Описание:</strong></span>
+                </div>
+                <div class="view-task-description-preview" style="white-space:pre-line;word-break:break-word;">${textPreview}</div>
+                ${attachmentsHtml}
+                ${needShowFull ? `<div class='view-task-more'><button class='view-full-task-btn plus-btn' data-task-id='${task.id}'><span class='material-icons'>open_in_new</span>Открыть полностью</button></div>` : ''}
+                <div class="view-task-field">
+                    <span class="material-icons">person</span>
+                    <span><strong>Обновлено:</strong> ${task.updated_by_name ? escapeHTML(task.updated_by_name) : "Неизвестно"}</span>
+                </div>
+                <div class="view-task-field">
+                    <span class="material-icons">schedule</span>
+                    <span><strong>Дата:</strong> ${task.updated_at ? formatDateTime(task.updated_at) : ""}</span>
+                </div>
             </div>
-            ${task.due_date
-                ? `
-              <div class="view-task-field">
-                <span class="material-icons">event</span>
-                <span><strong>Срок:</strong> ${formatRuDate(
-                    task.due_date
-                )}</span>
-              </div>
-            `
-                : ""
-            }
-            ${task.tags && task.tags.length > 0
-                ? `
-              <div class="view-task-field">
-                <span class="material-icons">label</span>
-                <span><strong>Теги:</strong> ${task.tags
-                    .map(
-                        (tag) =>
-                            `<span class="task-tag tag-${tag.toLowerCase()}">${escapeHTML(
-                                tag
-                            )}</span>`
-                    )
-                    .join(" ")}</span>
-              </div>
-            `
-                : ""
-            }
-            <div class="view-task-field">
-              <span class="material-icons">description</span>
-              <span><strong>Описание:</strong></span>
-            </div>
-            <div class="view-task-description-preview" style="white-space:pre-line;word-break:break-word;">${textPreview}${imageNotice}</div>
-            ${needShowFull
-                ? `<div class='view-task-more'><button class='view-full-task-btn plus-btn' data-task-id='${task.id}'><span class='material-icons'>open_in_new</span>Открыть полностью</button></div>`
-                : ""
-            }
-            <div class="view-task-field">
-              <span class="material-icons">person</span>
-              <span><strong>Обновлено:</strong> ${task.updated_by_name || "Неизвестно"
-            }</span>
-            </div>
-            <div class="view-task-field">
-              <span class="material-icons">schedule</span>
-              <span><strong>Дата:</strong> ${formatDateTime(
-                task.updated_at
-            )}</span>
-            </div>
-          </div>
         `;
+    }
+
+    // Скрываю отдельный блок attachmentsBlock (он больше не нужен)
+    if (attachmentsBlock) {
+        attachmentsBlock.style.display = 'none';
+        attachmentsBlock.innerHTML = '';
     }
 
     if (modal) modal.classList.add("show");
@@ -1393,8 +905,46 @@ async function openViewTaskModal(task) {
     }
 }
 
+// Функция для безопасного отключения всех сокетов
+function disconnectAllSockets() {
+    // Отключаем основной сокет
+    if (window.socket && typeof window.socket.disconnect === 'function') {
+        try {
+            window.socket.disconnect();
+        } catch (e) {
+            console.log('[kanban-app] Socket disconnect error:', e);
+        }
+        window.socket = null;
+    }
+
+    // Отключаем сокет уведомлений если есть
+    if (window.notificationsSocket && typeof window.notificationsSocket.disconnect === 'function') {
+        try {
+            window.notificationsSocket.disconnect();
+        } catch (e) {
+            console.log('[kanban-app] Notifications socket disconnect error:', e);
+        }
+        window.notificationsSocket = null;
+    }
+
+    // Отключаем глобальный сокет если есть
+    if (window.globalSocket && typeof window.globalSocket.disconnect === 'function') {
+        try {
+            window.globalSocket.disconnect();
+        } catch (e) {
+            console.log('[kanban-app] Global socket disconnect error:', e);
+        }
+        window.globalSocket = null;
+    }
+}
+
 function openFullTaskView(taskId) {
-    window.location.href = `/${USERNAME}/task/${taskId}`;
+    if (typeof smoothNavigate === 'function') {
+        smoothNavigate(`/${USERNAME}/task/${taskId}`);
+    } else {
+        disconnectAllSockets();
+        window.location.href = `/${USERNAME}/task/${taskId}`;
+    }
 }
 
 function closeViewTaskModal() {
@@ -1418,170 +968,11 @@ function renderTags(tags) {
     );
 }
 
-function closeAboutModal() {
-    const aboutModal = document.getElementById("about-modal");
-    if (aboutModal) aboutModal.classList.remove("show");
-}
+// Функция closeAboutModal теперь в universal-modals.js
 
 // === Централизованный режим редактирования профиля ===
 let profileEditMode = false;
-const saveBtn = document.getElementById('save-profile-btn');
-const cancelBtn = document.getElementById('cancel-profile-btn');
-const errorDiv = document.getElementById('profile-error');
-const fields = ['email', 'country', 'fullname'];
-
-function setProfileEditMode(on) {
-    profileEditMode = on;
-    const profileForm = document.getElementById('profile-form');
-    const profileInfo = document.getElementById('profile-info-block');
-
-    // Показываем/скрываем блоки
-    if (profileInfo) profileInfo.style.display = on ? 'none' : 'flex';
-    if (profileForm) profileForm.style.display = on ? 'block' : 'none';
-
-    fields.forEach(f => {
-        const input = document.getElementById(`profile-${f}-input`);
-        const display = document.getElementById(`profile-${f}`);
-        const select = document.getElementById(`profile-country-select`);
-
-        if (f === 'country' && select) {
-            if (on) {
-                // Включаем редактирование
-                fillCountryOptions(select, select.value || '');
-                select.disabled = false;
-                select.style.display = 'block';
-                if (display) display.style.display = 'none';
-            } else {
-                // Возвращаем просмотр
-                select.disabled = true;
-                select.style.display = 'none';
-                if (display) display.style.display = 'block';
-            }
-            select.classList.toggle('active', on);
-        } else if (input && display) {
-            if (on) {
-                // Включаем редактирование
-                input.disabled = false;
-                input.style.display = 'block';
-                display.style.display = 'none';
-            } else {
-                // Возвращаем просмотр
-                input.disabled = true;
-                input.style.display = 'none';
-                display.style.display = 'block';
-            }
-            input.classList.toggle('active', on);
-        }
-    });
-
-    // Показываем/скрываем кнопки
-    if (saveBtn) {
-        saveBtn.style.display = on ? 'inline-flex' : 'none';
-        saveBtn.classList.toggle('active', on);
-    }
-    if (cancelBtn) {
-        cancelBtn.style.display = on ? 'inline-flex' : 'none';
-        cancelBtn.classList.toggle('active', on);
-    }
-
-    if (profileForm) {
-        profileForm.classList.toggle('active', on);
-    }
-}
-
-const editProfileBtn = document.getElementById('edit-profile-btn');
-if (editProfileBtn) {
-    editProfileBtn.onclick = function () {
-        setProfileEditMode(true);
-    };
-}
-if (cancelBtn) {
-    cancelBtn.onclick = function () {
-        setProfileEditMode(false);
-        resetProfileEditFields(window.lastProfileData || {});
-        if (errorDiv) {
-            errorDiv.textContent = '';
-            errorDiv.className = 'profile-error';
-        }
-    };
-}
-if (saveBtn && profileForm) {
-    profileForm.onsubmit = async function (e) {
-        e.preventDefault();
-        saveBtn.disabled = true;
-        errorDiv.textContent = '';
-        errorDiv.className = 'profile-error';
-
-        // Скрываем предыдущее успешное сообщение
-        const successMessage = document.getElementById('profile-success-message');
-        if (successMessage) successMessage.style.display = 'none';
-
-        const email = document.getElementById('profile-email-input')?.value?.trim() || '';
-        const country = document.getElementById('profile-country-select')?.value?.trim() || '';
-        const fullname = document.getElementById('profile-fullname-input')?.value?.trim() || '';
-        // Валидация email
-        const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-        if (!emailPattern.test(email)) {
-            errorDiv.textContent = 'Введите корректный e-mail';
-            errorDiv.className = 'profile-error visible';
-            saveBtn.disabled = false;
-            return;
-        }
-        try {
-            const resp = await fetch(`/${USERNAME}/api/update_profile`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify({ email, country, fullname })
-            });
-            const data = await resp.json();
-            if (resp.ok && data.success) {
-                // Обновляем отображаемые значения
-                const emailEl = document.getElementById('profile-email');
-                const countryEl = document.getElementById('profile-country');
-                const fullnameEl = document.getElementById('profile-fullname');
-                if (emailEl) emailEl.textContent = email;
-                if (countryEl) countryEl.textContent = country;
-                if (fullnameEl) fullnameEl.textContent = fullname;
-
-                // Показываем успешное сообщение в блоке информации
-                if (successMessage) {
-                    successMessage.textContent = 'Профиль успешно обновлён!';
-                    successMessage.style.display = 'flex';
-                }
-
-                window.lastProfileData = { email, country, fullname };
-                setProfileEditMode(false);
-
-                // Скрываем сообщение через 3 секунды
-                setTimeout(() => {
-                    if (successMessage) successMessage.style.display = 'none';
-                }, 3000);
-            } else {
-                errorDiv.textContent = data.error || 'Ошибка обновления профиля';
-                errorDiv.className = 'profile-error visible';
-            }
-        } catch (err) {
-            errorDiv.textContent = 'Ошибка сети';
-            errorDiv.className = 'profile-error visible';
-        }
-        saveBtn.disabled = false;
-    };
-}
-
-function resetProfileEditFields(data) {
-    fields.forEach(f => {
-        const input = document.getElementById(`profile-${f}-input`);
-        const display = document.getElementById(`profile-${f}`);
-        const select = document.getElementById(`profile-country-select`);
-        if (f === 'country' && select) {
-            if (select) select.value = data[f] || '';
-            if (display) display.textContent = data[f] || '';
-        } else {
-            if (input) input.value = data[f] || '';
-            if (display) display.textContent = data[f] || '';
-        }
-    });
-}
+// Логика профиля вынесена в profile.js
 
 // === Универсальные обработчики крестиков и кнопок отмены для всех модалок ===
 document.querySelectorAll('.modal-close').forEach(btn => {
@@ -1599,80 +990,519 @@ document.querySelectorAll('.modal-close').forEach(btn => {
     };
 });
 
-function showProfileModal() {
-    const profileModal = document.getElementById('profile-modal');
-    if (profileModal) profileModal.classList.add('show');
+// Инициализация профиля происходит в profile.js
+
+// --- Logout ---
+// Инициализация происходит в universal-modals.js
+
+// --- Логика профиля вынесена в profile.js ---
+
+// ===== СИСТЕМА УВЕДОМЛЕНИЙ =====
+let socket = null;
+let notificationsData = [];
+let unreadCount = 0;
+
+// Инициализация Socket.IO для уведомлений
+function getOrCreateSocket() {
+    if (window.socket && window.socket.connected) return window.socket;
+    window.socket = io();
+    return window.socket;
 }
 
-// === Инициализация селектора стран ===
-function initializeCountrySelect() {
-    const countrySelect = document.getElementById('profile-country-select');
-    if (countrySelect && typeof fillCountryOptions === 'function') {
-        fillCountryOptions(countrySelect, countrySelect.value || '');
+// Загрузка уведомлений
+async function loadNotifications() {
+    try {
+        const response = await fetch(`/${USERNAME}/api/notifications`, {
+            headers: window.getHeaders()
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            notificationsData = data.notifications || [];
+            unreadCount = data.unread_count || 0;
+
+            updateNotificationBadge(unreadCount);
+            renderNotifications();
+        }
+    } catch (error) {
+        // Ошибка загрузки уведомлений
     }
 }
 
-// Инициализируем селектор стран при загрузке страницы
-document.addEventListener('DOMContentLoaded', function () {
-    initializeCountrySelect();
-});
+// Обновление значка уведомлений
+function updateNotificationBadge(count) {
+    const badge = document.querySelector('.notifications-badge');
+    const btn = document.getElementById('notifications-btn');
 
-// Также инициализируем при открытии модалки профиля
-const originalShowProfileModal = showProfileModal;
-showProfileModal = function () {
-    originalShowProfileModal();
-    setTimeout(initializeCountrySelect, 100); // Небольшая задержка для гарантии загрузки DOM
-};
-
-// --- Logout ---
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-    logoutBtn.onclick = () => {
-        window.location.href = `/${USERNAME}/logout`;
-    };
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'flex';
+            if (btn) btn.classList.add('has-unread');
+        } else {
+            badge.style.display = 'none';
+            if (btn) btn.classList.remove('has-unread');
+        }
+    }
 }
 
-// --- Открытие модалки профиля (гарантированно последний обработчик) ---
-const profileBtn = document.getElementById("profile-btn");
-if (profileBtn) {
-    profileBtn.onclick = async function () {
-        const userDropdown = document.getElementById("user-dropdown");
-        if (userDropdown) userDropdown.classList.remove("show");
-        try {
-            let r = await fetch(`/api/profile/${USERNAME}`, { headers: getHeaders() });
-            let data = await r.json();
+// Отрисовка списка уведомлений
+function renderNotifications() {
+    const list = document.getElementById('notifications-list');
+    if (!list) return;
 
-            // Заполняем username через innerHTML с <span>
-            const usernameEl = document.getElementById("profile-username");
-            if (usernameEl) usernameEl.innerHTML = `<span>${data.username || ""}</span>`;
+    if (notificationsData.length === 0) {
+        list.innerHTML = `
+            <div class="no-notifications">
+                <span class="material-icons">notifications_none</span>
+                <p>Нет новых уведомлений</p>
+            </div>
+        `;
+        return;
+    }
 
-            // Обновляем данные профиля
-            window.lastProfileData = {
-                email: data.email || '',
-                country: data.country || '',
-                fullname: data.fullname || ''
-            };
+    list.innerHTML = notificationsData.map(notification => {
+        const iconClass = notification.type === 'mention' ? 'mention' : 'assigned';
+        const icon = notification.type === 'mention' ? 'alternate_email' : 'assignment_ind';
+        const timeAgo = formatTimeAgo(notification.created_at);
+        // Исправляем &quot; на обычные кавычки
+        let message = notification.message.replace(/&quot;/g, '"');
+        // Выделяем username жирным только для известных username
+        const usernames = [notification.from_username, notification.to_username, notification.mentioned_username].filter(Boolean);
+        usernames.forEach(u => {
+            if (u) message = message.replace(new RegExp(`\\b${u}\\b`, 'g'), `<span class='notif-username'><b>${u}</b></span>`);
+        });
+        // Также выделяем все @username
+        message = message.replace(/@([a-zA-Z0-9_\-]+)/g, '<span class="notif-username">@$1</span>');
+        return `
+            <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                 data-id="${notification.id}" 
+                 data-link="${notification.link || ''}">
+                <div class="notification-avatar">
+                    ${notification.from_avatar
+                ? `<img src="${notification.from_avatar}" alt="${notification.from_username}" />`
+                : `<span>${getInitials(notification.from_username)}</span>`
+            }
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">
+                        <span class="material-icons notification-icon ${iconClass}">${icon}</span>
+                        ${escapeHTML(notification.title)}
+                    </div>
+                    <div class="notification-message">${message}</div>
+                    <div class="notification-time">${timeAgo}</div>
+                </div>
+                ${!notification.is_read ? '<div class="notification-unread-dot"></div>' : ''}
+            </div>
+        `;
+    }).join('');
 
-            // Заполняем поля
-            const emailEl = document.getElementById("profile-email");
-            const emailInput = document.getElementById("profile-email-input");
-            const countryEl = document.getElementById("profile-country");
-            const countrySelect = document.getElementById("profile-country-select");
-            const fullnameEl = document.getElementById("profile-fullname");
-            const fullnameInput = document.getElementById("profile-fullname-input");
+    // Добавляем обработчики кликов
+    list.querySelectorAll('.notification-item').forEach(item => {
+        item.onclick = async function () {
+            const id = parseInt(item.dataset.id);
+            const link = item.dataset.link;
 
-            if (emailEl) emailEl.textContent = data.email || '';
-            if (emailInput) emailInput.value = data.email || '';
-            if (countryEl) countryEl.textContent = data.country || '';
-            if (countrySelect) countrySelect.value = data.country || '';
-            if (fullnameEl) fullnameEl.textContent = data.fullname || '';
-            if (fullnameInput) fullnameInput.value = data.fullname || '';
+            // Отмечаем как прочитанное
+            if (item.classList.contains('unread')) {
+                await markNotificationAsRead([id]);
+                item.classList.remove('unread');
+                item.querySelector('.notification-unread-dot')?.remove();
+            }
 
-            updateProfileAvatar(data.avatar_url);
-            setProfileEditMode(false);
-            showProfileModal();
-        } catch (error) {
-            alert("Ошибка загрузки профиля");
+            // Переходим по ссылке если есть
+            if (link) {
+                window.location.href = link;
+            }
+        };
+    });
+}
+
+// Форматирование времени "назад"
+function formatTimeAgo(dateString) {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'только что';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} мин назад`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч назад`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} дн назад`;
+
+    return date.toLocaleDateString('ru-RU');
+}
+
+// Отметить уведомления как прочитанные
+async function markNotificationAsRead(notificationIds) {
+    try {
+        const response = await fetch(`/${USERNAME}/api/notifications/mark_read`, {
+            method: 'POST',
+            headers: window.getHeaders(),
+            body: JSON.stringify({ notification_ids: notificationIds })
+        });
+
+        if (response.ok) {
+            // Обновляем счетчик
+            unreadCount = Math.max(0, unreadCount - notificationIds.length);
+            updateNotificationBadge(unreadCount);
         }
+    } catch (error) {
+        // Ошибка отметки уведомлений
+    }
+}
+
+// Отметить все как прочитанные
+async function markAllNotificationsAsRead() {
+    try {
+        const response = await fetch(`/${USERNAME}/api/notifications/mark_read`, {
+            method: 'POST',
+            headers: window.getHeaders(),
+            body: JSON.stringify({ mark_all: true })
+        });
+
+        if (response.ok) {
+            // Обновляем UI
+            notificationsData.forEach(n => n.is_read = true);
+            unreadCount = 0;
+            updateNotificationBadge(0);
+            renderNotifications();
+        }
+    } catch (error) {
+        // Ошибка отметки всех уведомлений
+    }
+}
+
+// Инициализация обработчиков уведомлений
+function initNotifications() {
+    const notificationsBtn = document.getElementById('notifications-btn');
+    const notificationsDropdown = document.getElementById('notifications-dropdown');
+    const markAllBtn = document.getElementById('mark-all-read-btn');
+
+    if (notificationsBtn && notificationsDropdown) {
+        // Клик по кнопке уведомлений
+        notificationsBtn.onclick = function (e) {
+            e.stopPropagation();
+            const isOpen = notificationsDropdown.classList.contains('open');
+
+            if (!isOpen) {
+                loadNotifications();
+                notificationsDropdown.classList.add('open');
+            } else {
+                notificationsDropdown.classList.remove('open');
+            }
+        };
+
+        // Предотвращаем закрытие при клике внутри dropdown
+        notificationsDropdown.onclick = function (e) {
+            e.stopPropagation();
+        };
+
+        // Закрытие при клике вне dropdown
+        document.addEventListener('click', function () {
+            notificationsDropdown.classList.remove('open');
+        });
+    }
+
+    // Кнопка "Прочитать все"
+    if (markAllBtn) {
+        markAllBtn.onclick = function () {
+            if (unreadCount > 0) {
+                markAllNotificationsAsRead();
+            }
+        };
+    }
+
+    // Загружаем уведомления при старте
+    loadNotifications();
+
+    // 🔥 ИНИЦИАЛИЗАЦИЯ SOCKET.IO ДЛЯ TOAST УВЕДОМЛЕНИЙ 🔥
+    if (typeof io !== 'undefined') {
+        const socket = getOrCreateSocket();
+
+        // Подключаемся к личной комнате пользователя
+        socket.emit('join_user', { username: USERNAME });
+
+        // Обработчик получения количества уведомлений
+        socket.on('notification_count', (data) => {
+            updateNotificationBadge(data.count);
+        });
+
+        // Обработчик обновления уведомлений
+        socket.on('notifications_updated', () => {
+            loadNotifications();
+        });
+
+        // 🔥 НОВЫЕ ОБРАБОТЧИКИ ДЛЯ TOAST УВЕДОМЛЕНИЙ 🔥
+
+        // Новая задача назначена пользователю
+        socket.on('task_assigned', (data) => {
+            if (window.toast) {
+                window.toast.taskAssigned(data.taskTitle, data.assigneeName);
+            }
+            loadNotifications(); // Обновляем список уведомлений
+        });
+
+        // Пользователя упомянули в комментарии
+        socket.on('user_mentioned', (data) => {
+            if (window.toast) {
+                window.toast.mentionReceived(data.authorName, data.taskTitle);
+            }
+            loadNotifications(); // Обновляем список уведомлений
+        });
+
+        // Новый комментарий к задаче
+        socket.on('new_comment', (data) => {
+            if (window.toast) {
+                window.toast.newComment(data.authorName, data.taskTitle);
+            }
+        });
+    }
+}
+
+// Запускаем систему уведомлений при загрузке страницы
+document.addEventListener('DOMContentLoaded', function () {
+    // Инициализация toast уведомлений
+    if (window.ToastNotifications) {
+        window.toast = new ToastNotifications();
+    }
+
+    initNotifications();
+});
+
+// ========== Инициализация модалок ==========
+// Все модалки инициализируются в соответствующих файлах:
+// - Команды: team-modal.js
+// - Профиль: profile.js
+// - Смена пароля и "О проекте": universal-modals.js
+
+// Обработчики навигации уже определены в начале файла
+
+// Обработчики событий страницы
+window.addEventListener('beforeunload', function () {
+    disconnectAllSockets();
+});
+
+// Обработчик при скрытии страницы
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        // При скрытии страницы отключаем сокеты
+        disconnectAllSockets();
+    }
+});
+
+// === Для блока комментариев ===
+function scrollCommentsToBottom() {
+    const list = document.getElementById('modal-comments-list');
+    if (list) {
+        list.scrollTop = list.scrollHeight;
+    }
+}
+
+// Везде, где было socket = io(); заменить на getOrCreateSocket();
+// Например:
+// socket = io();
+// socket.emit(...)  =>
+// socket = getOrCreateSocket();
+// socket.emit(...)
+
+// ========== Комментарии: автопрокрутка и индикатор новых ==========
+function renderModalComments(comments) {
+    const list = document.getElementById('modal-comments-list');
+    if (!list) return;
+    if (!comments || comments.length === 0) {
+        list.innerHTML = '<div class="no-comments">Комментариев пока нет</div>';
+        return;
+    }
+    // Показываем только последние 5 комментариев, если их больше
+    let showCount = 5;
+    let showAll = window._showAllComments;
+    if (!showAll && comments.length > showCount) {
+        const hiddenCount = comments.length - showCount;
+        list.innerHTML = `
+            <div class='comments-indicator'>Показаны последние ${showCount} из ${comments.length} комментариев</div>
+            <button class='show-all-comments-btn'>Показать все</button>
+        ` + comments.slice(-showCount).map(c => renderCommentHtml(c)).join('');
+        list.querySelector('.show-all-comments-btn').onclick = function () {
+            window._showAllComments = true;
+            renderModalComments(comments);
+        };
+    } else {
+        list.innerHTML = comments.map(c => renderCommentHtml(c)).join('');
+    }
+    // Автопрокрутка вниз
+    setTimeout(() => { list.scrollTop = list.scrollHeight; }, 80);
+    // ... обработчики удаления ...
+    list.querySelectorAll('.comment-delete-btn').forEach(btn => {
+        btn.onclick = async function () {
+            if (!confirm('Удалить комментарий?')) return;
+            const commentId = btn.getAttribute('data-comment-id');
+            await fetch(`/${USERNAME}/api/teams/${TEAM_ID}/tasks/${window._lastOpenedTask.id}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: window.getHeaders()
+            });
+            await loadModalComments();
+        };
+    });
+}
+
+function renderCommentHtml(c) {
+    return `
+        <div class="comment-item">
+            <div class="comment-avatar">
+                ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.author}" />` : `<span class="avatar-initial">${(c.author || '?')[0].toUpperCase()}</span>`}
+            </div>
+            <div class="comment-body">
+                <div class="comment-meta">
+                    <span class="comment-author">${escapeHTML(c.author)}</span>
+                    <span class="comment-date">${formatDateTime(c.created_at)}</span>
+                    ${c.author === USERNAME ? `<button class="comment-delete-btn" aria-label="Удалить комментарий" title="Удалить" data-comment-id="${c.id}"><span class="material-icons">delete</span></button>` : ''}
+                </div>
+                <div class="comment-text">${highlightMentions(escapeHTML(c.text), c.mentions)}</div>
+            </div>
+        </div>
+    `;
+}
+
+// === Локальное обновление задач ===
+function updateTaskCard(task) {
+    // Найти карточку по id
+    const card = document.querySelector(`.kanban-task[data-task-id='${task.id}']`);
+    if (card) {
+        const newCard = createTaskCard(task);
+        card.replaceWith(newCard);
+
+        // Назначаем обработчики событий для обновленной карточки
+        bindAllHandlers();
+        bindTaskViewHandlers();
+    }
+}
+
+function addTaskCard(task) {
+    // Найти колонку по статусу
+    const col = document.querySelector(`.kanban-column[data-status-code='${task.status}'] .kanban-tasks`);
+    if (col) {
+        // Удаляем блок "Нет задач" если он есть
+        const noTasksBlock = col.querySelector('.no-tasks');
+        if (noTasksBlock) {
+            noTasksBlock.remove();
+        }
+
+        const newCard = createTaskCard(task);
+        col.appendChild(newCard);
+
+        // Назначаем обработчики событий для новой карточки
+        bindAllHandlers();
+        bindTaskViewHandlers();
+    }
+}
+
+function removeTaskCard(taskId) {
+    const card = document.querySelector(`.kanban-task[data-task-id='${taskId}']`);
+    if (card) {
+        const column = card.closest('.kanban-tasks');
+        card.remove();
+
+        // Проверяем, остались ли задачи в колонке
+        updateColumnState(column);
+    }
+}
+
+// Обновляем состояние колонки (показываем/скрываем "Нет задач")
+function updateColumnState(columnElement) {
+    if (!columnElement) return;
+
+    const tasks = columnElement.querySelectorAll('.kanban-task');
+    const noTasksBlock = columnElement.querySelector('.no-tasks');
+
+    if (tasks.length === 0) {
+        // Если нет задач, показываем блок "Нет задач"
+        if (!noTasksBlock) {
+            columnElement.innerHTML = '<div class="no-tasks">Нет задач</div>';
+        }
+    } else {
+        // Если есть задачи, убираем блок "Нет задач"
+        if (noTasksBlock) {
+            noTasksBlock.remove();
+        }
+    }
+}
+
+// ===== Просмотр вложения (изображения) =====
+
+function openImageModal({ src, filename, downloadUrl }) {
+    const modal = document.getElementById('image-modal');
+    const img = document.getElementById('image-modal-img');
+    const fname = document.getElementById('image-modal-filename');
+    const downloadBtn = document.getElementById('image-modal-download-btn');
+    const closeBtn = document.getElementById('image-modal-close-btn');
+
+    img.src = src;
+    img.alt = filename;
+    fname.textContent = filename;
+    fname.style.display = 'block';
+    downloadBtn.innerHTML = '<span class="material-icons">download</span>Скачать';
+    downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = downloadUrl || src;
+        a.download = filename;
+        a.click();
     };
+    function closeModal() {
+        modal.classList.remove('show');
+        img.src = '';
+        document.body.classList.remove('modal-open');
+        window.removeEventListener('keydown', escListener);
+    }
+    closeBtn.onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+    function escListener(e) {
+        if (e.key === 'Escape') closeModal();
+    }
+    window.addEventListener('keydown', escListener);
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+}
+
+// Исправленный обработчик клика по превью вложения (унификация)
+document.addEventListener('click', function (e) {
+    const preview = e.target.closest('.attachment-preview');
+    if (preview && preview.dataset.type === 'image') {
+        e.preventDefault();
+        openImageModal({
+            src: preview.dataset.full || preview.querySelector('img')?.src,
+            filename: preview.dataset.filename || 'image',
+            downloadUrl: preview.dataset.download || preview.dataset.full || preview.querySelector('img')?.src
+        });
+    }
+});
+
+// Переключение состояния блока вложений
+function toggleAttachments(attachmentsId) {
+    const content = document.getElementById(attachmentsId + '-content');
+    const toggle = document.querySelector(`#${attachmentsId} .attachments-toggle`);
+
+    if (content && toggle) {
+        const isExpanded = content.classList.contains('expanded');
+
+        if (isExpanded) {
+            content.classList.remove('expanded');
+            toggle.classList.remove('expanded');
+        } else {
+            content.classList.add('expanded');
+            toggle.classList.add('expanded');
+        }
+    }
+}
+
+// Закрытие модального окна с изображением
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+    }
 }

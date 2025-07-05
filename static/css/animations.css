@@ -1,0 +1,531 @@
+/* Красивые анимации для всего проекта */
+
+/* Базовые анимации появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Анимации для карточек задач */
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cardPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 12px rgba(82, 113, 255, 0.15);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(82, 113, 255, 0.25);
+    }
+}
+
+/* Анимации для модальных окон */
+@keyframes modalShow {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes overlayShow {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Анимации для кнопок */
+@keyframes buttonPress {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.98);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes errorShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-3px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(3px);
+    }
+}
+
+/* Анимации для загрузки */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    53%,
+    80%,
+    100% {
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        transform: translate3d(0, 0, 0);
+    }
+
+    40%,
+    43% {
+        animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+        transform: translate3d(0, -8px, 0);
+    }
+
+    70% {
+        animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+        transform: translate3d(0, -4px, 0);
+    }
+
+    90% {
+        transform: translate3d(0, -2px, 0);
+    }
+}
+
+/* Анимации для уведомлений */
+@keyframes notificationSlide {
+    from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes notificationBounce {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Анимации для элементов интерфейса */
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(82, 113, 255, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(82, 113, 255, 0.8), 0 0 30px rgba(82, 113, 255, 0.6);
+    }
+}
+
+@keyframes highlight {
+    0% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: rgba(82, 113, 255, 0.1);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes wiggle {
+
+    0%,
+    7% {
+        transform: rotateZ(0);
+    }
+
+    15% {
+        transform: rotateZ(-15deg);
+    }
+
+    20% {
+        transform: rotateZ(10deg);
+    }
+
+    25% {
+        transform: rotateZ(-10deg);
+    }
+
+    30% {
+        transform: rotateZ(6deg);
+    }
+
+    35% {
+        transform: rotateZ(-4deg);
+    }
+
+    40%,
+    100% {
+        transform: rotateZ(0);
+    }
+}
+
+/* Классы для применения анимаций */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-fade-in-down {
+    animation: fadeInDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-card-appear {
+    animation: cardAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-button-press {
+    animation: buttonPress 0.1s ease-out;
+}
+
+.animate-success-pulse {
+    animation: successPulse 0.6s ease-out;
+}
+
+.animate-error-shake {
+    animation: errorShake 0.5s ease-out;
+}
+
+.animate-bounce {
+    animation: bounce 1s ease-out;
+}
+
+.animate-glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+.animate-highlight {
+    animation: highlight 1s ease-out;
+}
+
+.animate-wiggle {
+    animation: wiggle 0.5s ease-out;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Переходы для элементов */
+.smooth-transition {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.smooth-transition-fast {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.smooth-transition-slow {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hover эффекты */
+.hover-lift {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hover-scale {
+    transition: transform 0.2s ease-out;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.hover-glow {
+    transition: box-shadow 0.3s ease-out;
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(82, 113, 255, 0.4);
+}
+
+/* Анимации для специфических элементов */
+.kanban-task {
+    animation: cardAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 1;
+    /* Гарантируем видимость после анимации */
+}
+
+.kanban-task:hover {
+    animation: none;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(82, 113, 255, 0.15);
+    transition: all 0.2s ease-out;
+}
+
+.modal.show .modal-content {
+    animation: modalShow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal.show {
+    animation: overlayShow 0.3s ease-out;
+}
+
+.btn {
+    transition: all 0.2s ease-out;
+}
+
+.btn:active {
+    animation: buttonPress 0.1s ease-out;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(82, 113, 255, 0.4);
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Анимации для форм */
+.form-input:focus {
+    animation: glow 0.3s ease-out;
+}
+
+.form-error {
+    animation: errorShake 0.5s ease-out;
+}
+
+.form-success {
+    animation: successPulse 0.6s ease-out;
+}
+
+/* Анимации для аватарок */
+.avatar {
+    transition: all 0.3s ease-out;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(82, 113, 255, 0.3);
+}
+
+/* Анимации для навигации */
+.nav-item {
+    transition: all 0.2s ease-out;
+}
+
+.nav-item:hover {
+    transform: translateY(-1px);
+}
+
+.nav-item.active {
+    animation: highlight 0.5s ease-out;
+}
+
+/* Анимации для загрузки */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+.loading-dots::after {
+    content: '';
+    animation: bounce 1.4s ease-in-out infinite both;
+}
+
+/* Анимации для статусов */
+.status-success {
+    animation: successPulse 0.6s ease-out;
+}
+
+.status-error {
+    animation: errorShake 0.5s ease-out;
+}
+
+.status-warning {
+    animation: wiggle 0.5s ease-out;
+}
+
+/* Адаптивные анимации */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Улучшенные анимации для мобильных устройств */
+@media (max-width: 768px) {
+
+    .animate-fade-in-up,
+    .animate-fade-in-down,
+    .animate-slide-in-right,
+    .animate-slide-in-left {
+        animation-duration: 0.2s;
+    }
+
+    .hover-lift:hover,
+    .hover-scale:hover {
+        transform: none;
+    }
+}

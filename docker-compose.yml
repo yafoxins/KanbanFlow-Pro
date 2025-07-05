@@ -5,36 +5,47 @@ services:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_USER: kanban_user
-      POSTGRES_PASSWORD: kanban_pass
-      POSTGRES_DB: kanban_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Europe/Moscow
+      POSTGRES_INITDB_ARGS: --timezone=Europe/Moscow
     volumes:
       - pg_data:/var/lib/postgresql/data
+    networks:
+      - shared_net
 
   flask:
     build: .
     container_name: flask_app
     environment:
-      DATABASE_URL: postgres://kanban_user:kanban_pass@db:5432/kanban_db
+      DATABASE_URL: ${DATABASE_URL}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      FLASK_HOST: ${FLASK_HOST}
+      FLASK_PORT: ${FLASK_PORT}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      UPLOAD_FOLDER: ${UPLOAD_FOLDER}
+      MAX_CONTENT_LENGTH: ${MAX_CONTENT_LENGTH}
+      BASE_URL: ${BASE_URL}
+      TZ: Europe/Moscow
     depends_on:
       - db
-    expose:
-      - "5000"
+    ports:
+      - "${FLASK_PORT}:5000"
     volumes:
       - .:/app
       - ./static:/app/static
       - ./templates:/app/templates
+      - ./uploads:/app/uploads
+    networks:
+      - shared_net
+    command: python start_with_bot.py
+    restart: unless-stopped
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx_proxy
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./static:/app/static:ro
-    depends_on:
-      - flask
+networks:
+  shared_net:
+    external: true
 
 volumes:
   pg_data:

@@ -8,19 +8,44 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/telegram-link.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/search-panel.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/toast-notifications.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/animations.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/socket-transitions.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/comments.css') }}" rel="stylesheet" />
   <!-- SortableJS -->
   <script src="{{ url_for('static', filename='js/sortable.min.js') }}"></script>
-
   <!-- SimpleBar -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/simplebar.min.css') }}">
   <script src="{{ url_for('static', filename='js/simplebar.min.js') }}"></script>
-
   <!-- Quill.js -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}">
   <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/countries.js') }}"></script>
 
-  <script src="{{ url_for('static', filename='countries.js') }}"></script>
+  <!-- Глобальная функция для получения заголовков CSRF -->
+  <script type="text/javascript">
+    window.getHeaders = function (contentType = 'application/json') {
+      const headers = {
+        'X-CSRF-Token': document.body ? document.body.getAttribute('data-csrf-token') || '' : '{{ csrf_token }}'
+      };
+      if (contentType) headers['Content-Type'] = contentType;
+      return headers;
+    };
+  </script>
+
+  <!-- Передаю данные для поиска -->
+  <script type="text/javascript">
+    window.USERNAME = "{{ username }}";
+    window.USER_AVATAR_URL = "{{ user_avatar_url or '' }}";
+    // Данные для поиска загружаются через API
+    window.STATUSES = [];
+    window.MEMBERS = [];
+    window.TASKS = [];
+  </script>
 </head>
 
 <body data-csrf-token="{{ csrf_token }}" data-username="{{ username }}">
@@ -40,28 +65,51 @@
           <span>ToDo‑лист</span>
         </button>
       </div>
-      <div class="user-menu-wrap">
-        <button id="user-menu-btn" class="user-menu-btn" type="button">
-          <span class="material-icons">account_circle</span>
-          <span class="user-menu-name">{{ username }}</span>
-          <span class="material-icons">expand_more</span>
+      <div class="topbar-right" style="display: flex; align-items: center;">
+        <button id="notifications-btn" class="notifications-btn">
+          <span class="material-icons">notifications</span>
+          <span class="notifications-badge" style="display: none;">0</span>
         </button>
-        <div class="user-dropdown" id="user-dropdown">
-          <button class="dropdown-item" id="profile-btn" type="button">
-            <span class="material-icons">person</span>Профиль
+        <div class="notifications-dropdown" id="notifications-dropdown">
+          <div class="notifications-header">
+            <h3 class="notifications-title">
+              <span class="material-icons">notifications</span>
+              Уведомления
+            </h3>
+            <button class="mark-all-read-btn" id="mark-all-read-btn">
+              Прочитать все
+            </button>
+          </div>
+          <div class="notifications-list" id="notifications-list">
+            <div class="no-notifications">
+              <span class="material-icons">notifications_none</span>
+              <p>Нет новых уведомлений</p>
+            </div>
+          </div>
+        </div>
+        <div class="user-menu-wrap">
+          <button id="user-menu-btn" class="user-menu-btn" type="button">
+            <span class="material-icons">account_circle</span>
+            <span class="user-menu-name">{{ username }}</span>
+            <span class="material-icons">expand_more</span>
           </button>
-          <button class="dropdown-item" id="teams-btn" type="button">
-            <span class="material-icons">groups</span>Команды
-          </button>
-          <button class="dropdown-item" id="about-btn" type="button">
-            <span class="material-icons">info</span>О проекте
-          </button>
-          <button class="dropdown-item" id="change-password-btn" type="button">
-            <span class="material-icons">lock</span>Сменить пароль
-          </button>
-          <button class="dropdown-item" id="logout-btn" type="button">
-            <span class="material-icons">logout</span>Выйти
-          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <button class="dropdown-item" id="profile-btn" type="button">
+              <span class="material-icons">person</span>Профиль
+            </button>
+            <button class="dropdown-item" id="teams-btn" type="button">
+              <span class="material-icons">groups</span>Команды
+            </button>
+            <button class="dropdown-item" id="about-btn" type="button">
+              <span class="material-icons">info</span>О проекте
+            </button>
+            <button class="dropdown-item" id="change-password-btn" type="button">
+              <span class="material-icons">lock</span>Сменить пароль
+            </button>
+            <button class="dropdown-item" id="logout-btn" type="button">
+              <span class="material-icons">logout</span>Выйти
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -86,6 +134,78 @@
         </div>
       </div>
 
+      <!-- Поисковая панель -->
+      <div class="search-panel">
+        <div class="search-main">
+          <div class="search-input-group">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="task-search" class="search-input" placeholder="Поиск по задачам..." />
+            <button id="clear-search" class="clear-search-btn" style="display: none;">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <button id="toggle-filters" class="btn btn-secondary filter-toggle-btn">
+            <span class="material-icons">filter_list</span>
+            Фильтры
+          </button>
+        </div>
+        <div class="search-filters" id="search-filters" style="display: none;">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="material-icons">person</span>
+                Исполнитель
+              </label>
+              <select id="filter-assignee" class="filter-select">
+                <option value="">Все исполнители</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="material-icons">label</span>
+                Тег
+              </label>
+              <select id="filter-tag" class="filter-select">
+                <!-- Опции заполняются динамически через JavaScript -->
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="material-icons">flag</span>
+                Статус
+              </label>
+              <select id="filter-status" class="filter-select">
+                <option value="">Все статусы</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="material-icons">event</span>
+                Срок
+              </label>
+              <select id="filter-date" class="filter-select">
+                <option value="">Все даты</option>
+                <option value="overdue">Просроченные</option>
+                <option value="today">Сегодня</option>
+                <option value="week">На этой неделе</option>
+                <option value="month">В этом месяце</option>
+                <option value="no-date">Без срока</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button id="clear-filters" class="btn-reset">
+              <span class="material-icons">clear</span>
+              Сбросить
+            </button>
+            <div class="search-stats" id="search-stats">
+              <span class="material-icons">info</span>
+              <span id="search-results-count">Всего задач: 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Kanban доска -->
       <div class="kanban-board" id="kanban-board">
         <!-- Колонки будут добавлены через JavaScript -->
@@ -93,143 +213,12 @@
     </div>
   </div>
 
-  <!-- Модалка: профиль пользователя -->
-  <div class="modal" id="profile-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Профиль пользователя</h2>
-        <button class="modal-close" onclick="closeProfileModal()">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div class="profile-card">
-        <div class="profile-avatar" id="profile-avatar-container">
-          <img id="profile-avatar-img" class="profile-avatar-img" />
-          <span class="profile-avatar-initial" id="profile-avatar-initial">{{ username[0]|upper }}</span>
-        </div>
-        <div class="profile-username" id="profile-username"></div>
-        <button class="btn btn-secondary profile-edit-btn center-btn" id="edit-profile-btn">
-          <span class="material-icons">edit</span>Редактировать профиль
-        </button>
-        <div class="profile-avatar-actions">
-          <label for="avatar-upload" class="btn btn-primary">
-            <span class="material-icons">photo_camera</span>
-            Загрузить аватарку
-          </label>
-          <input type="file" id="avatar-upload" accept="image/*" />
-          <button class="btn btn-danger" id="delete-avatar-btn">
-            <span class="material-icons">delete</span>
-            Удалить
-          </button>
-        </div>
-        <!-- Блок красивого просмотра -->
-        <div class="profile-info" id="profile-info-block">
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">mail</span><span
-              class="profile-info-label">E-mail:</span><span class="profile-info-value" id="profile-email"></span></div>
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">public</span><span
-              class="profile-info-label">Страна:</span><span class="profile-info-value" id="profile-country"></span>
-          </div>
-          <div class="profile-info-row"><span class="material-icons profile-info-icon">person</span><span
-              class="profile-info-label">Имя:</span><span class="profile-info-value" id="profile-fullname"></span></div>
-        </div>
-        <!-- Элемент успешного сообщения -->
-        <div id="profile-success-message" class="profile-success-message" style="display: none;"></div>
-        <!-- Форма редактирования -->
-        <form class="profile-form" id="profile-form" autocomplete="off">
-          <div class="profile-fields">
-            <div class="profile-field">
-              <span class="profile-label">E-mail:</span>
-              <input type="email" id="profile-email-input" class="profile-input" disabled placeholder="Введите email" />
-            </div>
-            <div class="profile-field">
-              <span class="profile-label">Страна:</span>
-              <select id="profile-country-select" class="profile-input custom-select" disabled>
-                <option value="">Выберите страну</option>
-              </select>
-            </div>
-            <div class="profile-field">
-              <span class="profile-label">Имя:</span>
-              <input type="text" id="profile-fullname-input" class="profile-input" disabled
-                placeholder="Введите полное имя" />
-            </div>
-          </div>
-          <div class="profile-actions">
-            <button type="button" class="btn btn-secondary" id="cancel-profile-btn">
-              <span class="material-icons">close</span>Отмена
-            </button>
-            <button type="submit" class="btn btn-primary" id="save-profile-btn">
-              <span class="material-icons">save</span>Сохранить
-            </button>
-          </div>
-          <div id="profile-error" class="profile-error"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модалка: смена пароля -->
-  <div class="modal" id="change-password-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <span class="material-icons">lock_reset</span>
-          Смена пароля
-        </h2>
-        <button class="modal-close" id="close-change-password-modal-btn">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div class="password-change-content">
-        <div class="password-change-icon">
-          <span class="material-icons">security</span>
-        </div>
-        <p class="password-change-description">
-          Введите текущий пароль и новый пароль для обновления безопасности вашего аккаунта
-        </p>
-        <form class="modal-form" id="change-password-form" autocomplete="off">
-          <div class="form-group">
-            <label for="old_password" class="form-label">
-              <span class="material-icons">lock</span>
-              Текущий пароль
-            </label>
-            <input type="password" id="old_password" class="form-control" placeholder="Введите текущий пароль"
-              required />
-          </div>
-          <div class="form-group">
-            <label for="new_password" class="form-label">
-              <span class="material-icons">lock_open</span>
-              Новый пароль
-            </label>
-            <input type="password" id="new_password" class="form-control" placeholder="Введите новый пароль" required />
-          </div>
-          <div class="form-group">
-            <label for="new_password2" class="form-label">
-              <span class="material-icons">verified</span>
-              Подтвердите новый пароль
-            </label>
-            <input type="password" id="new_password2" class="form-control" placeholder="Повторите новый пароль"
-              required />
-          </div>
-          <div class="d-flex gap-3">
-            <button type="button" class="btn btn-secondary" id="cancel-change-password-btn">
-              <span class="material-icons">close</span>Отмена
-            </button>
-            <button type="submit" class="btn btn-primary" id="change-password-submit">
-              <span class="material-icons">sync_lock</span>Обновить пароль
-            </button>
-          </div>
-          <div id="change-password-error" class="modal-error"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модалка: задача -->
+  <!-- Модалка: задача (создание/редактирование) -->
   <div class="modal" id="task-modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title" id="task-modal-title">Новая задача</h2>
-        <button class="modal-close" id="close-task-modal-btn">
+        <button class="modal-close" onclick="closeTaskModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -246,13 +235,15 @@
           <label for="task_description_editor" class="form-label">
             <span class="material-icons">description</span> Описание
           </label>
-          <div id="task_description_editor" class="task-description-editor"></div>
+          <div id="task_description_editor" style="height: 200px"></div>
         </div>
         <div class="form-group">
           <label for="task_status" class="form-label">
             <span class="material-icons">flag</span> Статус
           </label>
-          <select name="task_status" id="task_status" class="form-control" required></select>
+          <select name="task_status" id="task_status" class="form-control" required>
+            <!-- Статусы будут добавлены через JavaScript -->
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -278,7 +269,7 @@
         </div>
         <div id="task-modal-error" class="modal-error"></div>
         <div class="d-flex gap-3">
-          <button type="button" class="btn btn-secondary" id="cancel-task-modal-btn">
+          <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">
             <span class="material-icons">close</span>Отмена
           </button>
           <button type="submit" class="btn btn-primary" id="task-modal-submit-btn">
@@ -289,12 +280,12 @@
     </div>
   </div>
 
-  <!-- Модалка: новый статус -->
+  <!-- Модалка: статус -->
   <div class="modal" id="status-modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Добавить новый статус</h2>
-        <button class="modal-close" id="close-status-modal-btn">
+        <button class="modal-close" onclick="closeStatusModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -312,98 +303,7 @@
     </div>
   </div>
 
-  <!-- Модалка: список команд -->
-  <div class="modal" id="teams-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <span class="material-icons">groups</span>
-          Мои команды
-        </h2>
-        <button class="modal-close" id="close-teams-modal-btn">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <button id="create-team-btn" class="btn">
-        <span class="material-icons">add</span>Создать команду
-      </button>
-      <div id="teams-list" class="teams-list"></div>
-    </div>
-  </div>
-
-  <!-- Модалка: создать команду -->
-  <div class="modal" id="create-team-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Создать команду</h2>
-        <button class="modal-close" id="close-create-team-modal-btn">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <form class="modal-form" id="create-team-form" autocomplete="off">
-        <div class="form-group">
-          <label for="team-name-input" class="form-label">Название команды</label>
-          <input type="text" id="team-name-input" class="form-control" placeholder="Название команды" maxlength="40"
-            required />
-        </div>
-        <button type="submit" class="btn btn-primary">
-          <span class="material-icons">add</span>Создать
-        </button>
-        <div id="create-team-error" class="modal-error"></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Модалка: редактировать команду -->
-  <div class="modal" id="edit-team-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <span class="material-icons">groups</span>
-          Редактировать команду
-        </h2>
-        <button class="modal-close" id="close-edit-team-modal-btn">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <form class="modal-form" id="edit-team-form" autocomplete="off">
-        <div class="form-group">
-          <label for="edit-team-name" class="form-label">
-            <span class="material-icons">edit</span>
-            Название команды
-          </label>
-          <input type="text" id="edit-team-name" class="form-control" placeholder="Название команды" maxlength="40"
-            required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">
-            <span class="material-icons">group</span>
-            Участники команды
-          </label>
-          <div class="edit-team-members" id="edit-team-members"></div>
-        </div>
-        <div class="form-group">
-          <label for="add-member-input" class="form-label">Добавить участника</label>
-          <input type="text" id="add-member-input" class="form-control" placeholder="Добавить участника по username"
-            maxlength="32" autocomplete="off" />
-        </div>
-        <button type="button" class="btn btn-secondary mb-3" id="add-member-btn">
-          <span class="material-icons">person_add</span>Добавить участника
-        </button>
-        <div class="d-flex gap-3">
-          <button type="submit" class="btn">
-            <span class="material-icons">save</span>Сохранить
-          </button>
-          <button type="button" class="btn btn-danger" id="delete-team-btn">
-            <span class="material-icons">delete</span>Удалить
-          </button>
-        </div>
-        <div id="edit-team-error" class="modal-error"></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Модалка просмотра задачи -->
+  <!-- Модалка просмотра задачи (без комментариев) -->
   <div class="modal" id="view-task-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -415,88 +315,64 @@
       <div id="view-task-content">
         <!-- Контент будет загружен через JavaScript -->
       </div>
+      <div id="view-task-attachments" style="display:none;"></div>
       <button class="btn btn-primary" id="view-task-edit-btn">
         <span class="material-icons">edit</span>Редактировать
       </button>
     </div>
   </div>
 
-  <!-- Модалка: О проекте -->
-  <div class="modal" id="about-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <span class="material-icons">info</span>
-          О проекте
-        </h2>
-        <button class="modal-close" id="close-about-modal-btn">
+  <!-- Модалка просмотра вложения (изображения) -->
+  <div class="modal" id="image-modal">
+    <div class="modal-content image-modal-content">
+      <div class="image-modal-header">
+        <button class="image-modal-close" id="image-modal-close-btn" title="Закрыть">
           <span class="material-icons">close</span>
         </button>
       </div>
-      <div class="about-content">
-        <div class="about-project">
-          <h3 class="about-subtitle">Kanban Board</h3>
-          <p class="about-description">
-            Kanban Board — современная система управления задачами с акцентом на <b>безопасность</b> и удобство. Все
-            действия защищены <b>CSRF Token</b>, реализована строгая авторизация, а данные пользователей надёжно
-            хранятся и передаются только по защищённым каналам.<br>
-            <br>
-            Проект построен на Flask, использует Docker для изоляции, WebSocket для мгновенных обновлений, а также
-            современный UI и адаптивный дизайн.<br>
-          </p>
-          <div class="tech-stack">
-            <h4>Технологии:</h4>
-            <div class="tech-tags">
-              <span class="tech-tag">Flask</span>
-              <span class="tech-tag">Python</span>
-              <span class="tech-tag">JavaScript</span>
-              <span class="tech-tag">CSS3</span>
-              <span class="tech-tag">WebSocket</span>
-              <span class="tech-tag">Docker</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="about-author">
-          <h3 class="about-subtitle">Разработчик</h3>
-          <div class="author-card">
-            <div class="author-avatar">
-              <img src="{{ url_for('static', filename='profile.jpg') }}" alt="Александр Тимков"
-                class="author-avatar-img">
-            </div>
-            <div class="author-info">
-              <h4 class="author-name">Александр Тимков</h4>
-              <p class="author-title">DevOps Engineer</p>
-              <p class="author-age">24 года, Россия, Санкт-Петербург</p>
-            </div>
-          </div>
-
-          <div class="author-links">
-            <a href="https://yafoxin.ru" class="author-link" target="_blank">
-              <span class="material-icons">language</span>
-              <span>Личный сайт</span>
-            </a>
-            <a href="https://t.me/yafoxin" class="author-link" target="_blank">
-              <span class="material-icons">telegram</span>
-              <span>Telegram</span>
-            </a>
-            <a href="https://github.com/yafoxins" class="author-link" target="_blank">
-              <span class="material-icons">code</span>
-              <span>GitHub</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="about-footer">
-          <p class="about-version">Версия <b>5.2.3</b><span class="dev-badge">dev</span></p>
-          <p class="about-copyright">© 2025 Александр Тимков. Все права защищены.</p>
-        </div>
+      <div class="image-modal-body">
+        <img id="image-modal-img" src="" alt="" />
+        <div class="image-filename-title" id="image-modal-filename"></div>
+        <button class="image-download-btn" id="image-modal-download-btn" title="Скачать">
+          <span class="material-icons">download</span>Скачать
+        </button>
       </div>
     </div>
   </div>
 
+  {% include 'universal_modals.html' %}
+
   <!-- Подключаю внешний файл -->
+  <script src="{{ url_for('static', filename='js/page-transitions.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast-notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/telegram-link.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/search-panel.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/team-modal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/kanban-app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/universal-modals.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+  <script>
+    // --- ИСПРАВЛЕНО: восстанавливаем состояние поиска после рендера ---
+    if (window.searchPanel && typeof window.searchPanel.restoreSearchState === 'function') {
+      window.searchPanel.restoreSearchState();
+    }
+
+    // Инициализация аватарки
+    document.addEventListener('DOMContentLoaded', function () {
+      // Инициализация аватарки
+      if (typeof loadInitialAvatar === 'function') {
+        setTimeout(loadInitialAvatar, 300);
+      }
+
+      // Дополнительная инициализация аватарки в модалке профиля
+      if (window.USER_AVATAR_URL && window.USER_AVATAR_URL.trim() !== '' && typeof updateProfileAvatar === 'function') {
+        setTimeout(() => {
+          updateProfileAvatar(window.USER_AVATAR_URL);
+        }, 400);
+      }
+    });
+  </script>
 </body>
 
 </html>

@@ -1,0 +1,1552 @@
+/* ===== КРАСИВЫЙ ДИЗАЙН КОММЕНТАРИЕВ ===== */
+
+/* Основной блок комментариев */
+.task-comments-section {
+    background: linear-gradient(135deg, #f8faff 0%, #e3e8ff 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(82, 113, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid rgba(82, 113, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    max-height: 300px;
+    overflow: hidden;
+}
+
+/* Заголовок комментариев */
+.comments-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 12px 18px;
+    background: linear-gradient(135deg, #5271ff 0%, #7b5cff 100%);
+    color: white;
+    border-radius: 14px 14px 0 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 16px rgba(82, 113, 255, 0.18);
+    flex-shrink: 0;
+}
+
+/* Специальные стили для заголовка в модальном окне */
+.modal .task-comments-section .comments-header {
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    z-index: 5;
+}
+
+.comments-title {
+    font-size: 1.18em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.01em;
+}
+
+.comments-title .material-icons {
+    font-size: 1.2em;
+    opacity: 0.85;
+    margin-right: 2px;
+}
+
+.comments-count {
+    background: rgba(255, 255, 255, 0.18);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 1em;
+    font-weight: 600;
+    margin-left: 4px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.comments-word {
+    margin-left: 6px;
+    font-size: 1em;
+    color: #e3e8ff;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* Кнопка обновления комментариев */
+.refresh-comments-btn {
+    background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+    border: none;
+    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 180, 219, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.refresh-comments-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 180, 219, 0.4);
+    background: linear-gradient(135deg, #00c4ef 0%, #0095c7 100%);
+}
+
+.refresh-comments-btn:active {
+    transform: translateY(0);
+}
+
+.refresh-comments-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.refresh-comments-btn:hover::before {
+    left: 100%;
+}
+
+.refresh-comments-btn .material-icons {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.refresh-comments-btn:hover .material-icons {
+    transform: rotate(180deg);
+}
+
+/* Контейнер списка комментариев */
+.comments-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: inset 0 2px 8px rgba(82, 113, 255, 0.08);
+    scrollbar-width: thin;
+    scrollbar-color: #5271ff #f1f3f5;
+    position: relative;
+}
+
+/* Красивая прокрутка */
+.comments-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.comments-container::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+}
+
+.comments-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #5271ff, #7b5cff);
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.comments-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3956c4, #5c4ae0);
+}
+
+/* Список комментариев */
+#modal-comments-list {
+    display: block !important;
+    min-height: 100px;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Дополнительные стили для видимости в модальном окне */
+.modal .task-comments-section #modal-comments-list {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 100px;
+    padding: 8px 0;
+    background: transparent;
+}
+
+/* Улучшенные стили для комментариев в модалке */
+.modal .task-comments-section .comment-item {
+    margin-bottom: 8px !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(82, 113, 255, 0.1) !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    gap: 12px !important;
+}
+
+.modal .task-comments-section .comment-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Элемент комментария */
+.comment-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(82, 113, 255, 0.1);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.08);
+}
+
+.comment-item:hover {
+    box-shadow: 0 4px 16px rgba(82, 113, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.comment-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Аватар комментария */
+.comment-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5271ff, #7b5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(82, 113, 255, 0.2);
+}
+
+/* Уменьшенные аватарки в модальном окне */
+.modal .task-comments-section .comment-avatar {
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.comment-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-initial {
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Удаляем индикатор онлайн-статуса у аватарки */
+.comment-avatar.online::after {
+    display: none !important;
+}
+
+/* Контент комментария */
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.comment-author {
+    color: #5271ff;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.comment-author:hover {
+    text-decoration: underline;
+}
+
+.comment-date {
+    color: #666;
+    font-size: 14px;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.comment-delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.comment-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+}
+
+.comment-text {
+    color: #333;
+    font-size: 15px;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Упоминания в комментариях */
+.mention {
+    color: #5271ff;
+    background: rgba(82, 113, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mention:hover {
+    background: rgba(82, 113, 255, 0.2);
+    text-decoration: none;
+}
+
+/* Когда нет комментариев */
+.no-comments {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #666;
+    text-align: center;
+    font-size: 16px;
+    min-height: 150px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    margin: 8px 0;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.no-comments .material-icons {
+    font-size: 48px;
+    color: rgba(82, 113, 255, 0.3);
+    margin-bottom: 12px;
+}
+
+/* Форма комментариев - красивый дизайн */
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+    background: #f7f8fa;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px #5271ff0a, 0 1px 4px #0001;
+    padding: 18px 16px 14px 16px;
+}
+
+/* Поле ввода комментария */
+#modal-comment-input {
+    flex: 1;
+    min-height: 48px;
+    max-height: 120px;
+    border: 2px solid rgba(82, 113, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    background: #fff;
+    color: #333;
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#modal-comment-input:focus {
+    outline: none;
+    border-color: #5271ff;
+    box-shadow: 0 0 0 4px rgba(82, 113, 255, 0.1);
+}
+
+#modal-comment-input::placeholder {
+    color: #888;
+    font-style: italic;
+}
+
+/* Красивая кнопка отправки */
+.comment-form button[type="submit"] {
+    background: linear-gradient(135deg, #5271ff 0%, #7b5cff 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(82, 113, 255, 0.3);
+}
+
+.comment-form button[type="submit"]:hover {
+    background: linear-gradient(135deg, #4051c8 0%, #6b4ce0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(82, 113, 255, 0.4);
+}
+
+.comment-form button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* Индикаторы - правильное позиционирование */
+.new-comments-indicator {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin: 8px 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    z-index: 10;
+}
+
+.comments-above-indicator {
+    position: relative;
+    margin: 8px 0;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    z-index: 10;
+    width: calc(100% - 32px);
+    margin-left: 16px;
+    margin-right: 16px;
+    min-height: 44px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.comments-above-indicator .material-icons {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.comments-above-indicator:hover {
+    background: linear-gradient(135deg, #5856eb 0%, #7c3aed 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Скрываем индикаторы в модальном окне */
+.modal .comments-above-indicator {
+    display: none !important;
+}
+
+.modal .new-comments-indicator {
+    display: none !important;
+}
+
+/* Убираем отступы у индикатора когда он на верхнем уровне */
+.task-comments-section>.comments-above-indicator {
+    margin: 8px 0;
+}
+
+.new-comments-indicator.show,
+.comments-above-indicator.show {
+    display: flex !important;
+    animation: slideInDown 0.3s ease-out, pulse 2s infinite;
+    opacity: 1;
+    visibility: visible;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .task-comments-section {
+        margin-top: 16px;
+        border-radius: 12px;
+        max-height: 300px;
+        min-height: 200px;
+        padding: 16px;
+    }
+
+    .comments-header {
+        padding: 12px 16px;
+    }
+
+    .comments-container {
+        padding: 12px;
+        max-height: 200px;
+        min-height: 120px;
+    }
+
+    .comment-item {
+        gap: 12px;
+        padding: 12px 16px;
+    }
+
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .comment-form {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    #modal-comment-input {
+        min-height: 40px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .comment-form button[type="submit"] {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-width: 80px;
+    }
+
+    .comment-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .comment-actions {
+        margin-left: 0;
+        margin-top: 4px;
+    }
+
+    .new-comments-indicator,
+    .comments-above-indicator {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Дополнительные стили для правильного отображения */
+.comment-form,
+.comment-form *,
+#modal-comment-input,
+.comment-form button {
+    visibility: visible;
+    opacity: 1;
+}
+
+.task-comments-section {
+    scroll-behavior: smooth;
+}
+
+/* Убираем анимацию для лучшей производительности */
+.comment-item.new-comment {
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+/* Обеспечиваем правильную прокрутку на всех устройствах */
+.comments-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* Принудительная видимость для всех элементов */
+.task-comments-section,
+.comments-container,
+#modal-comments-list,
+.comment-form,
+#modal-comment-input,
+.comment-form button {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+}
+
+.comment-form {
+    display: flex;
+}
+
+/* Стили для автодополнения упоминаний */
+.mention-autocomplete {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #5271ff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(82, 113, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    animation: mentionBoxAppear 0.2s ease-out;
+}
+
+@keyframes mentionBoxAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mention-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f2f5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #5271ff;
+    font-weight: 600;
+}
+
+.mention-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5271ff, #7b5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.2);
+}
+
+.mention-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mention-avatar .avatar-initial {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.mention-username {
+    flex: 1;
+    font-size: 15px;
+}
+
+.mention-item:last-child {
+    border-bottom: none;
+}
+
+.mention-item:hover {
+    background: linear-gradient(135deg, #f8faff 0%, #e3e8ff 100%);
+    color: #3749b4;
+    transform: translateX(4px);
+}
+
+.mention-item:active {
+    background: #e3e8ff;
+}
+
+/* Улучшенные стили для поля ввода с автодополнением */
+.comment-input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Конец файла */
+
+/* ===== СТИЛИ ДЛЯ БЛОКА ВЛОЖЕНИЙ ===== */
+
+.attachments-block {
+    background: linear-gradient(135deg, #f8faff 0%, #e3e8ff 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(82, 113, 255, 0.12), 0 1px 4px rgba(0, 0, 0, 0.05);
+    padding: 12px;
+    margin: 16px 0;
+    border: 1px solid rgba(82, 113, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.attachments-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #5271ff, #7b5cff, #10b981);
+    border-radius: 12px 12px 0 0;
+}
+
+.attachments-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(82, 113, 255, 0.15);
+}
+
+.attachments-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #5271ff 0%, #7b5cff 100%);
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(82, 113, 255, 0.2);
+}
+
+.attachments-header:hover {
+    background: linear-gradient(135deg, #4051c8 0%, #6b4ce0 100%);
+}
+
+.attachments-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.attachments-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.attachments-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.attachments-toggle {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.attachments-toggle.expanded {
+    transform: rotate(180deg);
+}
+
+.attachments-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.attachments-content.expanded {
+    max-height: 250px;
+}
+
+.attachments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.attachment-item {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid rgba(82, 113, 255, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.attachment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(82, 113, 255, 0.15);
+}
+
+.attachment-preview {
+    width: 100%;
+    height: 80px;
+    background: #f8faff;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.attachment-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.attachment-item:hover .attachment-preview img {
+    transform: scale(1.1);
+}
+
+.attachment-info {
+    margin-top: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.attachment-name {
+    font-size: 1.01em;
+    font-weight: 500;
+    color: #7a7a8c;
+    word-break: break-all;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    max-width: 180px;
+    white-space: pre-line;
+}
+
+.attachment-size {
+    display: inline-block;
+    font-size: 0.93em;
+    color: #6d6d7a;
+    background: #f1f2f6;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 2px 12px;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 4px #eaeaf2;
+}
+
+.attachment-icon {
+    font-size: 36px;
+    color: rgba(82, 113, 255, 0.3);
+}
+
+.attachment-item:hover .attachment-icon {
+    color: #5271ff;
+    transform: scale(1.1);
+}
+
+/* Мобильная адаптация для блока вложений */
+@media (max-width: 768px) {
+    .attachments-block {
+        padding: 8px;
+        margin: 12px 0;
+    }
+
+    .attachments-header {
+        padding: 10px 12px;
+    }
+
+    .attachments-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .attachment-item {
+        padding: 8px;
+    }
+
+    .attachment-preview {
+        height: 60px;
+    }
+
+    .attachment-name {
+        font-size: 12px;
+    }
+
+    .attachment-size {
+        font-size: 11px;
+    }
+
+    .attachment-icon {
+        font-size: 24px;
+    }
+}
+
+/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ПРОСМОТРА ИЗОБРАЖЕНИЙ ===== */
+
+/* Модалка просмотра вложения (изображения) */
+#image-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(30, 32, 50, 0.82);
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.18s;
+}
+
+#image-modal.active {
+    display: flex;
+}
+
+.image-modal-content {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px #2223, 0 1.5px 8px #7b5cff22;
+    max-width: 96vw;
+    max-height: 92vh;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalPop 0.22s;
+}
+
+.image-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 22px 8px 22px;
+    background: #f7f8fa;
+    border-bottom: 1px solid #e3e6f0;
+    gap: 0;
+    min-height: 36px;
+}
+
+.image-modal-filename {
+    display: block;
+    font-weight: 400;
+    font-size: 1em;
+    color: #444;
+    text-align: center;
+    margin: 22px 24px 0 24px;
+    max-width: calc(100vw - 64px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre-line;
+}
+
+.image-modal-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.image-action-btn,
+.image-modal-close {
+    background: #e6e8ff;
+    border: none;
+    border-radius: 18px;
+    min-width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s, box-shadow 0.18s;
+    cursor: pointer;
+    outline: none;
+    margin-left: 2px;
+    box-shadow: 0 1.5px 8px #7b5cff11;
+    font-size: 1em;
+    font-weight: 500;
+    gap: 6px;
+    padding: 0 14px 0 10px;
+}
+
+.image-action-btn.download-btn {
+    background: #7b5cff;
+    color: #fff;
+    border-radius: 18px;
+    min-width: 38px;
+    height: 38px;
+    font-size: 1em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 12px #7b5cff22;
+    position: static;
+    padding: 0 18px 0 12px;
+}
+
+.image-action-btn.download-btn span.material-icons {
+    font-size: 1.2em;
+    margin-right: 2px;
+}
+
+.image-action-btn.download-btn:hover {
+    background: #5a3fff;
+}
+
+.image-modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 18px 22px 18px;
+    background: #fff;
+    position: relative;
+}
+
+#image-modal-img {
+    max-width: 90vw;
+    max-height: calc(80vh - 60px);
+    border-radius: 12px;
+    box-shadow: 0 2px 16px #2222, 0 1.5px 8px #7b5cff22;
+    object-fit: contain;
+    background: #f3f4fa;
+    transition: box-shadow 0.18s;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 600px) {
+    .image-modal-header {
+        padding: 8px 8px 4px 8px;
+        min-height: 28px;
+    }
+
+    .image-modal-filename {
+        font-size: 0.92em;
+        margin: 12px 8px 0 8px;
+        max-width: 98vw;
+    }
+
+    .image-action-btn.download-btn {
+        height: 32px;
+        font-size: 0.95em;
+        padding: 0 10px 0 8px;
+        min-width: 32px;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Исправленный блок комментариев в модалке */
+.modal .task-comments-section {
+    position: relative;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: #f8faff;
+    border-radius: 16px;
+    padding: 0;
+    margin: 16px 0;
+}
+
+/* Правильная прокрутка для контейнера комментариев */
+.modal .task-comments-section .comments-container {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex: none !important;
+    max-height: 400px !important;
+    min-height: 150px !important;
+    height: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    margin: 12px;
+    padding: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #5271ff #f1f3f5;
+}
+
+/* Красивая прокрутка для контейнера комментариев в модалке */
+.modal .task-comments-section .comments-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+.modal .task-comments-section .comments-container::-webkit-scrollbar-track {
+    background: rgba(241, 243, 245, 0.8);
+    border-radius: 6px;
+    margin: 4px 0;
+}
+
+.modal .task-comments-section .comments-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #5271ff, #7b5cff);
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(82, 113, 255, 0.2);
+}
+
+.modal .task-comments-section .comments-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3956c4, #5c4ae0);
+    box-shadow: 0 4px 8px rgba(82, 113, 255, 0.3);
+}
+
+.modal .task-comments-section .comments-container::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(135deg, #2844a8, #4a37c0);
+}
+
+@media (max-width: 768px) {
+    .task-comments-section {
+        max-height: 50vw !important;
+        min-height: 120px;
+    }
+}
+
+/* --- Новый стиль формы добавления комментария в модалке --- */
+#modal-comments-section .comment-form {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 -2px 8px rgba(82, 113, 255, 0.1);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 12px 12px 12px;
+    border-top: 1px solid rgba(82, 113, 255, 0.1);
+    position: relative;
+    z-index: 5;
+}
+
+#modal-comments-section .comment-input-wrap textarea {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e4ea;
+    background: #fff;
+    resize: vertical;
+    transition: border 0.2s, box-shadow 0.2s;
+    box-shadow: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 1.5;
+}
+
+#modal-comments-section .comment-input-wrap textarea:focus {
+    border: 1.5px solid #5271ff;
+    box-shadow: 0 0 0 2px #5271ff22;
+    outline: none;
+}
+
+#modal-comments-section .comment-input-wrap textarea::placeholder {
+    font-size: 15px;
+    color: #b0b8c9;
+    opacity: 1;
+}
+
+#modal-comments-section button[type="submit"] {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.0em;
+}
+
+/* --- Улучшения для блока комментариев в модалке просмотра задачи --- */
+
+/* 1. Больше отступ между иконкой и числом комментариев */
+#view-task-comments-section .comments-title .material-icons {
+    margin-right: 8px;
+    font-size: 1.3em;
+}
+
+#view-task-comments-section .comments-count {
+    margin-left: 10px;
+    font-size: 1.08em;
+}
+
+/* 2. Больше высота и padding у поля ввода */
+#view-task-comment-input {
+    min-height: 56px;
+    padding: 16px 18px;
+    font-size: 16px;
+    border-radius: 14px;
+}
+
+/* 3. Кнопка отправки меньше и по центру */
+#view-task-comment-form button[type="submit"] {
+    min-width: 48px;
+    max-width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 14px;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    margin-top: 0;
+    box-shadow: 0 2px 8px #7b5cff22;
+}
+
+#view-task-comment-form button[type="submit"] .material-icons {
+    font-size: 1.5em;
+}
+
+/* 4. Кнопка "Редактировать" с отступом сверху */
+#view-task-modal .modal-footer {
+    margin-top: 24px;
+}
+
+/* 5. Блок ввода комментария — скругления и тень */
+#view-task-comment-form {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 12px #5271ff11;
+    padding: 18px 18px 14px 18px;
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+/* 6. Исправить слишком маленький input внутри формы */
+#view-task-comment-form .comment-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+#view-task-comment-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 1. Запретить resize у поля ввода комментария в модалке просмотра задачи */
+#view-task-comment-input {
+    resize: none;
+}
+
+/* 2. Красивый заголовок: иконка, число и слово "комментариев" с отступами */
+#view-task-comments-section .comments-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#view-task-comments-section .comments-title .material-icons {
+    margin-right: 0;
+}
+
+#view-task-comments-section .comments-title .comments-count {
+    margin-left: 0;
+    font-size: 1.08em;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    padding: 4px 14px;
+    border-radius: 18px;
+    letter-spacing: 0.01em;
+}
+
+#view-task-comments-section .comments-title .comments-word {
+    margin-left: 4px;
+    font-size: 1.08em;
+    color: #e0e6ff;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* Стили для превью вложений в модалке задачи */
+.attachments-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 32px;
+    margin: 24px 0 0 0;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.attachment-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: #f8faff;
+    border-radius: 18px;
+    box-shadow: 0 1.5px 8px #7b5cff08;
+    padding: 12px 12px 8px 12px;
+    cursor: pointer;
+    transition: box-shadow 0.18s, background 0.18s, transform 0.16s;
+    max-width: 220px;
+    min-width: 120px;
+    min-height: 120px;
+    position: relative;
+}
+
+.attachment-preview img {
+    max-width: 100%;
+    max-height: 140px;
+    border-radius: 12px;
+    box-shadow: 0 1.5px 8px #7b5cff11;
+    object-fit: cover;
+    background: #f3f4fa;
+    transition: box-shadow 0.18s;
+    margin-bottom: 10px;
+}
+
+.attachment-preview .attachment-filename {
+    font-size: 0.93em;
+    color: #333;
+    font-weight: 400;
+    text-align: center;
+    margin-top: 2px;
+    word-break: break-all;
+    max-width: 180px;
+    line-height: 1.2;
+    white-space: pre-line;
+}
+
+.attachment-preview:hover,
+.attachment-preview:focus {
+    background: #e6e8ff;
+    box-shadow: 0 4px 16px #7b5cff22;
+    transform: translateY(-2px) scale(1.04);
+    outline: none;
+}
+
+.attachment-preview.file {
+    flex-direction: row;
+    padding: 7px 12px 7px 7px;
+    min-width: 120px;
+    max-width: 220px;
+    min-height: 38px;
+    max-height: 44px;
+    background: #f7f8fa;
+    box-shadow: 0 1.5px 8px #7b5cff11;
+    cursor: pointer;
+    align-items: center;
+    gap: 8px;
+}
+
+.attachment-preview.file .material-icons {
+    font-size: 1.5em;
+    color: #7b5cff;
+}
+
+.attachment-preview.file a {
+    color: #3a3a4a;
+    font-size: 0.98em;
+    text-decoration: underline dotted;
+    word-break: break-all;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .attachments-preview-list {
+        gap: 8px 6px;
+        margin: 10px 0 0 0;
+        justify-content: center;
+        min-height: 80px;
+    }
+
+    .attachment-preview {
+        max-width: 90vw;
+        min-width: 60vw;
+        min-height: 70px;
+        padding: 7px 7px 5px 7px;
+        border-radius: 9px;
+    }
+
+    .attachment-preview img {
+        max-width: 90vw;
+        max-height: 60vw;
+        border-radius: 6px;
+        margin-bottom: 6px;
+    }
+
+    .attachment-preview .attachment-filename {
+        font-size: 0.89em;
+        max-width: 90vw;
+    }
+}
+
+.attachments-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.08em;
+    font-weight: 500;
+    color: #4a4a6a;
+    margin: 18px 0 8px 0;
+    padding-left: 2px;
+}
+
+.attachments-modal-title .material-icons {
+    font-size: 1.3em;
+    color: #7b5cff;
+}
+
+.attachments-modal-title .attachments-count {
+    background: #e6e8ff;
+    color: #7b5cff;
+    border-radius: 8px;
+    font-size: 0.98em;
+    font-weight: 500;
+    padding: 2px 8px;
+    margin-left: 6px;
+}
+
+.image-filename-title {
+    display: block;
+    text-align: center;
+    font-size: 1.25em;
+    color: #3a3a4a;
+    font-weight: 700;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    max-width: 96vw;
+    word-break: break-all;
+    white-space: pre-line;
+    letter-spacing: 0.01em;
+    text-shadow: 0 2px 8px #7b5cff22, 0 1px 0 #fff;
+    background: linear-gradient(90deg, #7b5cff11 0%, #5271ff11 100%);
+    border-radius: 12px;
+    padding: 12px 18px;
+    box-shadow: 0 2px 12px #7b5cff11;
+}
+
+.image-download-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(90deg, #7b5cff 0%, #5271ff 100%);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    font-size: 1.15em;
+    font-weight: 700;
+    padding: 0 32px 0 20px;
+    height: 48px;
+    margin: 0 auto 18px auto;
+    box-shadow: 0 4px 16px #7b5cff33;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
+    letter-spacing: 0.01em;
+}
+
+.image-download-btn span.material-icons {
+    font-size: 1.3em;
+    margin-right: 4px;
+}
+
+.image-download-btn:hover {
+    background: linear-gradient(90deg, #5a3fff 0%, #4051c8 100%);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 24px #7b5cff44;
+}
+
+@media (max-width: 600px) {
+    .image-filename-title {
+        font-size: 0.97em;
+        margin-top: 10px;
+        margin-bottom: 6px;
+        max-width: 98vw;
+    }
+
+    .image-download-btn {
+        font-size: 0.97em;
+        height: 34px;
+        padding: 0 10px 0 8px;
+        margin-bottom: 6px;
+    }
+}
