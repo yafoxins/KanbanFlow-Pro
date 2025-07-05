@@ -43,6 +43,22 @@ services:
     command: python start_with_bot.py
     restart: unless-stopped
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./static:/app/static:ro
+      - ./uploads:/app/uploads:ro
+    depends_on:
+      - flask
+    networks:
+      - shared_net
+    restart: unless-stopped
+
 networks:
   shared_net:
     external: true
